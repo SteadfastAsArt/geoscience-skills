@@ -1,242 +1,117 @@
 ---
 name: welly
-description: Subsurface well data analysis toolkit. Load, process, and analyze well logs, striplogs, formation tops, and synthetic seismograms. Built on lasio.
+description: |
+  Subsurface well data analysis toolkit for loading, processing, and analyzing
+  well logs, projects, and formation tops. Built on lasio with enhanced curve
+  processing. Use when Claude needs to: (1) Load wells from LAS files with
+  metadata, (2) Work with multi-well Projects, (3) Process curves (despike,
+  smooth, resample, normalize), (4) Manage formation tops, (5) Export well
+  data to DataFrame/LAS/CSV, (6) Perform cross-well analysis and QC.
 ---
 
 # welly - Well Data Analysis
 
-Help users load, process, and analyze subsurface well data including logs, striplogs, and synthetics.
+## Quick Reference
 
-## Installation
+```python
+from welly import Well, Project
 
-```bash
-pip install welly
+# Load single well
+w = Well.from_las('well.las')
+
+# Access data
+df = w.df()                      # DataFrame
+gr = w.data['GR']                # Curve object
+values = gr.values               # numpy array
+depth = gr.basis                 # depth array
+
+# Well info
+print(w.name, w.uwi)
+print(w.data.keys())             # Available curves
+
+# Load multiple wells
+p = Project.from_las('wells/*.las')
+for well in p:
+    print(well.name)
 ```
 
-## Core Concepts
+## Key Classes
 
-### Key Classes
 | Class | Purpose |
 |-------|---------|
 | `Well` | Single well with curves, location, tops |
-| `Project` | Collection of wells |
-| `Curve` | Log curve with depth basis and data |
-| `Synthetic` | Synthetic seismogram generation |
+| `Project` | Collection of wells for multi-well workflows |
+| `Curve` | Log curve with depth basis, units, and processing methods |
 
-### Well Components
-- **Header** - Well metadata (name, UWI, location)
-- **Curves** - Log data (GR, NPHI, RHOB, etc.)
-- **Tops** - Formation/horizon picks
-- **Location** - Coordinates and deviation
+## Essential Operations
 
-## Common Workflows
-
-### 1. Load a Single Well
+### Access Curve Data
 ```python
-from welly import Well
-
-# From LAS file
-w = Well.from_las('well.las')
-
-# Print summary
-print(w)
-
-# Access well info
-print(w.name)
-print(w.uwi)
-print(w.location)
+gr = w.data['GR']
+print(gr.mnemonic, gr.units)     # Metadata
+print(gr.start, gr.stop, gr.step)  # Depth range
 ```
 
-### 2. Load Multiple Wells (Project)
+### Process Curves
 ```python
-from welly import Project
-
-# Load all LAS files in directory
-p = Project.from_las('wells/*.las')
-
-# Print summary
-print(p)
-print(f"Number of wells: {len(p)}")
-
-# Iterate over wells
-for well in p:
-    print(well.name, list(well.data.keys()))
-```
-
-### 3. Access Curve Data
-```python
-w = Well.from_las('well.las')
-
-# List available curves
-print(w.data.keys())
-
-# Get specific curve
 gr = w.data['GR']
 
-# Curve properties
-print(gr.mnemonic)
-print(gr.units)
-print(gr.start, gr.stop, gr.step)
-
-# Get numpy array
-data = gr.values
-basis = gr.basis  # depth array
-```
-
-### 4. Plot Well Logs
-```python
-w = Well.from_las('well.las')
-
-# Quick plot of single curve
-w.data['GR'].plot()
-
-# Plot multiple curves
-import matplotlib.pyplot as plt
-
-fig, axes = plt.subplots(1, 3, figsize=(10, 12), sharey=True)
-
-w.data['GR'].plot(ax=axes[0], c='green')
-w.data['NPHI'].plot(ax=axes[1], c='blue')
-w.data['RHOB'].plot(ax=axes[2], c='red')
-
-axes[0].set_ylabel('Depth (m)')
-plt.tight_layout()
-plt.show()
-```
-
-### 5. Work with Formation Tops
-```python
-from welly import Well
-
-w = Well.from_las('well.las')
-
-# Add tops manually
-w.tops = {
-    'TopFormationA': 1500.0,
-    'TopFormationB': 1750.0,
-    'TopFormationC': 2100.0,
-}
-
-# Access tops
-for name, depth in w.tops.items():
-    print(f"{name}: {depth} m")
-
-# Plot with tops
-ax = w.data['GR'].plot()
-for name, depth in w.tops.items():
-    ax.axhline(depth, color='red', linestyle='--', label=name)
-```
-
-### 6. Curve Processing
-```python
-w = Well.from_las('well.las')
-gr = w.data['GR']
-
-# Despike
+# Clean and filter
 gr_clean = gr.despike(window=5, z=2)
-
-# Smooth
 gr_smooth = gr.smooth(window=11)
 
-# Resample to different step
+# Transform
+gr_norm = gr.normalize()         # 0-1 range
 gr_resampled = gr.resample(step=0.5)
-
-# Normalize (0-1)
-gr_norm = gr.normalize()
-
-# Clip to depth range
 gr_clipped = gr.clip(top=1500, bottom=2000)
 ```
 
-### 7. Quality Control
+### Work with Formation Tops
 ```python
-w = Well.from_las('well.las')
+w.tops = {
+    'TopFormationA': 1500.0,
+    'TopFormationB': 1750.0,
+}
 
-# Check for gaps
-for name, curve in w.data.items():
-    nulls = curve.null_count()
-    pct = 100 * nulls / len(curve)
-    print(f"{name}: {pct:.1f}% null")
-
-# Check depth coverage
-print(f"Start: {w.data['GR'].start}")
-print(f"Stop: {w.data['GR'].stop}")
+for name, depth in w.tops.items():
+    print(f"{name}: {depth} m")
 ```
 
-### 8. Create Synthetic Seismogram
+### Multi-Well Project
 ```python
-from welly import Well, Synthetic
-import numpy as np
+from welly import Project
 
-w = Well.from_las('well.las')
+p = Project.from_las('wells/*.las')
+print(f"Loaded {len(p)} wells")
 
-# Need sonic (DT) and density (RHOB)
-dt = w.data['DT']
-rhob = w.data['RHOB']
-
-# Create acoustic impedance
-vp = 1e6 / dt.values  # Convert to velocity
-ai = vp * rhob.values
-
-# Generate reflection coefficients
-rc = np.diff(ai) / (ai[:-1] + ai[1:])
-
-# Convolve with wavelet for synthetic
-# (simplified example)
+# Filter and analyze
+for w in p:
+    if 'GR' in w.data:
+        print(f"{w.name}: GR mean={w.data['GR'].values.mean():.1f}")
 ```
 
-### 9. Export Data
+### Export Data
 ```python
-w = Well.from_las('well.las')
-
 # To DataFrame
 df = w.df()
 
-# To LAS
+# To LAS file
 w.to_las('output.las')
 
 # To CSV
 df.to_csv('well_data.csv')
 ```
 
-### 10. Project-Level Analysis
-```python
-from welly import Project
-import pandas as pd
+## Common Curve Mnemonics
 
-p = Project.from_las('wells/*.las')
-
-# Get all wells with GR curve
-wells_with_gr = [w for w in p if 'GR' in w.data]
-
-# Compute statistics across project
-stats = []
-for w in p:
-    if 'GR' in w.data:
-        gr = w.data['GR']
-        stats.append({
-            'well': w.name,
-            'gr_mean': gr.values.mean(),
-            'gr_std': gr.values.std(),
-            'depth_range': gr.stop - gr.start
-        })
-
-df = pd.DataFrame(stats)
-print(df)
-```
-
-### 11. Well Location and Deviation
-```python
-w = Well.from_las('well.las')
-
-# Set location
-w.location.x = 500000.0  # Easting
-w.location.y = 6000000.0  # Northing
-w.location.kb = 350.0     # Kelly bushing elevation
-
-# Add deviation survey
-w.location.deviation = deviation_data  # DataFrame with MD, INC, AZI
-```
+| Mnemonic | Description | Units |
+|----------|-------------|-------|
+| GR | Gamma Ray | GAPI |
+| NPHI | Neutron Porosity | v/v |
+| RHOB | Bulk Density | g/cc |
+| DT | Sonic | us/ft |
+| RT/ILD | Deep Resistivity | ohm.m |
+| CALI | Caliper | in |
 
 ## Tips
 
@@ -246,19 +121,12 @@ w.location.deviation = deviation_data  # DataFrame with MD, INC, AZI
 4. **Resample to common basis** - use `curve.resample()` for cross-well comparison
 5. **welly extends lasio** - all lasio functionality available
 
-## Common Curve Mnemonics
+## References
 
-| Mnemonic | Description | Common Units |
-|----------|-------------|--------------|
-| GR | Gamma Ray | GAPI |
-| NPHI | Neutron Porosity | v/v |
-| RHOB | Bulk Density | g/cc |
-| DT | Sonic | us/ft |
-| RT/ILD | Deep Resistivity | ohm.m |
-| CALI | Caliper | in |
+- **[Curve Processing](references/curve_processing.md)** - Despike, smooth, normalize, resample methods
+- **[Project Workflows](references/project_workflows.md)** - Multi-well analysis patterns
 
-## Resources
+## Scripts
 
-- GitHub: https://github.com/agile-geoscience/welly
-- Tutorials: https://github.com/agile-geoscience/welly/tree/main/tutorial
-- Related: lasio, striplog, bruges
+- **[scripts/well_qc.py](scripts/well_qc.py)** - QC well data for gaps and issues
+- **[scripts/project_stats.py](scripts/project_stats.py)** - Compute project-level statistics

@@ -1,275 +1,93 @@
 ---
 name: dlisio
-description: Read DLIS and LIS well log files. Parse modern digital well log formats, extract curves, and access file metadata.
+description: |
+  Read and parse DLIS (Digital Log Interchange Standard) and LIS (Log Information
+  Standard) well log files. Use when Claude needs to: (1) Read/parse DLIS or LIS
+  files, (2) Extract well log curves as numpy arrays, (3) Access file metadata and
+  origin information, (4) Handle multi-frame or multi-file DLIS, (5) Convert DLIS
+  to LAS or DataFrame, (6) Work with RP66 format well logs, (7) Process array or
+  image log data.
 ---
 
 # dlisio - DLIS/LIS File Reader
 
-Help users read DLIS and LIS well log file formats.
+## Quick Reference
 
-## Installation
-
-```bash
-pip install dlisio
-```
-
-## Core Concepts
-
-### What dlisio Does
-- Read DLIS (Digital Log Interchange Standard) files
-- Read LIS (Log Information Standard) files
-- Extract log curves as numpy arrays
-- Access file and frame metadata
-- Handle multi-file and multi-frame DLIS
-
-### File Structure
-DLIS files contain:
-- **Logical Files** - Independent datasets within physical file
-- **Frames** - Groups of channels with common sampling
-- **Channels** - Individual log curves
-- **Parameters** - Metadata and constants
-
-## Common Workflows
-
-### 1. Open and Explore DLIS File
 ```python
 import dlisio
 
 # Open DLIS file (returns generator of logical files)
-with dlisio.dlis.load('well.dlis') as files:
-    for f in files:
-        print(f"Logical file: {f.describe()}")
-
-        # List available frames
-        for frame in f.frames:
-            print(f"  Frame: {frame.name}")
-            print(f"  Channels: {[ch.name for ch in frame.channels]}")
-```
-
-### 2. Read Specific Curves
-```python
-import dlisio
-import numpy as np
-
-with dlisio.dlis.load('well.dlis') as (f, *_):
-    # Get first frame
+with dlisio.dlis.load('well.dlis') as (f, *rest):
     frame = f.frames[0]
-
-    # Read all curves in frame
     curves = frame.curves()
 
     # Access by channel name
     depth = curves['DEPTH']
     gr = curves['GR']
-    nphi = curves['NPHI']
 
-    print(f"Depth range: {depth.min():.1f} - {depth.max():.1f}")
-    print(f"GR range: {gr.min():.1f} - {gr.max():.1f}")
+    # File metadata
+    for origin in f.origins:
+        print(origin.well_name, origin.field_name)
 ```
 
-### 3. Convert to Pandas DataFrame
+## Key Classes
+
+| Class | Purpose |
+|-------|---------|
+| `PhysicalFile` | Container returned by `dlis.load()` |
+| `LogicalFile` | Independent dataset within physical file |
+| `Frame` | Group of channels with common sampling |
+| `Channel` | Individual log curve with metadata |
+| `Origin` | Well and file metadata |
+
+## Essential Operations
+
+### Read Curves to DataFrame
 ```python
-import dlisio
 import pandas as pd
 
 with dlisio.dlis.load('well.dlis') as (f, *_):
     frame = f.frames[0]
     curves = frame.curves()
-
-    # Convert to DataFrame
     df = pd.DataFrame(curves)
-
-    # Set depth as index
     df.set_index('DEPTH', inplace=True)
-
-    print(df.head())
-    print(df.describe())
 ```
 
-### 4. Access File Metadata
+### Access Channel and Origin Metadata
 ```python
-import dlisio
-
 with dlisio.dlis.load('well.dlis') as (f, *_):
-    # Origin information
+    # Origin metadata
     for origin in f.origins:
-        print(f"Well: {origin.well_name}")
-        print(f"Field: {origin.field_name}")
-        print(f"Company: {origin.company}")
-        print(f"Run number: {origin.run_nr}")
-        print(f"Creation time: {origin.creation_time}")
+        print(f"Well: {origin.well_name}, Field: {origin.field_name}")
 
-    # Parameters
-    for param in f.parameters:
-        print(f"{param.name}: {param.values}")
+    # Channel properties
+    for ch in f.frames[0].channels:
+        print(f"{ch.name}: {ch.units}, dim={ch.dimension}")
 ```
 
-### 5. Handle Multi-Frame Files
+### Find Channels Across Frames
 ```python
-import dlisio
-
 with dlisio.dlis.load('well.dlis') as (f, *_):
-    # Find frame with specific channel
+    # By exact name or regex
+    channels = f.find('CHANNEL', '.*GR.*', regex=True)
+
+    # Find frame containing specific channel
     for frame in f.frames:
-        channel_names = [ch.name for ch in frame.channels]
-        if 'GR' in channel_names:
-            print(f"GR found in frame: {frame.name}")
+        if 'GR' in [ch.name for ch in frame.channels]:
             curves = frame.curves()
-            gr = curves['GR']
             break
 ```
 
-### 6. Channel Properties
+### Handle Array Channels
 ```python
-import dlisio
-
 with dlisio.dlis.load('well.dlis') as (f, *_):
-    frame = f.frames[0]
-
-    for channel in frame.channels:
-        print(f"Name: {channel.name}")
-        print(f"  Long name: {channel.long_name}")
-        print(f"  Units: {channel.units}")
-        print(f"  Dimension: {channel.dimension}")
-        print(f"  Representation: {channel.reprc}")
-        print()
-```
-
-### 7. Handle Array Channels
-```python
-import dlisio
-import numpy as np
-
-with dlisio.dlis.load('well.dlis') as (f, *_):
-    frame = f.frames[0]
-    curves = frame.curves()
-
-    # Some channels are multi-dimensional (e.g., waveforms, images)
+    curves = f.frames[0].curves()
     for name, data in curves.items():
         if data.ndim > 1:
-            print(f"{name}: shape = {data.shape}")
-        else:
-            print(f"{name}: {len(data)} samples")
+            print(f"{name}: shape = {data.shape}")  # Image/waveform
 ```
 
-### 8. Read LIS Files
-```python
-import dlisio.lis
-
-# Open LIS file
-with dlisio.lis.load('well.lis') as files:
-    for f in files:
-        # Get data records
-        for record in f.data_records():
-            print(f"Record type: {record.type}")
-
-        # Read curves
-        curves = f.curves()
-        print(curves.keys())
-```
-
-### 9. Find Specific Objects
-```python
-import dlisio
-
-with dlisio.dlis.load('well.dlis') as (f, *_):
-    # Find all objects by type
-    tools = f.find('TOOL')
-    for tool in tools:
-        print(f"Tool: {tool.name}, {tool.description}")
-
-    # Find channels matching pattern
-    channels = f.find('CHANNEL', '.*GR.*', regex=True)
-    for ch in channels:
-        print(f"Channel: {ch.name}")
-```
-
-### 10. Export to LAS
-```python
-import dlisio
-import lasio
-import numpy as np
-
-with dlisio.dlis.load('well.dlis') as (f, *_):
-    frame = f.frames[0]
-    curves = frame.curves()
-
-    # Create LAS file
-    las = lasio.LASFile()
-
-    # Add header info
-    for origin in f.origins:
-        las.well.WELL = origin.well_name or ''
-        las.well.FLD = origin.field_name or ''
-
-    # Add curves
-    for channel in frame.channels:
-        name = channel.name
-        data = curves[name]
-
-        # Skip multi-dimensional data
-        if data.ndim > 1:
-            continue
-
-        las.append_curve(
-            name,
-            data,
-            unit=channel.units or ''
-        )
-
-    las.write('output.las')
-```
-
-### 11. Plot Curves
-```python
-import dlisio
-import matplotlib.pyplot as plt
-
-with dlisio.dlis.load('well.dlis') as (f, *_):
-    frame = f.frames[0]
-    curves = frame.curves()
-
-    depth = curves['DEPTH']
-    gr = curves['GR']
-    nphi = curves['NPHI']
-
-    fig, axes = plt.subplots(1, 2, figsize=(10, 12), sharey=True)
-
-    # GR track
-    axes[0].plot(gr, depth, 'g-')
-    axes[0].set_xlabel('GR (API)')
-    axes[0].set_xlim(0, 150)
-    axes[0].invert_yaxis()
-
-    # NPHI track
-    axes[1].plot(nphi, depth, 'b-')
-    axes[1].set_xlabel('NPHI (v/v)')
-    axes[1].set_xlim(0.45, -0.15)
-
-    plt.tight_layout()
-    plt.show()
-```
-
-### 12. Handle Encrypted or Problematic Files
-```python
-import dlisio
-
-# Set error handling
-dlisio.dlis.set_encodings(['utf-8', 'latin-1'])
-
-try:
-    with dlisio.dlis.load('problem.dlis') as files:
-        for f in files:
-            try:
-                frame = f.frames[0]
-                curves = frame.curves()
-            except Exception as e:
-                print(f"Error reading frame: {e}")
-except Exception as e:
-    print(f"Error loading file: {e}")
-```
-
-## DLIS Structure Reference
+## Common Object Types
 
 | Object Type | Description |
 |-------------|-------------|
@@ -278,31 +96,32 @@ except Exception as e:
 | CHANNEL | Log curve definition |
 | TOOL | Logging tool info |
 | PARAMETER | Constants and settings |
-| CALIBRATION | Tool calibration data |
 
 ## Common Curve Names
 
 | Curve | Description |
 |-------|-------------|
-| DEPT, DEPTH | Measured depth |
-| TDEP | True vertical depth |
+| DEPT, DEPTH, TDEP | Depth curves |
 | GR | Gamma ray |
 | NPHI | Neutron porosity |
 | RHOB | Bulk density |
 | DT, DTC | Compressional slowness |
 | RT, ILD | Resistivity |
-| SP | Spontaneous potential |
-| CALI | Caliper |
 
-## Tips
+## Error Handling
 
-1. **Use context manager** - Ensures proper file cleanup
-2. **Handle multiple logical files** - DLIS can contain several
-3. **Check channel dimensions** - Some are multi-dimensional
-4. **Try multiple encodings** - For files with special characters
-5. **Convert to DataFrame** - Easier analysis with pandas
+```python
+dlisio.dlis.set_encodings(['utf-8', 'latin-1'])
 
-## Comparison: DLIS vs LAS
+try:
+    with dlisio.dlis.load('file.dlis') as files:
+        for f in files:
+            curves = f.frames[0].curves()
+except Exception as e:
+    print(f"Error: {e}")
+```
+
+## DLIS vs LAS Comparison
 
 | Feature | DLIS | LAS |
 |---------|------|-----|
@@ -310,11 +129,12 @@ except Exception as e:
 | Multi-frame | Yes | No |
 | Array data | Yes | Limited |
 | Metadata | Rich | Basic |
-| File size | Smaller | Larger |
-| Readability | Machine | Human |
 
-## Resources
+## References
 
-- Documentation: https://dlisio.readthedocs.io/
-- GitHub: https://github.com/equinor/dlisio
-- DLIS Standard: RP66 (API)
+- **[DLIS File Structure](references/dlis_structure.md)** - RP66 format specification
+- **[Frames and Channels](references/frame_channels.md)** - Working with frames and channels
+
+## Scripts
+
+- **[scripts/dlis_to_las.py](scripts/dlis_to_las.py)** - Convert DLIS to LAS format

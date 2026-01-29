@@ -1,200 +1,128 @@
 ---
 name: mtpy
-description: Magnetotelluric data processing and modelling. Read EDI files, analyze MT responses, perform inversions, and visualize resistivity models.
+description: |
+  Magnetotelluric data processing and modelling. Read EDI files, analyze MT
+  responses, perform inversions, and visualize resistivity models. Use when
+  Claude needs to: (1) Read/write EDI files, (2) Process MT impedance tensors,
+  (3) Analyze phase tensors and dimensionality, (4) Plot apparent resistivity
+  and phase curves, (5) Create pseudosections, (6) Perform strike analysis,
+  (7) Run 1D inversions, (8) Prepare data for 2D/3D modelling.
 ---
 
 # mtpy - Magnetotelluric Analysis
 
-Help users process and analyze magnetotelluric (MT) data.
+## Quick Reference
 
-## Installation
-
-```bash
-pip install mtpy
-# Note: mtpy-v2 is the actively maintained version
-pip install mtpy-v2
-```
-
-## Core Concepts
-
-### What mtpy Does
-- Read/write EDI files (industry standard)
-- MT data processing and quality control
-- 1D/2D/3D inversion interfaces
-- Visualization of MT responses
-- Phase tensor analysis
-
-### Key Classes
-| Class | Purpose |
-|-------|---------|
-| `MT` | Single station MT data |
-| `MTCollection` | Multiple stations |
-| `PlotMTResponse` | Plot impedance, phase |
-| `PlotPhaseTensor` | Phase tensor ellipses |
-| `PlotStrike` | Strike direction |
-
-## Common Workflows
-
-### 1. Load EDI File
 ```python
-from mtpy import MT
+from mtpy import MT, MTCollection
 
-# Load single station
+# Read single station
 mt = MT('station001.edi')
 
 # Access data
-print(f"Station: {mt.station}")
-print(f"Latitude: {mt.latitude}")
-print(f"Longitude: {mt.longitude}")
-print(f"Frequencies: {len(mt.frequency)} points")
+Z = mt.Z                         # Complex impedance tensor
+freq = mt.frequency              # Frequency array
+rho_xy = mt.apparent_resistivity[:, 0, 1]  # Apparent resistivity
 
-# Get impedance tensor
-Z = mt.Z  # Complex impedance
-Z_err = mt.Z_err  # Errors
+# Station info
+print(mt.station, mt.latitude, mt.longitude)
+
+# Write EDI
+mt.write_edi('output.edi')
 ```
 
-### 2. Load Multiple Stations
+## Key Classes
+
+| Class | Purpose |
+|-------|---------|
+| `MT` | Single station MT data container |
+| `MTCollection` | Multiple stations management |
+| `PlotMTResponse` | Plot impedance, resistivity, phase |
+| `PlotPhaseTensor` | Phase tensor ellipse visualization |
+| `PlotPseudoSection` | Profile pseudosection display |
+| `PlotStrike` | Strike direction analysis |
+
+## Essential Operations
+
+### Load and Inspect EDI
+```python
+from mtpy import MT
+
+mt = MT('station001.edi')
+print(f"Station: {mt.station}")
+print(f"Location: ({mt.latitude}, {mt.longitude})")
+print(f"Frequencies: {len(mt.frequency)} points")
+print(f"Period range: {1/mt.frequency.max():.2f} - {1/mt.frequency.min():.0f} s")
+```
+
+### Load Multiple Stations
 ```python
 from mtpy import MTCollection
 
-# Load all EDI files in directory
 mc = MTCollection()
 mc.from_edis('survey_data/*.edi')
+print(f"Loaded {len(mc)} stations")
 
-# Access stations
-print(f"Number of stations: {len(mc)}")
 for station in mc:
-    print(f"  {station.station}: ({station.latitude}, {station.longitude})")
+    print(f"  {station.station}: ({station.latitude:.4f}, {station.longitude:.4f})")
 ```
 
-### 3. Plot MT Response
+### Plot MT Response
 ```python
 from mtpy import MT
 from mtpy.imaging import PlotMTResponse
 
-# Load data
 mt = MT('station001.edi')
-
-# Plot apparent resistivity and phase
 plot = PlotMTResponse(mt)
-plot.plot()
+plot.plot()  # Apparent resistivity and phase
 ```
 
-### 4. Plot Phase Tensor
+### Phase Tensor Analysis
 ```python
 from mtpy import MT
 from mtpy.imaging import PlotPhaseTensor
 
 mt = MT('station001.edi')
 
-# Phase tensor plot
-pt = PlotPhaseTensor(mt)
-pt.plot()
-
 # Get phase tensor parameters
 phi_min = mt.phase_tensor.phimin
 phi_max = mt.phase_tensor.phimax
-skew = mt.phase_tensor.skew
+skew = mt.phase_tensor.skew       # 3D indicator
+
+# Plot
+pt = PlotPhaseTensor(mt)
+pt.plot()
 ```
 
-### 5. Pseudosection
+### Rotate Impedance Tensor
+```python
+from mtpy import MT
+
+mt = MT('station001.edi')
+mt_rotated = mt.rotate(30)        # 30 degrees clockwise
+mt.rotate_to_strike()             # Auto-rotate to geoelectric strike
+```
+
+### Create Pseudosection
 ```python
 from mtpy import MTCollection
 from mtpy.imaging import PlotPseudoSection
 
-# Load profile data
 mc = MTCollection()
 mc.from_edis('profile/*.edi')
 
-# Create pseudosection
 ps = PlotPseudoSection(mc)
-ps.plot(
-    plot_type='apparent_resistivity',  # or 'phase'
-    mode='te'  # or 'tm', 'det'
-)
+ps.plot(plot_type='apparent_resistivity', mode='te')  # or 'tm', 'det'
 ```
 
-### 6. Strike Analysis
+### Export Data
 ```python
 from mtpy import MT
-from mtpy.imaging import PlotStrike
+import pandas as pd
 
 mt = MT('station001.edi')
-
-# Plot strike direction vs period
-strike = PlotStrike(mt)
-strike.plot()
-
-# Get strike angles
-strike_angle = mt.pt.strike
-```
-
-### 7. Data Quality Control
-```python
-from mtpy import MT
-import numpy as np
-
-mt = MT('station001.edi')
-
-# Check data quality
-Z = mt.Z
-
-# Flag bad data (high errors)
-bad_mask = mt.Z_err / np.abs(Z) > 0.5
-
-# Remove bad frequencies
-mt_clean = mt.remove_frequencies(mt.frequency[bad_mask])
-
-# Interpolate gaps
-mt_interp = mt.interpolate(np.logspace(-3, 3, 50))
-```
-
-### 8. Rotate to Strike
-```python
-from mtpy import MT
-
-mt = MT('station001.edi')
-
-# Rotate impedance tensor
-rotation_angle = 30  # degrees clockwise from north
-mt_rotated = mt.rotate(rotation_angle)
-
-# Or rotate to geoelectric strike
-mt.rotate_to_strike()
-```
-
-### 9. Tipper (Magnetic Transfer Function)
-```python
-from mtpy import MT
-from mtpy.imaging import PlotTipper
-
-mt = MT('station001.edi')
-
-# Check if tipper data exists
-if mt.has_tipper:
-    # Plot tipper
-    tipper = PlotTipper(mt)
-    tipper.plot()
-
-    # Get tipper values
-    Tx = mt.Tipper[:, 0, 0]  # Real part, x-component
-    Ty = mt.Tipper[:, 0, 1]  # Real part, y-component
-```
-
-### 10. Export Data
-```python
-from mtpy import MT
-
-mt = MT('station001.edi')
-
-# Export to different format
-mt.write_edi('output.edi')
-
-# Export to ModEM format
-mt.write_modem('station001.dat')
 
 # Export to CSV
-import pandas as pd
 df = pd.DataFrame({
     'frequency': mt.frequency,
     'rho_xy': mt.apparent_resistivity[:, 0, 1],
@@ -203,89 +131,43 @@ df = pd.DataFrame({
     'phase_yx': mt.phase[:, 1, 0]
 })
 df.to_csv('mt_data.csv', index=False)
+
+# Export for ModEM
+mt.write_modem('station001.dat')
 ```
 
-### 11. 1D Inversion (Occam)
-```python
-from mtpy import MT
-from mtpy.modeling import Occam1D
+## Impedance Tensor Components
 
-mt = MT('station001.edi')
-
-# Setup 1D inversion
-occam = Occam1D(mt)
-occam.setup(
-    n_layers=30,
-    target_depth=10000,  # meters
-    mode='det'  # determinant average
-)
-
-# Run inversion
-occam.run()
-
-# Plot result
-occam.plot_model()
-occam.plot_response()
-```
-
-### 12. Prepare for 2D/3D Inversion
-```python
-from mtpy import MTCollection
-
-# Load data
-mc = MTCollection()
-mc.from_edis('survey/*.edi')
-
-# Write ModEM input files
-mc.write_modem(
-    data_filename='ModEM_data.dat',
-    model_filename='ModEM_model.rho',
-    center_lat=35.0,
-    center_lon=-120.0
-)
-
-# Write Mare2DEM input
-mc.write_mare2dem('mare2dem_input.emdata')
-```
-
-## EDI File Structure
-
-EDI files contain:
-- Station metadata (location, elevation)
-- Frequency array
-- Impedance tensor (Z)
-- Impedance errors
-- Tipper (optional)
-
-## Impedance Components
-
-| Component | Description |
-|-----------|-------------|
-| Zxx | Ex/Bx (usually small) |
-| Zxy | Ex/By (TE mode) |
-| Zyx | Ey/Bx (TM mode) |
-| Zyy | Ey/By (usually small) |
+| Component | Description | Mode |
+|-----------|-------------|------|
+| Zxx | Ex/Bx response | Diagonal (usually small) |
+| Zxy | Ex/By response | TE mode |
+| Zyx | Ey/Bx response | TM mode |
+| Zyy | Ey/By response | Diagonal (usually small) |
 
 ## Phase Tensor Parameters
 
-| Parameter | Description |
-|-----------|-------------|
-| phi_min | Minimum phase |
-| phi_max | Maximum phase |
-| skew | 3D indicator |
-| ellipticity | Shape measure |
+| Parameter | Description | Interpretation |
+|-----------|-------------|----------------|
+| phi_min | Minimum phase | Relates to resistivity gradient |
+| phi_max | Maximum phase | Relates to resistivity gradient |
+| skew | Skew angle | >5 suggests 3D structure |
+| ellipticity | (phi_max-phi_min)/(phi_max+phi_min) | 2D/3D indicator |
 
-## Tips
+## Common Issues
 
-1. **Check data quality** before analysis
-2. **Rotate to strike** for 2D interpretation
-3. **Use phase tensor** for dimensionality analysis
-4. **Compare TE and TM** modes for consistency
-5. **Static shift correction** may be needed
+| Issue | Solution |
+|-------|----------|
+| No tipper data | Check `mt.has_tipper` before accessing |
+| Bad data points | Use `mt.Z_err / np.abs(mt.Z) > threshold` to mask |
+| Static shift | Apply correction before interpretation |
+| Wrong rotation | Verify coordinate system (N vs E convention) |
 
-## Resources
+## References
 
-- Documentation: https://mtpy2.readthedocs.io/
-- GitHub (v2): https://github.com/MTgeophysics/mtpy-v2
-- GitHub (legacy): https://github.com/MTgeophysics/mtpy
-- MT Forum: https://www.mtnet.info/
+- **[EDI Format](references/edi_format.md)** - EDI file structure and sections
+- **[Plotting Options](references/plotting.md)** - Visualization parameters and styles
+
+## Scripts
+
+- **[scripts/mt_analysis.py](scripts/mt_analysis.py)** - MT data analysis and QC
