@@ -6,6 +6,11 @@ description: |
   (2) Perform Gassmann fluid substitution, (3) Generate seismic wavelets (Ricker, Ormsby),
   (4) Compute reflectivity and synthetic seismograms, (5) Calculate elastic moduli from
   velocities, (6) Apply Gardner/Castagna empirical relations, (7) Model rock physics effects.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [Rock Physics, AVO, Gassmann, Wavelets, Seismic Modelling]
+dependencies: [bruges>=0.5.0, numpy, scipy]
 ---
 
 # bruges - Geophysics Equations
@@ -116,6 +121,54 @@ vs = castagna(vp)    # Vs from Vp (mudrock line)
 | IIp | ~0 | + | Phase reversal |
 | III | - | - | Low impedance sand |
 | IV | - | + | Very low impedance |
+
+## When to Use vs Alternatives
+
+| Use Case | Tool | Why |
+|----------|------|-----|
+| AVO modelling and reflectivity | **bruges** | Complete Zoeppritz/Shuey/Aki-Richards suite |
+| Gassmann fluid substitution | **bruges** | Clean API, validated equations |
+| Seismic wavelets | **bruges** | Ricker, Ormsby, and more out of the box |
+| Elastic moduli calculations | **bruges** | Bulk, shear, Young's, Poisson's from Vp/Vs |
+| Advanced rock physics models | **rockphypy** | More models (Hashin-Shtrikman, DEM, etc.) |
+| Simple impedance/reflectivity | **Custom numpy** | Fewer dependencies for basic calculations |
+| Full seismic modelling (FD/FE) | **Devito / SimPEG** | Wave equation solvers |
+| Well log processing | **welly / lasio** | LAS file I/O and log manipulation |
+
+**Choose bruges when**: You need validated geophysical equations for AVO analysis,
+fluid substitution, or synthetic seismogram generation. It provides clean, tested
+implementations of standard rock physics equations.
+
+**Choose rockphypy when**: You need a broader set of rock physics models beyond
+what bruges offers, such as effective medium theories or contact models.
+
+**Choose custom numpy when**: You only need a single equation (e.g., acoustic
+impedance = Vp * rho) and want to avoid adding a dependency.
+
+## Common Workflows
+
+### AVO Analysis and Synthetic Seismogram Generation
+- [ ] Define layer properties (Vp, Vs, density) from well logs or literature
+- [ ] Compute acoustic impedance: `AI = Vp * rho`
+- [ ] Compute reflectivity series using `zoeppritz()` or `shuey()` for each interface
+- [ ] Classify AVO response (Class I-IV) from intercept and gradient
+- [ ] Perform Gassmann fluid substitution to model fluid effects on Vp/Vs
+- [ ] Recompute reflectivity with substituted properties
+- [ ] Generate Ricker or Ormsby wavelet at target frequency
+- [ ] Convolve reflectivity with wavelet to create synthetic seismogram
+- [ ] Compare synthetic with observed seismic for well tie
+- [ ] Compute elastic moduli (K, mu, E, nu) for crossplot analysis
+- [ ] Create AVO crossplots (intercept vs gradient) to identify anomalies
+
+## Common Issues
+
+| Issue | Solution |
+|-------|----------|
+| Rpp blows up at high angles | Use Zoeppritz (exact) instead of Shuey above 30 degrees |
+| Gassmann gives unrealistic Vp | Check mineral modulus and porosity values |
+| Wavelet length too short | Increase `duration` parameter (try 0.128-0.256 s) |
+| Negative shear modulus | Verify Vs < Vp and density is reasonable |
+| Units mismatch | Ensure consistent units: m/s for velocity, g/cc for density |
 
 ## Tips
 

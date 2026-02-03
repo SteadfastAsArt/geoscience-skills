@@ -7,6 +7,11 @@ description: |
   field data with equivalent sources, (4) Perform upward/downward continuation,
   (5) Calculate magnetic anomalies from magnetized bodies, (6) Apply derivative
   filters (gradients, tilt angle), (7) Process regional or local gravity surveys.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [Gravity, Magnetics, Potential Fields, Forward Modelling, Fatiando]
+dependencies: [harmonica>=0.6.0, numpy, verde]
 ---
 
 # Harmonica - Gravity and Magnetics
@@ -115,6 +120,56 @@ Harmonica uses a **right-handed coordinate system**:
 - **Upward** (z): positive up (heights positive, depths negative)
 
 Units are SI: meters for distance, kg/m3 for density, mGal for gravity.
+
+## When to Use vs Alternatives
+
+| Use Case | Tool | Why |
+|----------|------|-----|
+| Gravity/magnetic forward modelling | **Harmonica** | Purpose-built, Fatiando ecosystem |
+| Potential field inversion | **SimPEG** | Full inversion framework with regularization |
+| Commercial gravity processing | **Oasis Montaj** | Industry-standard GUI, proprietary formats |
+| Simple Bouguer corrections only | **Custom numpy** | Fewer dependencies for one-off calculations |
+| Equivalent source gridding | **Harmonica** | Best open-source option for potential fields |
+| Regional/global scale | **Harmonica** (tesseroids) | Handles spherical geometry natively |
+| Magnetic data reduction to pole | **Harmonica** | FFT-based filters for gridded data |
+| Teaching/prototyping | **Harmonica** | Clean API, good documentation |
+
+**Choose Harmonica when**: You need open-source gravity/magnetic processing with
+forward modelling, terrain corrections, or equivalent source gridding. It integrates
+well with Verde for projections and gridding. Part of the Fatiando a Terra ecosystem.
+
+**Choose SimPEG when**: You need to invert potential field data for subsurface
+property distributions (density or susceptibility models).
+
+**Choose Oasis Montaj when**: You work in an industry setting that requires
+proprietary formats, commercial support, or GUI-based interactive processing.
+
+## Common Workflows
+
+### Process Gravity Survey with Terrain Correction and Gridding
+- [ ] Load raw gravity observations and station coordinates
+- [ ] Apply latitude, free-air, and tidal corrections
+- [ ] Load DEM and build prism layer with `hm.prism_layer()`
+- [ ] Compute terrain effect at observation points
+- [ ] Subtract terrain effect from free-air anomaly to get Bouguer anomaly
+- [ ] Project coordinates to Cartesian with `verde.get_projection()`
+- [ ] Block-reduce data if station density is uneven
+- [ ] Fit equivalent sources with `hm.EquivalentSources()`
+- [ ] Grid the Bouguer anomaly onto a regular grid
+- [ ] Apply `vd.distance_mask()` to mask areas far from data
+- [ ] Apply derivative filters (horizontal gradient, tilt angle) for interpretation
+- [ ] Perform upward continuation to enhance regional features
+- [ ] Export gridded data to NetCDF
+
+## Common Issues
+
+| Issue | Solution |
+|-------|----------|
+| Wrong gravity sign | Check z-axis convention (positive upward) |
+| Poor equivalent source fit | Adjust `depth` and `damping` parameters |
+| Slow terrain correction | Reduce DEM resolution or use larger prisms |
+| Edge effects in FFT filters | Pad grid before applying `upward_continuation` |
+| Coordinate mismatch | Ensure consistent use of projected vs geographic coords |
 
 ## Tips
 

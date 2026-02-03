@@ -7,6 +7,11 @@ description: |
   (4) Sample DEMs along profiles or cross-sections, (5) Convert between GIS
   formats and GemPy inputs, (6) Clip/transform vector/raster data for modeling,
   (7) Create model extents from geospatial bounds.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [GIS, Geospatial, Data Preparation, DEM, Geological Modelling]
+dependencies: [gemgis>=1.0.0, geopandas, rasterio]
 ---
 
 # GemGIS - Geospatial Data for Geological Modelling
@@ -119,6 +124,37 @@ gdf_utm = gg.vector.reproject(gdf, 'EPSG:32632')
 | 4326 | WGS84 (lat/lon) |
 | 32632 | UTM Zone 32N |
 | 32633 | UTM Zone 33N |
+
+## When to Use vs Alternatives
+
+| Scenario | Recommendation |
+|----------|---------------|
+| Prepare GIS data for GemPy modelling | **GemGIS** - purpose-built bridge between GIS and GemPy |
+| General geospatial analysis in Python | **geopandas + rasterio** - more flexible, larger community |
+| GUI-based geological map processing | **QGIS** - visual, interactive, plugin ecosystem |
+| Extract XYZ + elevation from shapefiles and DEMs | **GemGIS** - one-liner with `extract_xyz()` |
+| Complex raster analysis pipelines | **rasterio + xarray** - more control and scalability |
+
+**Choose GemGIS when**: You are building a GemPy model and need to convert GIS data
+(shapefiles, DEMs, geological maps) into GemPy-compatible inputs. It eliminates
+boilerplate for common spatial data preparation tasks.
+
+**Avoid GemGIS when**: You need general-purpose GIS analysis (use geopandas directly),
+or your workflow does not involve GemPy (the tool is specifically designed for that pipeline).
+
+## Common Workflows
+
+### Prepare geospatial data for GemPy model
+
+- [ ] Load geological map (contacts, formations) with `gpd.read_file()`
+- [ ] Reproject all data to a projected CRS (UTM) with `gdf.to_crs()`
+- [ ] Define model extent with `gg.utils.set_extent()` or from GeoDataFrame bounds
+- [ ] Clip vector data to extent with `gg.vector.clip_by_extent()`
+- [ ] Extract interface XYZ from contacts using `gg.vector.extract_xyz(gdf, dem)`
+- [ ] Extract orientation XYZ from structural measurements
+- [ ] Convert strike to dip direction (azimuth = strike + 90)
+- [ ] Validate that all data shares the same CRS and falls within extent
+- [ ] Pass prepared DataFrames to GemPy model
 
 ## Tips
 

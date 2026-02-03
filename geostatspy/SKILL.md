@@ -6,6 +6,11 @@ description: |
   (2) Fit variogram models, (3) Perform simple/ordinary kriging, (4) Run
   sequential Gaussian simulation (SGSIM), (5) Apply normal score transforms,
   (6) Decluster spatial data, (7) Generate multiple realizations for uncertainty.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [Geostatistics, Variogram, Kriging, SGSIM, GSLIB, Spatial Estimation]
+dependencies: [geostatspy>=0.0.40, numpy, pandas, matplotlib]
 ---
 
 # GeostatsPy - Geostatistical Analysis
@@ -41,7 +46,7 @@ est, var = geostats.kb2d(df, 'X', 'Y', 'npor', ..., vario=vario)  # Krige
 | Transforms | `nscore`, `backtr` |
 | Declustering | `declus` |
 
-## Common Workflows
+## Common Operations
 
 ### 1. Normal Score Transform
 ```python
@@ -116,6 +121,55 @@ declustered_mean = np.average(df['porosity'], weights=wts)
 | `range` | Distance where correlation becomes negligible |
 | `azimuth` | Direction of maximum continuity (degrees from N) |
 | `ktype` | 0=simple kriging (known mean), 1=ordinary kriging |
+
+## When to Use vs Alternatives
+
+| Use Case | Tool | Why |
+|----------|------|-----|
+| GSLIB-style workflows | **GeostatsPy** | Direct port of GSLIB programs to Python |
+| SGSIM / SISIM simulation | **GeostatsPy** | Full GSLIB simulation engine |
+| Declustering spatial data | **GeostatsPy** | Built-in `declus` function |
+| Modern variogram API | **scikit-gstat** | Cleaner API, sklearn integration |
+| Kriging only (no simulation) | **pykrige** | Focused API, universal kriging support |
+| Random field generation | **gstools** | Flexible covariance models, field generation |
+| Large-scale 3D geomodelling | **SGeMS / Petrel** | GUI-based, industrial workflows |
+| Indicator simulation | **GeostatsPy** (`sisim`) | Categorical property simulation |
+
+**Choose GeostatsPy when**: You need GSLIB-compatible workflows in Python, especially
+for sequential simulation (SGSIM/SISIM), declustering, or if you are familiar with
+GSLIB parameter conventions. Best for reservoir characterization workflows.
+
+**Choose scikit-gstat when**: You prefer a modern scikit-learn-style API for variogram
+analysis and kriging, with better integration into Python data science workflows.
+
+**Choose pykrige when**: You only need kriging interpolation (no simulation) and want
+universal kriging with external drift or regression kriging capabilities.
+
+## Common Workflows
+
+### Variogram Analysis and Kriging Interpolation
+- [ ] Load spatial data into a pandas DataFrame
+- [ ] Explore data with `GSLIB.locmap()` and `GSLIB.hist()`
+- [ ] Check for clustering and decluster with `geostats.declus()` if needed
+- [ ] Apply normal score transform with `geostats.nscore()`
+- [ ] Compute experimental variogram with `geostats.gamv()` (isotropic first)
+- [ ] Check directional variograms for anisotropy (azimuths 0, 45, 90, 135)
+- [ ] Fit variogram model with `GSLIB.make_variogram()`
+- [ ] Overlay model on experimental variogram to verify fit
+- [ ] Run kriging with `geostats.kb2d()` (ktype=1 for ordinary)
+- [ ] Run SGSIM for uncertainty quantification (50-100 realizations)
+- [ ] Back-transform results with `geostats.backtr()`
+- [ ] Validate with cross-validation or holdout data
+
+## Common Issues
+
+| Issue | Solution |
+|-------|----------|
+| Variogram doesn't reach sill | Increase `nlag` or `xlag` to capture full range |
+| Kriging produces negative values | Back-transform after kriging, not before |
+| SGSIM artifacts | Check grid definition (xmn, xsiz) matches data extent |
+| Too few variogram pairs | Increase `atol` (angular tolerance) or `xltol` (lag tolerance) |
+| Hole effect in variogram | May indicate periodicity; try nested structures |
 
 ## Tips
 

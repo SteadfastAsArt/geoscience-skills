@@ -8,6 +8,11 @@ description: |
   (5) Implement Reverse Time Migration (RTM), (6) Create absorbing boundary
   conditions, (7) Generate optimized stencil code for CPUs/GPUs, (8) Solve
   custom PDEs with finite differences.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [PDE Solver, Wave Propagation, Seismic Modelling, FWI, RTM, Finite Difference]
+dependencies: [devito>=4.8.0, numpy]
 ---
 
 # Devito - Symbolic PDE Solver
@@ -120,6 +125,39 @@ snapshot = p.data[0]          # Current wavefield
 | 8 | 9 | O(h^8) |
 
 Higher order = more accurate but slower. Use 4-8 for production.
+
+## When to Use vs Alternatives
+
+| Scenario | Recommendation |
+|----------|---------------|
+| Seismic wave propagation (acoustic/elastic) | **Devito** - symbolic PDE, auto-optimized code |
+| Full Waveform Inversion (FWI) or RTM | **Devito** - adjoint support, GPU-ready |
+| Legacy seismic processing pipelines | **Madagascar** - established, large script library |
+| Simple 1D/2D wave demos | **Custom NumPy** - no dependencies, easier to debug |
+| General-purpose PDE solving (non-wave) | **FEniCS** - FEM-based, broader PDE support |
+| Production seismic imaging at scale | **Devito** - generates optimized C code, MPI support |
+
+**Choose Devito when**: You need high-performance finite-difference wave propagation
+with symbolic equation specification. It auto-generates optimized C/OpenMP/GPU code
+from Python-level math, making it ideal for FWI, RTM, and research prototyping.
+
+**Avoid Devito when**: You need finite-element methods (use FEniCS), or simple
+pedagogical examples where NumPy suffices.
+
+## Common Workflows
+
+### Acoustic wave forward modelling with sources and receivers
+
+- [ ] Define `Grid` with shape and physical extent matching the velocity model
+- [ ] Create velocity `Function` and populate with model values
+- [ ] Create `TimeFunction` for the wavefield (time_order=2, space_order=4+)
+- [ ] Verify CFL condition: `dt < dx / (v_max * sqrt(ndim))`
+- [ ] Build wave equation stencil: `Eq(p.forward, solve(p.dt2 - v**2 * p.laplace, p.forward))`
+- [ ] Create source (`RickerSource`) and receivers, set coordinates
+- [ ] Add source injection and receiver interpolation terms
+- [ ] Compile `Operator` with stencil + source + receiver terms
+- [ ] Run operator: `op(time_M=nt-1, dt=dt)`
+- [ ] Extract shot record from `rec.data` and plot
 
 ## References
 

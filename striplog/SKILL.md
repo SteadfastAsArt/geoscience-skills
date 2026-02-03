@@ -7,6 +7,11 @@ description: |
   columns with patterns and colors, (4) Perform well-to-well correlations, (5) Extract
   statistics like net-to-gross ratios, (6) Define rock type lexicons and legends,
   (7) Export lithology data to CSV/LAS/JSON.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [Lithology, Stratigraphy, Well Correlation, Visualization]
+dependencies: [striplog>=0.9.0, matplotlib]
 ---
 
 # striplog - Lithological Logs
@@ -119,6 +124,37 @@ df = strip.to_dataframe()
 | Plus | `+++` | Limestone |
 | X | `xxx` | Dolomite |
 | V | `vvv` | Volcanic |
+
+## When to Use vs Alternatives
+
+| Tool | Best For |
+|------|----------|
+| **striplog** | Structured lithology logs, interval-based data, NTG, correlation |
+| **welly** | Well log curves (continuous data), multi-well projects |
+| **custom matplotlib** | Simple one-off stratigraphic columns without interval logic |
+
+**Use striplog when** you need to represent geological intervals (lithology,
+facies) as structured objects with querying, statistics, and correlation.
+
+**Use welly instead** when working with continuous well log curves (GR, RHOB).
+Welly and striplog complement each other -- welly for curves, striplog for
+lithology intervals.
+
+**Use custom matplotlib instead** for simple, one-off stratigraphic columns
+where you don't need interval querying or net-to-gross calculations.
+
+## Common Workflows
+
+### Create lithological log from CSV data
+```
+- [ ] Prepare CSV with columns: top, base, lithology (optionally color)
+- [ ] Load with `Striplog.from_csv('lithology.csv')`
+- [ ] Define Legend with colors and hatch patterns for each lithology
+- [ ] Verify intervals: check for gaps or overlaps
+- [ ] Merge adjacent same-lithology intervals with `merge_neighbours()`
+- [ ] Compute statistics: `net_to_gross()`, `unique()`
+- [ ] Plot with legend and export to desired format
+```
 
 ## Common Issues
 

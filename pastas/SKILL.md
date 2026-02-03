@@ -7,6 +7,11 @@ description: |
   parameters from head data, (4) Forecast or hindcast groundwater levels,
   (5) Decompose hydrological signals into components, (6) Compare response
   functions, (7) Perform model diagnostics and uncertainty analysis.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [Groundwater, Hydrology, Time Series, Transfer Function, Well Response]
+dependencies: [pastas>=1.0.0, pandas, scipy]
 ---
 
 # Pastas - Groundwater Time Series Analysis
@@ -126,6 +131,46 @@ sm = ps.StressModel(river, rfunc=ps.Exponential(), name='river',
                     settings='waterlevel')
 ml.add_stressmodel(sm)
 ```
+
+## When to Use vs Alternatives
+
+| Use Case | Tool | Why |
+|----------|------|-----|
+| Groundwater time series analysis | **Pastas** | Purpose-built transfer function models |
+| Well response to recharge/pumping | **Pastas** | Built-in stress models and response functions |
+| Numerical groundwater flow (MODFLOW) | **FloPy** | Full 3D finite-difference groundwater model |
+| Simple exponential decay fitting | **Custom scipy** | `scipy.optimize.curve_fit` is sufficient |
+| Regional groundwater flow modelling | **FloPy** | Spatially distributed parameters and boundaries |
+| Aquifer test analysis (pumping tests) | **Aqtesolv / custom** | Dedicated well test interpretation |
+| Multi-well network analysis | **Pastas** | Model each well independently, compare responses |
+| Signal decomposition | **Pastas** | Separate recharge, pumping, and trend contributions |
+
+**Choose Pastas when**: You have groundwater level time series and want to model
+responses to precipitation, evaporation, or pumping using transfer function noise
+models. Excellent for rapid model building with diagnostics.
+
+**Choose FloPy when**: You need spatially distributed groundwater flow modelling
+with MODFLOW, including multiple layers, boundary conditions, and transport.
+
+**Choose custom scipy when**: You only need to fit a simple analytical model
+(e.g., Theis equation) to pumping test data without time series decomposition.
+
+## Common Workflows
+
+### Groundwater Response Model with Diagnostics
+- [ ] Load head time series and stress data (precipitation, evaporation, pumping)
+- [ ] Inspect data: check for gaps, outliers, and time coverage
+- [ ] Create `ps.Model(head)` with observation data
+- [ ] Add recharge stress with `ps.RechargeModel(precip, evap, rfunc=ps.Gamma())`
+- [ ] Add pumping or river stresses if applicable
+- [ ] Solve model with `ml.solve()`
+- [ ] Check EVP (>70%), RMSE, and AIC
+- [ ] Run `ml.plots.diagnostics()` to inspect residuals
+- [ ] Check residual autocorrelation; enable noise model if needed: `ml.solve(noise=True)`
+- [ ] Compare response functions (Gamma vs Exponential vs Hantush) using AIC
+- [ ] Extract step/block responses to interpret aquifer behavior
+- [ ] Decompose signal into individual stress contributions
+- [ ] Export model to JSON and simulation results to CSV
 
 ## Tips
 

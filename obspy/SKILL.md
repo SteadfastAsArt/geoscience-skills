@@ -8,6 +8,11 @@ description: |
   from IRIS/USGS/FDSN services, (4) Search for earthquakes by magnitude/location,
   (5) Plot seismograms or spectrograms, (6) Remove instrument response,
   (7) Analyze station metadata.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [Seismology, Waveforms, FDSN, Earthquake, Time Series]
+dependencies: [obspy>=1.4.0]
 ---
 
 # ObsPy - Seismology Data Processing
@@ -130,6 +135,36 @@ except FDSNNoDataException:
 3. **Check for gaps** before processing with `st.print_gaps()`
 4. **Wildcards work** in queries: `station="A*"`, `channel="BH?"`
 5. **UTCDateTime** accepts ISO strings, timestamps, datetime objects
+
+## When to Use vs Alternatives
+
+| Tool | Best For |
+|------|----------|
+| **obspy** | Full seismology workflows, FDSN data access, waveform processing |
+| **segyio** | Fast, low-level SEG-Y file I/O for reflection seismic data |
+| **scipy.signal** | Generic signal processing without seismology-specific features |
+
+**Use obspy when** you need seismological context: FDSN clients, instrument
+response removal, earthquake catalogs, or standard seismic formats.
+
+**Use segyio instead** when working exclusively with SEG-Y files for reflection
+seismic. segyio is faster for large 3D volumes with inline/crossline access.
+
+**Use scipy.signal instead** when you only need generic filtering or spectral
+analysis and don't need seismology-specific metadata or data access.
+
+## Common Workflows
+
+### Fetch and process earthquake waveforms
+```
+- [ ] Initialize FDSN client: `Client("IRIS")`
+- [ ] Search events with `client.get_events()` for target magnitude/region
+- [ ] Fetch waveforms with `client.get_waveforms()` for desired stations
+- [ ] Get station metadata with `level="response"` for instrument correction
+- [ ] Preprocess: detrend, taper, remove instrument response
+- [ ] Filter to frequency band of interest
+- [ ] Trim to analysis window and export or plot
+```
 
 ## References
 

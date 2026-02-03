@@ -7,6 +7,11 @@ description: |
   (3) Plot lineations with trend/plunge, (4) Generate density contours for orientations,
   (5) Calculate mean orientations and statistics, (6) Analyze fold axes with pi-diagrams,
   (7) Convert between strike/dip and trend/plunge formats.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [Structural Geology, Stereonet, Orientation Data, Matplotlib, Visualization]
+dependencies: [mplstereonet>=0.6, matplotlib, numpy]
 ---
 
 # mplstereonet - Stereonets for Matplotlib
@@ -147,6 +152,34 @@ back_strike, back_dip = mplstereonet.pole2strike(lon, lat)
 | `kamb` | Statistical significance (default) |
 | `schmidt` | Point counting |
 | `exponential_kamb` | Smoothed Kamb |
+
+## When to Use vs Alternatives
+
+| Tool | Best For | Limitations |
+|------|----------|-------------|
+| **mplstereonet** | Quick stereonets in Python, matplotlib integration, scripted workflows | No interactive rotation, limited 3D |
+| **apsg** | Advanced structural analysis, tensors, orientation statistics | Steeper learning curve |
+| **JTOPO** | Interactive GUI exploration, teaching | Java-based, not scriptable |
+
+**Use mplstereonet when** you need programmatic stereonet generation integrated with
+matplotlib, batch processing of orientation datasets, or reproducible structural plots
+for publications.
+
+**Consider alternatives when** you need interactive 3D visualization of orientations
+(use apsg), a GUI for teaching or quick inspection (use JTOPO), or advanced tensor
+statistics beyond what mplstereonet provides.
+
+## Common Workflows
+
+### Analyze bedding orientations and determine fold axis
+- [ ] Load strike/dip measurements from CSV or array
+- [ ] Create stereonet with `mplstereonet.subplots()`
+- [ ] Plot poles to bedding with `ax.pole(strikes, dips)`
+- [ ] Generate density contours with `ax.density_contourf()`
+- [ ] Fit girdle to poles with `mplstereonet.fit_girdle()`
+- [ ] Calculate fold axis as pole to girdle with `mplstereonet.pole()`
+- [ ] Plot fold axis with `ax.line(trend, plunge)`
+- [ ] Add grid, legend, and save figure
 
 ## References
 

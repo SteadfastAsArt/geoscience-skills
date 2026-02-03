@@ -8,6 +8,11 @@ description: |
   Analyze climate, ocean, or atmosphere data, (4) Compute temporal aggregations
   (daily/monthly/annual means), (5) Perform area-weighted statistics, (6)
   Process large datasets with Dask, (7) Apply CF conventions to scientific data.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [NetCDF, Climate Data, Multi-Dimensional Arrays, Dask, Zarr, Geoscience]
+dependencies: [xarray>=2023.0, numpy, pandas, netcdf4]
 ---
 
 # xarray - Multi-Dimensional Geoscience Data
@@ -124,6 +129,34 @@ ds = xr.open_mfdataset('data_*.nc', chunks='auto')
 # Operations are lazy until .compute()
 result = ds['temperature'].mean(dim='time').compute()
 ```
+
+## When to Use vs Alternatives
+
+| Tool | Best For | Limitations |
+|------|----------|-------------|
+| **xarray** | Labeled multi-dim arrays, NetCDF/Zarr, Dask integration | Learning curve for newcomers from numpy |
+| **iris** | Met Office climate workflows, UGRID mesh support | Smaller community, UK-centric conventions |
+| **CDO** | Fast command-line climate data operations | Not Python-native, limited custom analysis |
+| **NCO** | Quick NetCDF file manipulation and arithmetic | Command-line only, no visualization |
+
+**Use xarray when** you need labeled dimension handling, seamless NetCDF/Zarr I/O,
+groupby/resample operations, or Dask-based parallel processing of large datasets.
+
+**Consider alternatives when** you need fast one-off command-line operations on NetCDF
+files (use CDO/NCO), or you work within the Met Office ecosystem with UGRID meshes
+(use iris).
+
+## Common Workflows
+
+### Climate data analysis with temporal aggregation
+- [ ] Open NetCDF dataset with `xr.open_dataset()` (use `chunks=` if large)
+- [ ] Inspect dimensions, coordinates, and variables with `print(ds)`
+- [ ] Select region of interest with `.sel(lat=slice(), lon=slice())`
+- [ ] Compute climatology with `.groupby('time.month').mean('time')`
+- [ ] Calculate anomalies by subtracting climatology from data
+- [ ] Compute area-weighted spatial mean using cosine latitude weights
+- [ ] Resample to desired temporal resolution (monthly, annual)
+- [ ] Save results to NetCDF with `.to_netcdf()`
 
 ## Common Issues
 

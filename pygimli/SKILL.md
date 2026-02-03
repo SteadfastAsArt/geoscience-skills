@@ -7,6 +7,11 @@ description: |
   radar (GPR), (5) Create finite element meshes for geophysical problems, (6) Perform joint
   inversions of multiple datasets, (7) Forward model geophysical responses, (8) Analyze
   time-lapse monitoring data.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [Geophysical Inversion, ERT, Seismic Refraction, IP, Near-Surface, FEM]
+dependencies: [pygimli>=1.4.0, numpy, matplotlib]
 ---
 
 # pyGIMLi - Geophysical Inversion
@@ -119,6 +124,38 @@ mgr.mesh.exportVTK("result", mgr.model)
 | Res2DInv | .dat | 2D inversion format |
 | ABEM | .ohm | ABEM Terrameter |
 | SRT | .sgt | Seismic traveltimes |
+
+## When to Use vs Alternatives
+
+| Scenario | Recommendation |
+|----------|---------------|
+| Standard ERT inversion with common arrays | **pyGIMLi** - simplest API, built-in array types |
+| Seismic refraction tomography (SRT) | **pyGIMLi** - integrated SRT manager |
+| Multi-method inversion (DC, magnetics, gravity, EM) | **SimPEG** - broader method coverage |
+| Commercial ERT processing with reporting | **Res2DInv** - industry standard, GUI-based |
+| Custom forward operators or research flexibility | **SimPEG** - more modular design |
+| FEM-based geophysical modelling | **pyGIMLi** - native FEM mesh support |
+
+**Choose pyGIMLi when**: You need near-surface geophysical inversion (ERT, SRT, IP) with
+minimal code. Its manager classes (`ERTManager`, `SRTManager`) handle the full workflow
+from data loading to inversion to visualization in a few lines.
+
+**Avoid pyGIMLi when**: You need methods beyond near-surface (use SimPEG), or you
+require a commercial-grade reporting pipeline.
+
+## Common Workflows
+
+### ERT data inversion and visualization
+
+- [ ] Load ERT data file with `ert.load("survey.ohm")`
+- [ ] Inspect data: check measurement count with `data.size()`, plot pseudosection
+- [ ] Remove outliers or bad data points
+- [ ] Create `ERTManager` with data
+- [ ] Run inversion: `mgr.invert(lam=20)` (start with higher lambda)
+- [ ] Check chi-squared value (target ~ 1)
+- [ ] Visualize result with `mgr.showResult()`
+- [ ] Export mesh and model to VTK for ParaView: `mgr.mesh.exportVTK()`
+- [ ] Adjust lambda and zWeight if needed, re-invert
 
 ## Inversion Tips
 

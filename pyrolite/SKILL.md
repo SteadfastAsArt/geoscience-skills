@@ -7,6 +7,11 @@ description: |
   TAS or other classification diagrams, (4) Apply log-ratio transforms to
   compositional data, (5) Calculate CIPW norms, (6) Generate Harker variation
   diagrams, (7) Compute element ratios and anomalies.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [Geochemistry, REE, Spider Diagram, TAS, Compositional Data]
+dependencies: [pyrolite>=0.3.0, pandas, matplotlib]
 ---
 
 # pyrolite - Geochemistry Analysis
@@ -108,6 +113,34 @@ ax.scatter(df['Nb'], df['Y'], c='red', s=50)
 | Primitive Mantle | `PM_McDonough1995` | Trace elements |
 | N-MORB | `NMORB_SunMcDonough1989` | Ocean basalts |
 | Upper Crust | `UCC_RudnickGao2003` | Crustal rocks |
+
+## When to Use vs Alternatives
+
+| Tool | Best For | Limitations |
+|------|----------|-------------|
+| **pyrolite** | Python-native geochemistry, pandas integration, compositional transforms | Fewer built-in classification templates than GCDkit |
+| **GCDkit** | Comprehensive classification diagrams, R ecosystem | R-based, not Python |
+| **PetroGraph** | Quick GUI-based classification and plotting | Not scriptable, limited customization |
+| **Custom matplotlib** | Full control over plot appearance | No built-in normalization or templates |
+
+**Use pyrolite when** you need geochemistry analysis integrated with pandas workflows,
+compositional log-ratio transforms, or REE normalization in Python.
+
+**Consider alternatives when** you need extensive petrographic classification templates
+(use GCDkit), a quick GUI for classification (use PetroGraph), or only need simple
+scatter plots without normalization (use matplotlib directly).
+
+## Common Workflows
+
+### Geochemical classification and REE pattern analysis
+- [ ] Load sample data into pandas DataFrame
+- [ ] Close compositions with `df.pyrocomp.renormalise(scale=100)`
+- [ ] Plot TAS diagram with `TAS()` and overlay sample data
+- [ ] Normalize REE to chondrite with `df.pyrochem.normalize_to()`
+- [ ] Plot REE spider diagram with `df.pyroplot.REE()`
+- [ ] Calculate Eu anomaly and La/Yb ratio
+- [ ] Generate Harker variation diagrams for major elements
+- [ ] Export figures for publication
 
 ## Tips
 

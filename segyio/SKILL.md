@@ -6,6 +6,11 @@ description: |
   (1) Read/inspect SEG-Y files, (2) Extract trace data or headers, (3) Access 3D survey
   data by inline/crossline, (4) Create new SEG-Y files from arrays, (5) Modify existing
   SEG-Y files, (6) Extract subsets of seismic data, (7) Read/write Seismic Unix format.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [Seismic, SEG-Y, Data I/O, Traces, Headers]
+dependencies: [segyio>=1.9.0, numpy]
 ---
 
 # segyio - SEG-Y Seismic Data
@@ -119,6 +124,35 @@ with segyio.open('seismic.sgy', 'r+') as f:
 | 3 | 2-byte signed integer |
 | 5 | IEEE 4-byte float |
 | 8 | 1-byte signed integer |
+
+## When to Use vs Alternatives
+
+| Tool | Best For |
+|------|----------|
+| **segyio** | Fast SEG-Y I/O, 3D inline/crossline access, header manipulation |
+| **obspy** | Broader seismology: FDSN access, waveform processing, event analysis |
+| **segysak** | xarray-based SEG-Y workflows, NetCDF conversion, labeled dimensions |
+
+**Use segyio when** you need fast, low-level access to SEG-Y files -- reading
+traces, headers, 3D slices, or creating new SEG-Y files programmatically.
+
+**Use obspy instead** when you need seismological processing beyond file I/O:
+instrument response removal, FDSN data fetching, or earthquake analysis.
+
+**Use segysak instead** when you want xarray integration with labeled
+dimensions (inline, crossline, time) and easy conversion to NetCDF/Zarr.
+
+## Common Workflows
+
+### Read, inspect, and extract 3D seismic data
+```
+- [ ] Open file with `segyio.open()`, specify `iline=` and `xline=` byte positions
+- [ ] Inspect geometry: trace count, sample count, inline/crossline ranges
+- [ ] Read headers to verify coordinate and survey metadata
+- [ ] Extract target inline/crossline slices or full cube
+- [ ] Apply amplitude scaling or subset extraction as needed
+- [ ] Write results to new SEG-Y or export as numpy arrays
+```
 
 ## Common Issues
 

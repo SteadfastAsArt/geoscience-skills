@@ -7,6 +7,11 @@ description: |
   paths, (4) Plot surfaces and meshes in 3D, (5) Read/write VTK, STL, OBJ files,
   (6) Create cross-sections through 3D models, (7) Export publication-quality
   figures or interactive HTML.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [3D Visualization, VTK, Mesh, Geological Models, Point Clouds]
+dependencies: [pyvista>=0.42.0, numpy, vtk]
 ---
 
 # PyVista - 3D Visualization
@@ -108,6 +113,33 @@ plotter.export_html('model.html')           # Interactive HTML
 ## Supported Formats
 
 `.vtk`, `.vtu`, `.vti`, `.vtp`, `.stl`, `.obj`, `.ply` (read/write)
+
+## When to Use vs Alternatives
+
+| Tool | Best For | Limitations |
+|------|----------|-------------|
+| **pyvista** | Pythonic 3D viz, VTK wrapper, mesh operations, scripting | Requires display or off-screen backend |
+| **Mayavi** | Scientific 3D visualization, volume rendering | Heavier dependency, less active development |
+| **ParaView** | Interactive GUI exploration of large 3D datasets | GUI-focused, scripting is secondary |
+| **matplotlib 3D** | Simple 3D scatter/surface plots | Limited interactivity, not true 3D engine |
+
+**Use pyvista when** you need programmatic 3D visualization of geological models,
+meshes, or point clouds with VTK power but a Pythonic API.
+
+**Consider alternatives when** you need a full GUI for exploring large models
+(use ParaView), legacy scientific visualization (use Mayavi), or only need simple
+3D scatter plots (use matplotlib 3D).
+
+## Common Workflows
+
+### Visualize 3D geological model with multiple surfaces
+- [ ] Load mesh files with `pv.read()` for each surface/horizon
+- [ ] Create plotter with `pv.Plotter()` (use `off_screen=True` for scripts)
+- [ ] Add each surface with `plotter.add_mesh()` and distinct colors/opacity
+- [ ] Add well paths as tubes with `pv.Spline().tube()`
+- [ ] Add axes and legend with `plotter.add_axes()` and `plotter.add_legend()`
+- [ ] Set camera position for desired view angle
+- [ ] Export screenshot with `plotter.screenshot()` or HTML with `plotter.export_html()`
 
 ## Tips
 

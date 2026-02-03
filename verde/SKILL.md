@@ -8,6 +8,11 @@ description: |
   (4) Reduce large datasets using block averaging, (5) Remove polynomial trends from
   spatial data, (6) Cross-validate gridding parameters, (7) Create processing pipelines
   with Chain, (8) Grid vector data like GPS velocities.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [Gridding, Interpolation, Spatial Analysis, Fatiando, Cross-Validation]
+dependencies: [verde>=1.8.0, numpy, scipy]
 ---
 
 # Verde - Spatial Data Gridding
@@ -123,6 +128,46 @@ grid_masked = grid.where(mask)
 | `Spline` | Medium | High | Good |
 | `Linear` | Fast | Low | None |
 | `Cubic` | Fast | Medium | None |
+
+## When to Use vs Alternatives
+
+| Use Case | Tool | Why |
+|----------|------|-----|
+| General spatial gridding | **Verde** | ML-style API, pipelines, cross-validation |
+| Basic 1D/2D interpolation | **scipy.interpolate** | Simpler API, no spatial focus |
+| Potential field gridding | **Harmonica** | Equivalent sources designed for gravity/magnetics |
+| Command-line batch gridding | **GMT** | Powerful CLI, good for automation scripts |
+| Geostatistical interpolation | **scikit-gstat / pykrige** | Variogram-based with uncertainty |
+| Very large datasets (10M+ pts) | **GMT / GDAL** | Better memory handling at scale |
+| Vector data (GPS velocities) | **Verde** (`Vector`) | Built-in 2-component vector gridding |
+| Trend removal + gridding | **Verde** (`Chain`) | Pipeline combines steps cleanly |
+
+**Choose Verde when**: You need a Pythonic, scikit-learn-style API for gridding
+scattered spatial data with built-in cross-validation, trend removal, and pipelines.
+Ideal for exploratory analysis and reproducible workflows.
+
+**Choose scipy.interpolate when**: You have a simple interpolation task without
+spatial coordinates, projections, or need for validation.
+
+**Choose GMT when**: You need command-line batch processing of large datasets or
+are integrating with shell-based workflows and need `surface` or `nearneighbor`.
+
+## Common Workflows
+
+### Grid Scattered Spatial Data with Validation
+- [ ] Load scattered point data (coordinates + values)
+- [ ] Project geographic coordinates to Cartesian if needed
+- [ ] Inspect data distribution and identify clusters or gaps
+- [ ] Apply `BlockReduce` to decimate dense clusters
+- [ ] Remove regional trend with `Trend(degree=1)` or `Trend(degree=2)`
+- [ ] Cross-validate gridder parameters with `cross_val_score()`
+- [ ] Tune `Spline(damping=...)` or `Spline(mindist=...)` based on CV scores
+- [ ] Fit chosen gridder (Spline, Linear, or Cubic) on residuals
+- [ ] Grid onto regular spacing with `.grid()`
+- [ ] Add trend back to gridded residuals
+- [ ] Apply `distance_mask()` to clip extrapolation artifacts
+- [ ] Visualize grid with xarray plotting: `grid.elevation.plot()`
+- [ ] Save result to NetCDF with `grid.to_netcdf()`
 
 ## Common Issues
 

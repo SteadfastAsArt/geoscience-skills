@@ -7,6 +7,11 @@ description: |
   (3) Create folded geology representations, (4) Interpolate geological surfaces,
   (5) Export models to VTK for visualization, (6) Perform uncertainty analysis on
   geological models, (7) Evaluate model values on grids.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [Geological Modelling, 3D, Faults, Folds, Structural Geology]
+dependencies: [LoopStructural>=1.5.0, numpy, pandas]
 ---
 
 # LoopStructural - 3D Geological Modelling
@@ -155,6 +160,37 @@ grid.save('geological_model.vtk')
 | Orientation | X, Y, Z, feature_name, strike, dip | Structural measurements |
 | Gradient | X, Y, Z, feature_name, gx, gy, gz | Normal vectors to surfaces |
 | Fault | X, Y, Z, feature_name, val, coord | Fault surface points |
+
+## When to Use vs Alternatives
+
+| Scenario | Recommendation |
+|----------|---------------|
+| Complex fold modelling with structural frames | **LoopStructural** - best-in-class fold support |
+| Simple layered geology with faults | **GemPy** - simpler API, faster setup |
+| Fault network with displacement fields | **LoopStructural** - explicit displacement control |
+| Commercial subsurface modelling | **SKUA-GOCAD** - industry standard, proprietary |
+| Uncertainty analysis on geological models | **LoopStructural** - built-in support |
+
+**Choose LoopStructural when**: Your geology involves folds, complex fault networks with
+known displacements, or you need structural frame-based modelling. It excels at
+reproducing realistic fold geometries using fold constraints.
+
+**Avoid LoopStructural when**: You have simple layered geology (GemPy is easier),
+or you need a GUI-driven workflow (use commercial tools).
+
+## Common Workflows
+
+### Build faulted geological model from structural data
+
+- [ ] Prepare data as DataFrame with columns: X, Y, Z, feature_name, val (and strike/dip or gx/gy/gz)
+- [ ] Create `GeologicalModel` with origin and maximum bounds
+- [ ] Assign data to `model.data`
+- [ ] Add faults first with `model.create_and_add_fault()` and set displacement
+- [ ] Add stratigraphy with `model.create_and_add_foliation()`
+- [ ] Call `model.update()` to build the model
+- [ ] Evaluate on grid with `model['feature'].evaluate_value(points)`
+- [ ] Visualize with `LavaVuModelViewer` or export isosurfaces to VTK
+- [ ] Validate cross-sections against known geology
 
 ## Modelling Tips
 

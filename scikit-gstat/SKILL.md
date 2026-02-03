@@ -8,6 +8,11 @@ description: |
   (4) Assess spatial anisotropy with directional variograms, (5) Cross-validate spatial
   models, (6) Analyze spatio-temporal data, (7) Export variogram parameters for other
   geostatistical software.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [Geostatistics, Variogram, Kriging, Scikit-Learn, Spatial Statistics]
+dependencies: [scikit-gstat>=1.0.0, numpy, scipy, scikit-learn]
 ---
 
 # SciKit-GStat - Geostatistics
@@ -134,6 +139,54 @@ V = skg.Variogram(
 | `exponential` | Never reaches sill, gradual approach |
 | `gaussian` | Parabolic near origin, smooth |
 | `matern` | Flexible smoothness control |
+
+## When to Use vs Alternatives
+
+| Use Case | Tool | Why |
+|----------|------|-----|
+| Variogram analysis + kriging | **scikit-gstat** | Modern API, sklearn-compatible |
+| GSLIB-style simulation (SGSIM) | **GeostatsPy** | Full GSLIB simulation engine |
+| Kriging with trend/drift | **pykrige** | Universal kriging, regression kriging |
+| Random field generation | **gstools** | Flexible covariance, SRF generation |
+| Spatio-temporal variograms | **scikit-gstat** | Built-in SpaceTimeVariogram |
+| Production geomodelling | **SGeMS / Petrel** | GUI, large-scale 3D models |
+| Robust variogram estimation | **scikit-gstat** | Cressie, Dowd, Genton estimators |
+| ML pipeline integration | **scikit-gstat** | sklearn `fit`/`transform` interface |
+
+**Choose scikit-gstat when**: You want a Pythonic, scikit-learn-compatible API for
+variogram fitting and kriging. Best for exploratory geostatistical analysis with
+cross-validation and integration into ML pipelines.
+
+**Choose GeostatsPy when**: You need GSLIB-compatible simulation workflows (SGSIM,
+SISIM) or are working with traditional geostatistical conventions.
+
+**Choose pykrige when**: You need universal kriging with external drift variables
+or regression kriging combining geostatistics with machine learning predictions.
+
+## Common Workflows
+
+### Variogram Fitting and Ordinary Kriging
+- [ ] Load spatial data as numpy arrays (coordinates and values)
+- [ ] Create `Variogram` object with appropriate `n_lags` and `maxlag`
+- [ ] Test estimators: matheron (default) vs cressie (robust) for noisy data
+- [ ] Fit multiple models (spherical, exponential, gaussian) and compare RMSE
+- [ ] Check anisotropy with `DirectionalVariogram` at 0, 45, 90, 135 degrees
+- [ ] Select best model based on RMSE and visual fit
+- [ ] Create `OrdinaryKriging` object from fitted variogram
+- [ ] Define prediction grid and run `ok.transform(grid_coords)`
+- [ ] Set `ok.return_variance = True` to get kriging variance
+- [ ] Cross-validate with `cross_val_score()` to assess prediction quality
+- [ ] Map predictions and kriging variance
+
+## Common Issues
+
+| Issue | Solution |
+|-------|----------|
+| Variogram flat or erratic | Adjust `n_lags` and `maxlag` (try `maxlag='median'`) |
+| Poor model fit (high RMSE) | Try different model types or nested structures |
+| Kriging too slow | Reduce number of conditioning points or grid resolution |
+| Nugget too large | May indicate measurement error; try robust estimators |
+| Anisotropy unclear | Use smaller angular tolerance in `DirectionalVariogram` |
 
 ## Tips
 

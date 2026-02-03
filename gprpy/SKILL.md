@@ -7,6 +7,11 @@ description: |
   (3) Convert two-way travel time to depth, (4) Perform CMP/WARR velocity analysis,
   (5) Apply topographic corrections, (6) Export processed profiles as images or SEG-Y,
   (7) Batch process multiple GPR survey lines.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [GPR, Ground-Penetrating Radar, Near-Surface, Signal Processing]
+dependencies: [gprpy>=1.0.0, numpy, matplotlib, scipy]
 ---
 
 # GPRPy - Ground Penetrating Radar Processing
@@ -114,6 +119,35 @@ cmp.showSemblance()
 | Granite | 0.10-0.13 |
 | Water | 0.033 |
 | Ice | 0.16-0.17 |
+
+## When to Use vs Alternatives
+
+| Tool | Best For | Limitations |
+|------|----------|-------------|
+| **gprpy** | Python-based GPR processing, scripted workflows, open-source | Limited advanced migration algorithms |
+| **GPRMax** | Forward modelling and simulation of GPR responses | Simulation only, not for data processing |
+| **REFLEXW** | Full commercial processing suite, advanced migration | Commercial license required |
+| **Custom scipy** | Custom signal processing, research algorithms | Must build everything from scratch |
+
+**Use gprpy when** you need open-source GPR processing in Python, batch processing
+of survey lines, or integration with other Python geoscience tools.
+
+**Consider alternatives when** you need forward modelling of GPR responses (use GPRMax),
+advanced migration or commercial-grade processing (use REFLEXW), or highly custom
+signal processing algorithms (use scipy directly).
+
+## Common Workflows
+
+### Process raw GPR profile for interpretation
+- [ ] Import raw data with `gp.gprpyProfile()` and `importdata()`
+- [ ] Apply dewow filter to remove low-frequency drift
+- [ ] Remove mean trace to eliminate background ringing
+- [ ] Apply time-power gain or AGC for depth equalization
+- [ ] Apply bandpass filter to remove noise
+- [ ] Determine velocity from CMP analysis or material tables
+- [ ] Convert time axis to depth with `setVelocity()`
+- [ ] Apply topographic correction if survey has elevation changes
+- [ ] Export processed profile as image and/or SEG-Y
 
 ## References
 

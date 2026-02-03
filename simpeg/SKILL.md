@@ -8,6 +8,11 @@ description: |
   and receiver configurations, (4) Design mesh discretizations for simulations,
   (5) Apply regularization and optimization to inverse problems, (6) Model
   subsurface physical properties from geophysical data.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [Geophysical Inversion, DC Resistivity, Magnetics, Gravity, EM, Forward Modelling]
+dependencies: [simpeg>=0.20.0, discretize, numpy]
 ---
 
 # SimPEG - Geophysical Simulation & Inversion
@@ -114,6 +119,39 @@ mrec = inv.run(m0)
 | Conductivity | 0.0001 - 1 | S/m |
 | Susceptibility | 0 - 0.1 | SI |
 | Density contrast | -1 to 1 | g/cc |
+
+## When to Use vs Alternatives
+
+| Scenario | Recommendation |
+|----------|---------------|
+| Multi-method geophysical inversion (DC, magnetics, gravity, EM) | **SimPEG** - broadest method coverage |
+| Near-surface ERT with standard arrays | **pyGIMLi** - simpler API, built-in array support |
+| ERT-focused inversion with GUI export | **pyGIMLi** - better ERT-specific tooling |
+| Custom forward modelling with flexible physics | **SimPEG** - modular design, easy to extend |
+| Joint inversion of multiple geophysical datasets | **SimPEG** - built-in support via Wires maps |
+| Commercial ERT processing | **Res2DInv / Res3DInv** - industry standard |
+
+**Choose SimPEG when**: You need a unified framework for multiple geophysical methods,
+custom forward operators, or research-grade flexibility. Its modular design
+(mesh + survey + simulation + inversion) suits complex and non-standard problems.
+
+**Avoid SimPEG when**: You only need standard ERT inversion (pyGIMLi is faster to set up),
+or you need a turnkey commercial solution.
+
+## Common Workflows
+
+### Run DC resistivity inversion from survey data
+
+- [ ] Define electrode locations and build dipole-dipole (or other) survey geometry
+- [ ] Create `TensorMesh` or `TreeMesh` with appropriate cell sizes
+- [ ] Set up `dc.Simulation2DNodal` with mesh, survey, and `ExpMap`
+- [ ] Load observed data into `data.Data` with standard deviations
+- [ ] Configure `L2DataMisfit`, `WeightedLeastSquares` regularization, and optimizer
+- [ ] Set directives: `BetaSchedule`, `TargetMisfit`
+- [ ] Build `BaseInvProblem` and `BaseInversion`
+- [ ] Run inversion with `inv.run(m0)` using a homogeneous starting model
+- [ ] Plot recovered model and compare observed vs predicted data
+- [ ] Check data misfit convergence (target chi-squared ~ 1)
 
 ## Tips
 

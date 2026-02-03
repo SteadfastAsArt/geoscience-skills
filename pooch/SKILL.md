@@ -8,6 +8,11 @@ description: |
   with SHA256/MD5 hashes, (4) Extract compressed archives (ZIP, TAR, GZIP),
   (5) Create data registries for reproducible workflows, (6) Fetch from Zenodo
   or other repositories.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [Data Download, Caching, Reproducibility, File Management]
+dependencies: [pooch>=1.7.0]
 ---
 
 # Pooch - Data File Fetching
@@ -122,6 +127,33 @@ except pooch.exceptions.HTTPDownloadError:
 except pooch.exceptions.DownloadError:
     print("Network issue")
 ```
+
+## When to Use vs Alternatives
+
+| Tool | Best For | Limitations |
+|------|----------|-------------|
+| **pooch** | Reproducible data downloads, hash verification, caching | Not a version control system |
+| **urllib/requests** | Simple one-off downloads, custom HTTP logic | No caching, no hash verification |
+| **DVC** | Data version control alongside git | Heavier setup, requires remote storage |
+| **wget** | Quick command-line downloads | No Python integration, no caching logic |
+
+**Use pooch when** you need reproducible data downloads with automatic caching and
+integrity verification, especially for scientific data registries.
+
+**Consider alternatives when** you need full data version control with git integration
+(use DVC), simple one-off downloads without caching needs (use requests), or
+command-line batch downloads (use wget).
+
+## Common Workflows
+
+### Set up reproducible data download with registry
+- [ ] Identify all required data files and their URLs
+- [ ] Generate SHA256 hashes with `pooch.file_hash()` for each file
+- [ ] Create registry with `pooch.create()` specifying base URL and file hashes
+- [ ] Fetch files with `REGISTRY.fetch()` in analysis scripts
+- [ ] Add processors for compressed files (`Unzip()`, `Untar()`, `Decompress()`)
+- [ ] Test registry by clearing cache and re-fetching
+- [ ] Document registry in project README for collaborators
 
 ## References
 

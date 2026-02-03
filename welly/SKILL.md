@@ -7,6 +7,11 @@ description: |
   metadata, (2) Work with multi-well Projects, (3) Process curves (despike,
   smooth, resample, normalize), (4) Manage formation tops, (5) Export well
   data to DataFrame/LAS/CSV, (6) Perform cross-well analysis and QC.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [Well Logs, Petrophysics, Data Analysis, Multi-Well]
+dependencies: [welly>=0.5.0, lasio]
 ---
 
 # welly - Well Data Analysis
@@ -120,6 +125,36 @@ df.to_csv('well_data.csv')
 3. **Despike before analysis** - remove outliers with `curve.despike()`
 4. **Resample to common basis** - use `curve.resample()` for cross-well comparison
 5. **welly extends lasio** - all lasio functionality available
+
+## When to Use vs Alternatives
+
+| Tool | Best For |
+|------|----------|
+| **welly** | Multi-well projects, curve processing, formation tops management |
+| **lasio** | Low-level LAS file I/O, header manipulation, malformed files |
+| **petropy** | Petrophysical calculations (Vsh, porosity, Sw, permeability) |
+
+**Use welly when** you need to manage wells as objects with curves, tops, and
+metadata -- especially for multi-well QC and cross-well analysis via Project.
+
+**Use lasio instead** when you only need to read/write LAS files, handle
+malformed headers, or need fine control over LAS formatting.
+
+**Use petropy instead** when your focus is formation evaluation calculations
+(shale volume, porosity, water saturation) rather than data management.
+
+## Common Workflows
+
+### Load and QC a multi-well project
+```
+- [ ] Load wells with `Project.from_las('wells/*.las')`
+- [ ] Check well count and names: `len(p)`, iterate wells
+- [ ] Verify required curves exist in each well (`'GR' in w.data`)
+- [ ] Despike and clean noisy curves: `curve.despike()`
+- [ ] Resample to common depth basis for cross-well comparison
+- [ ] Compute summary statistics per well (mean, min, max)
+- [ ] Export cleaned data to LAS or DataFrame
+```
 
 ## References
 

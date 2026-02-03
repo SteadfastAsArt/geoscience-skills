@@ -7,6 +7,11 @@ description: |
   DataFrame/CSV/Excel, (4) Create new LAS files from arrays, (5) Modify existing
   LAS files, (6) Handle problematic or malformed LAS files, (7) Batch process
   multiple well files.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [Well Logs, LAS, Petrophysics, Data I/O]
+dependencies: [lasio>=0.30]
 ---
 
 # lasio - LAS Well Log Files
@@ -111,6 +116,35 @@ for path in Path('wells/').glob('*.las'):
     las = lasio.read(path)
     df = las.df()
     # Process...
+```
+
+## When to Use vs Alternatives
+
+| Tool | Best For |
+|------|----------|
+| **lasio** | Direct LAS file I/O, header manipulation, format conversion |
+| **welly** | Higher-level well analysis, curve processing, multi-well projects |
+| **dlisio** | DLIS/RP66 binary format files (not LAS) |
+
+**Use lasio when** you need low-level control over LAS file reading/writing,
+need to handle malformed files, or want to programmatically build LAS files.
+
+**Use welly instead** when you need curve processing (despike, normalize),
+multi-well project management, or formation tops. Welly uses lasio internally.
+
+**Use dlisio instead** when your data is in DLIS format. DLIS files are binary,
+support multi-frame data and array logs -- lasio cannot read them.
+
+## Common Workflows
+
+### Read, QC, and export well log data
+```
+- [ ] Read LAS file with `lasio.read()`, handle encoding if needed
+- [ ] Inspect curves: `las.curves.keys()` and well headers
+- [ ] Replace null values: `df.replace(null_val, np.nan)`
+- [ ] Validate depth range and sample interval
+- [ ] Check for missing curves or anomalous values
+- [ ] Export to DataFrame with `las.df()` or write cleaned LAS
 ```
 
 ## Common Issues

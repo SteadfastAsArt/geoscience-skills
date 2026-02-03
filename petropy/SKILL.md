@@ -8,6 +8,11 @@ description: |
   Simandoux, (4) Calculate permeability from porosity and saturation, (5) Perform
   pay zone identification, (6) Conduct multi-mineral analysis, (7) Generate
   petrophysical summation plots.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [Petrophysics, Formation Evaluation, Water Saturation, Porosity]
+dependencies: [petropy>=0.1.6, lasio, numpy]
 ---
 
 # PetroPy - Petrophysical Analysis
@@ -119,6 +124,40 @@ df.to_csv('results.csv', index=False)
 | Limestone | 2.71 | 0.00 | 47.5 |
 | Dolomite | 2.87 | 0.02 | 43.5 |
 | Shale | 2.45 | 0.30-0.45 | 70-130 |
+
+## When to Use vs Alternatives
+
+| Tool | Best For |
+|------|----------|
+| **petropy** | Automated formation evaluation, standard petrophysical workflows |
+| **welly** | Well data management, curve processing, multi-well projects |
+| **custom calculations** | Non-standard equations, full control over methodology |
+
+**Use petropy when** you need a streamlined formation evaluation pipeline:
+Vsh, porosity, Sw, permeability, and pay flags with standard methods (Archie,
+Simandoux, Timur). It extends lasio so file I/O is built in.
+
+**Use welly instead** when your focus is data management, curve QC, and
+multi-well projects rather than petrophysical calculations.
+
+**Use custom calculations instead** when you need non-standard saturation
+models, proprietary equations, or more control over the computation steps
+than petropy's built-in methods provide.
+
+## Common Workflows
+
+### Complete formation evaluation from raw logs
+```
+- [ ] Load well with `pp.Log('well.las')`, verify required curves exist
+- [ ] Pick clean sand and shale GR values from histogram or crossplot
+- [ ] Compute shale volume: `log.shale_volume()`
+- [ ] Compute porosity: `log.formation_porosity()` with matrix parameters
+- [ ] Determine Rw from water zone or catalog; set Archie parameters
+- [ ] Compute water saturation: `log.water_saturation()`
+- [ ] Compute permeability: `log.permeability()`
+- [ ] Apply pay flag cutoffs (Vsh, porosity, Sw) and calculate net pay
+- [ ] Export interpreted log to LAS or CSV
+```
 
 ## References
 

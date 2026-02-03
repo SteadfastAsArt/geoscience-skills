@@ -7,6 +7,11 @@ description: |
   (3) Analyze phase tensors and dimensionality, (4) Plot apparent resistivity
   and phase curves, (5) Create pseudosections, (6) Perform strike analysis,
   (7) Run 1D inversions, (8) Prepare data for 2D/3D modelling.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [Magnetotellurics, MT, EDI, Impedance Tensor, EM, Geophysics]
+dependencies: [mtpy>=2.0.0, numpy, matplotlib]
 ---
 
 # mtpy - Magnetotelluric Analysis
@@ -153,6 +158,34 @@ mt.write_modem('station001.dat')
 | phi_max | Maximum phase | Relates to resistivity gradient |
 | skew | Skew angle | >5 suggests 3D structure |
 | ellipticity | (phi_max-phi_min)/(phi_max+phi_min) | 2D/3D indicator |
+
+## When to Use vs Alternatives
+
+| Tool | Best For | Limitations |
+|------|----------|-------------|
+| **mtpy** | Full MT workflow in Python, EDI I/O, visualization, modelling prep | Complex API, evolving between v1 and v2 |
+| **EMTF** | USGS time-series to impedance processing | Fortran-based, processing only |
+| **WinGLink** | Commercial integrated MT processing and inversion | Expensive commercial license |
+
+**Use mtpy when** you need end-to-end MT analysis in Python: reading EDI files,
+QC, phase tensor analysis, pseudosections, and preparing data for ModEM or other
+inversion codes.
+
+**Consider alternatives when** you need time-series to impedance processing from raw
+field data (use EMTF), or a fully integrated commercial inversion package with GUI
+(use WinGLink).
+
+## Common Workflows
+
+### Load, QC, and analyze MT station data
+- [ ] Load EDI file(s) with `MT()` or `MTCollection()`
+- [ ] Inspect station metadata (location, frequency range)
+- [ ] Plot apparent resistivity and phase with `PlotMTResponse`
+- [ ] Check phase tensor parameters for dimensionality (skew > 5 = 3D)
+- [ ] Identify and mask noisy data points using error thresholds
+- [ ] Rotate impedance tensor to geoelectric strike if needed
+- [ ] Create pseudosection for profile data
+- [ ] Export cleaned data for inversion (ModEM format)
 
 ## Common Issues
 

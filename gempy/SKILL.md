@@ -8,6 +8,11 @@ description: |
   intrusions, (3) Compute and visualize subsurface geology, (4) Export models
   to VTK or numpy arrays, (5) Generate gravity forward models, (6) Create
   cross-sections or 3D visualizations.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [Geological Modelling, 3D, Implicit Surfaces, Faults, Structural Geology]
+dependencies: [gempy>=2.3.0, numpy, pyvista]
 ---
 
 # GemPy - 3D Geological Modelling
@@ -106,6 +111,38 @@ lith_3d = lithology.reshape(geo_model.grid.regular_grid.resolution)
 | `ONLAP` | Younger onlaps onto older |
 | `FAULT` | Surface is a fault plane |
 | `INTRUSION` | Intrusive body |
+
+## When to Use vs Alternatives
+
+| Scenario | Recommendation |
+|----------|---------------|
+| 3D implicit geological modelling from surface data | **GemPy** - purpose-built, Python-native |
+| Complex fold modelling with structural frames | **LoopStructural** - better fold support |
+| Commercial-grade subsurface modelling | **SKUA-GOCAD** - industry standard, proprietary |
+| Quick 2D cross-sections only | **GemPy** works but may be overkill; consider manual interpolation |
+| Need gravity/magnetics forward model from geology | **GemPy** - has built-in potential field support |
+
+**Choose GemPy when**: You need implicit 3D geological modelling from surface contacts and
+orientations with fault/unconformity relationships, especially when integrated with Python
+workflows. It has a gentler learning curve than LoopStructural for standard cases.
+
+**Avoid GemPy when**: Your geology is dominated by complex folding (use LoopStructural),
+or you need production-grade reservoir modelling (use commercial tools).
+
+## Common Workflows
+
+### Build 3D geological model from surface data
+
+- [ ] Load or define surface contact points (min 2 per surface) and orientations (min 1 per surface)
+- [ ] Create `GeoModel` with appropriate extent and resolution
+- [ ] Add surface points with `gp.add_surface_points()`
+- [ ] Add orientations with `gp.add_orientations()`
+- [ ] Map geological stack with `gp.map_stack_to_surfaces()`
+- [ ] Set structural relations (ERODE, ONLAP, FAULT)
+- [ ] Set interpolator with `gp.set_interpolator()`
+- [ ] Compute model with `gp.compute_model()`
+- [ ] Validate with 2D cross-sections using `gp.plot_2d()`
+- [ ] Visualize 3D result with `gp.plot_3d()` or export to VTK
 
 ## Common Issues
 

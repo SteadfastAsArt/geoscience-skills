@@ -7,6 +7,11 @@ description: |
   dispersion, (3) Generate sensitivity kernels for inversion, (4) Forward model
   dispersion curves from velocity profiles, (5) Compare dispersion between different
   Earth models, (6) Set up surface wave tomography workflows.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [Surface Waves, Dispersion, Rayleigh, Love, Seismology]
+dependencies: [disba>=0.5.0, numpy, numba]
 ---
 
 # disba - Surface Wave Dispersion
@@ -103,6 +108,37 @@ def forward_model(vs_profile, thickness, vp_vs_ratio=1.73):
 2. **Numba JIT** - First call is slower due to compilation
 3. **Higher modes** may not exist at all periods
 4. **Sensitivity kernels** show which depths affect each period
+
+## When to Use vs Alternatives
+
+| Tool | Best For |
+|------|----------|
+| **disba** | Fast dispersion computation, Numba-accelerated, Python-native |
+| **CPS (Herrmann)** | Full surface wave analysis suite, Fortran-based, broader features |
+| **pysurf** | Surface wave processing from field data, MASW/SASW workflows |
+
+**Use disba when** you need fast forward modelling of dispersion curves for
+inversion or parameter studies. Numba acceleration makes it ideal for iterative
+workflows requiring thousands of forward computations.
+
+**Use CPS instead** when you need the full Herrmann suite: receiver functions,
+synthetic seismograms, or established research-grade tools.
+
+**Use pysurf instead** when processing raw field data (shot gathers) through
+MASW/SASW workflows to extract dispersion curves from measured data.
+
+## Common Workflows
+
+### Compute and analyze dispersion curves
+```
+- [ ] Define layered velocity model (thickness, Vp, Vs, density)
+- [ ] Set last layer thickness to 0.0 (half-space)
+- [ ] Choose period range appropriate for model depth
+- [ ] Compute phase/group velocity for fundamental mode
+- [ ] Compute higher modes if needed (wrap in try/except)
+- [ ] Generate sensitivity kernels to assess depth resolution
+- [ ] Compare computed curves against observed data
+```
 
 ## Common Issues
 

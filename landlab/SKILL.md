@@ -7,6 +7,11 @@ description: |
   (3) Route water flow across terrain, (4) Model hillslope diffusion processes,
   (5) Simulate weathering and soil production, (6) Analyze drainage networks,
   (7) Combine multiple geomorphic processes, (8) Load/save DEM data for modeling.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [Landscape Evolution, Geomorphology, Erosion, Surface Processes, Flow Routing]
+dependencies: [landlab>=2.6.0, numpy, matplotlib]
 ---
 
 # Landlab - Surface Process Modelling
@@ -119,6 +124,55 @@ for _ in range(500):
     ld.run_one_step(dt)
     z[grid.core_nodes] += uplift_rate * dt
 ```
+
+## When to Use vs Alternatives
+
+| Use Case | Tool | Why |
+|----------|------|-----|
+| Landscape evolution modelling | **Landlab** | Modular components, Python-native |
+| Basin-scale stratigraphy | **Badlands** | Focus on sediment deposition and basin fill |
+| Topographic analysis (MATLAB) | **TopoToolbox** | Mature MATLAB toolkit for DEM analysis |
+| Simple diffusion/erosion | **Custom numpy** | Fewer dependencies for basic models |
+| Coupled surface-subsurface | **Landlab** | Components for hydrology + geomorphology |
+| Channel network extraction | **Landlab** or **pysheds** | Both handle flow routing well |
+| Soil production and transport | **Landlab** | Dedicated weathering and soil components |
+| Teaching geomorphology | **Landlab** | Clear component API, good tutorials |
+
+**Choose Landlab when**: You need a modular, component-based framework for
+landscape evolution modelling that combines multiple surface processes (erosion,
+diffusion, flow routing, weathering) in a single simulation.
+
+**Choose Badlands when**: Your focus is on basin-scale landscape evolution with
+emphasis on sediment transport and stratigraphic architecture.
+
+**Choose custom numpy when**: You only need a simple 2D diffusion or stream power
+model without the overhead of a full component framework.
+
+## Common Workflows
+
+### Landscape Evolution Model with Erosion and Uplift
+- [ ] Create `RasterModelGrid` with appropriate dimensions and spacing
+- [ ] Initialize `topographic__elevation` field (flat + noise, or load DEM)
+- [ ] Set boundary conditions (open one edge as outlet, close others)
+- [ ] Create `FlowAccumulator` with chosen flow director (D8 or MFD)
+- [ ] Create `StreamPowerEroder` with erosion coefficient K_sp
+- [ ] Create `LinearDiffuser` for hillslope processes
+- [ ] Define time step `dt` and total runtime; choose uplift rate
+- [ ] Run time loop: flow routing, erosion, diffusion, then uplift
+- [ ] Save snapshots at intervals with `write_netcdf()` or `write_esri_ascii()`
+- [ ] Visualize final topography with `grid.imshow()`
+- [ ] Analyze drainage area and channel profiles
+- [ ] Extract river long profiles for steepness analysis
+
+## Common Issues
+
+| Issue | Solution |
+|-------|----------|
+| Flat areas block flow | Add small random noise to initial topography |
+| Boundary effects | Ensure at least one open boundary edge for drainage |
+| Unstable erosion | Reduce `dt` or `K_sp`; check Courant condition |
+| Wrong field name | Use exact Landlab names: `'topographic__elevation'`, `'drainage_area'` |
+| Memory with large grids | Reduce grid resolution or use `NetworkModelGrid` for channels only |
 
 ## Tips
 

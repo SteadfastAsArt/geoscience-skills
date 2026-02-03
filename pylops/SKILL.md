@@ -7,6 +7,11 @@ description: |
   processing transforms (FFT, convolution, derivatives), (4) Compose operators for
   complex workflows, (5) Perform regularized inversion with smoothness or sparsity
   constraints, (6) Process seismic or image data at scale.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [Linear Operators, Inverse Problems, Deconvolution, Signal Processing]
+dependencies: [pylops>=2.0.0, numpy, scipy]
 ---
 
 # PyLops - Linear Operators Library
@@ -121,6 +126,37 @@ x_tv = pylops.optimization.sparsity.splitbregman(
     niter_inner=5, niter_outer=10, mu=1.0, epsRL1s=[0.1]
 )[0].reshape(ny, nx)
 ```
+
+## When to Use vs Alternatives
+
+| Scenario | Recommendation |
+|----------|---------------|
+| Matrix-free linear operators for large inverse problems | **PyLops** - purpose-built, memory efficient |
+| Sparse matrix operations with known structure | **scipy.sparse** - standard, well-documented |
+| Simple convolution/deconvolution | **PyLops** - clean API with `Convolve1D` |
+| Custom operators for small problems | **Custom NumPy/SciPy** - no extra dependency |
+| GPU-accelerated linear algebra | **PyLops** - pass CuPy arrays for automatic GPU |
+| Seismic deconvolution or imaging operators | **PyLops** - rich signal processing operator library |
+
+**Choose PyLops when**: You need matrix-free linear operators that scale to large problems
+without forming explicit matrices. Its operator algebra (`@`, `VStack`, `BlockDiag`) and
+built-in solvers (LSQR, FISTA, Split Bregman) make inverse problem workflows concise.
+
+**Avoid PyLops when**: Your problem is small enough for explicit matrices (use NumPy/SciPy),
+or you need nonlinear operators (PyLops is strictly linear).
+
+## Common Workflows
+
+### Regularized seismic deconvolution
+
+- [ ] Define wavelet array and create `Convolve1D` operator
+- [ ] Generate or load seismic trace data
+- [ ] Run dot test to verify operator adjoint: `pylops.utils.dottest()`
+- [ ] Set up regularization operator (e.g., `SecondDerivative` for smoothness)
+- [ ] Run `RegularizedInversion(C, [Reg], data, epsRs=[eps])`
+- [ ] Compare estimated reflectivity against true (if available)
+- [ ] Tune `epsRs` parameter: higher = smoother, lower = sharper
+- [ ] For sparse solutions, use `pylops.optimization.sparsity.fista()` instead
 
 ## Tips
 

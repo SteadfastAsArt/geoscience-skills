@@ -7,6 +7,11 @@ description: |
   origin information, (4) Handle multi-frame or multi-file DLIS, (5) Convert DLIS
   to LAS or DataFrame, (6) Work with RP66 format well logs, (7) Process array or
   image log data.
+version: 1.0.0
+author: Geoscience Skills
+license: MIT
+tags: [Well Logs, DLIS, RP66, Data I/O]
+dependencies: [dlisio>=0.3.0]
 ---
 
 # dlisio - DLIS/LIS File Reader
@@ -129,6 +134,38 @@ except Exception as e:
 | Multi-frame | Yes | No |
 | Array data | Yes | Limited |
 | Metadata | Rich | Basic |
+
+## When to Use vs Alternatives
+
+| Tool | Best For |
+|------|----------|
+| **dlisio** | Reading DLIS/RP66 binary files, multi-frame data, image logs |
+| **lasio** | LAS (ASCII) well log files, simpler format, widely supported |
+| **welly** | Higher-level well data management, curve processing, projects |
+
+**Use dlisio when** your data is in DLIS (RP66) format. DLIS files are common
+from modern logging tools and contain multi-frame, array, and image data that
+LAS cannot represent.
+
+**Use lasio instead** when your data is in LAS format. LAS is ASCII-based,
+simpler, and more widely supported. Convert DLIS to LAS when downstream
+tools require it.
+
+**Use welly instead** when you need well-level data management with curve
+processing, formation tops, and multi-well projects after initial file loading.
+
+## Common Workflows
+
+### Read and convert DLIS to DataFrame
+```
+- [ ] Load file with `dlisio.dlis.load()`, handle encoding if needed
+- [ ] List logical files and frames to understand file structure
+- [ ] Inspect channels: names, units, dimensions per frame
+- [ ] Extract curves from target frame with `frame.curves()`
+- [ ] Handle array/image channels separately (ndim > 1)
+- [ ] Convert scalar curves to DataFrame with `pd.DataFrame(curves)`
+- [ ] Export to CSV or convert to LAS format
+```
 
 ## References
 
