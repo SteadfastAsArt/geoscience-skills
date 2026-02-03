@@ -12,6 +12,8 @@ author: Geoscience Skills
 license: MIT
 tags: [Geophysical Inversion, ERT, Seismic Refraction, IP, Near-Surface, FEM]
 dependencies: [pygimli>=1.4.0, numpy, matplotlib]
+complements: [simpeg, verde, pyvista]
+workflow_role: modelling
 ---
 
 # pyGIMLi - Geophysical Inversion

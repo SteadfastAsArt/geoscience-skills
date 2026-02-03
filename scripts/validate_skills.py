@@ -16,7 +16,12 @@ MIN_TAGS = 7
 # Directories that are not skills
 SKIP_DIRS = {
     ".claude-plugin", ".git", ".github", "docs", "scripts",
-    "node_modules", "__pycache__",
+    "node_modules", "__pycache__", "workflows", "agents",
+}
+
+# Valid workflow roles for optional frontmatter field
+VALID_WORKFLOW_ROLES = {
+    "data-loading", "processing", "analysis", "modelling", "visualization",
 }
 
 
@@ -88,6 +93,17 @@ def validate_skill(skill_dir):
     if "when to use" not in text.lower():
         issues.append(("WARN", "Missing 'When to use vs alternatives' section"))
 
+    # Optional frontmatter: workflow_role
+    workflow_role = fm.get("workflow_role")
+    if workflow_role is not None and workflow_role not in VALID_WORKFLOW_ROLES:
+        issues.append(("WARN", f"Invalid workflow_role '{workflow_role}' (allowed: {sorted(VALID_WORKFLOW_ROLES)})"))
+
+    # Optional frontmatter: complements
+    complements = fm.get("complements")
+    if complements is not None:
+        if not isinstance(complements, list):
+            issues.append(("WARN", "complements should be a list"))
+
     return issues
 
 
@@ -110,8 +126,16 @@ def validate_marketplace(root, skill_names):
         if skill not in plugin_names:
             issues.append(("ERROR", f"Skill '{skill}' not in marketplace.json plugins"))
 
+    # Check plugins exist as either top-level skills or workflow subdirectories
+    workflow_dir = root / "workflows"
+    workflow_names = set()
+    if workflow_dir.is_dir():
+        for d in workflow_dir.iterdir():
+            if d.is_dir() and (d / "SKILL.md").exists():
+                workflow_names.add(d.name)
+
     for plugin in plugin_names:
-        if plugin not in skill_names:
+        if plugin not in skill_names and plugin not in workflow_names:
             issues.append(("WARN", f"Plugin '{plugin}' in marketplace.json but no skill directory found"))
 
     return issues
@@ -145,8 +169,19 @@ def main():
         else:
             print(f"  PASS  {skill_dir.name}")
 
-    # Marketplace validation
+    # Cross-validate complements references
     skill_names = {d.name for d in skill_dirs}
+    for skill_dir in skill_dirs:
+        text = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
+        fm = parse_frontmatter(text)
+        if fm and "complements" in fm and isinstance(fm["complements"], list):
+            for comp in fm["complements"]:
+                if comp not in skill_names:
+                    total_warnings += 1
+                    print(f"  WARN  {skill_dir.name}")
+                    print(f"        WARN: complements entry '{comp}' is not a known skill")
+
+    # Marketplace validation
     mp_issues = validate_marketplace(root, skill_names)
     mp_errors = [i for i in mp_issues if i[0] == "ERROR"]
     mp_warnings = [i for i in mp_issues if i[0] == "WARN"]

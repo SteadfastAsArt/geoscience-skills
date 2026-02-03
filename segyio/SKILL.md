@@ -11,6 +11,8 @@ author: Geoscience Skills
 license: MIT
 tags: [Seismic, SEG-Y, Data I/O, Traces, Headers, Segyio, Inlines, Crosslines]
 dependencies: [segyio>=1.9.0, numpy]
+complements: [obspy, bruges, pyvista]
+workflow_role: data-loading
 ---
 
 # segyio - SEG-Y Seismic Data

@@ -18,14 +18,21 @@
 
 ### In Progress
 - GitHub Actions CI for skill validation
-- Enriched tag metadata for better discoverability
 
 ### Planned
 - npm CLI installer (`npx geoscience-skills install <skill>`)
 - Automated skill quality scoring
 - Integration testing with sample data files
 
+### Future Workflows & Agents
+- Hydrogeological workflow (pastas + well logs)
+- Near-surface geophysics workflow (GPR + ERT + MT)
+- Climate data analysis workflow (xarray + verde)
+- Cross-validation agent for model quality assessment
+
 ### Completed
+- v2.2.0: Added workflow skills, agents, slash commands, and SessionStart hook
+- v2.2.0: Enriched all 29 skill frontmatter with complements and workflow_role fields
 - v2.0.0: Standardized all 29 skills to Anthropic skill format
 - v2.0.0: Added YAML frontmatter with 7 required fields
 - v2.0.0: Added workflow checklists and "when to use vs alternatives" sections

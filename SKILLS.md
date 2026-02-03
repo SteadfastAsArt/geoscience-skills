@@ -97,6 +97,15 @@ Detailed list of all 29 geoscience skills with GitHub stars and descriptions.
 |-------|-------|-------------|
 | [pooch](pooch/) | 714 | Data file fetching and caching |
 
+### Workflow Skills
+| Skill | Description |
+|-------|-------------|
+| [seismic-interpretation](workflows/seismic-interpretation/) | SEG-Y → signal processing → rock physics → visualization |
+| [well-log-evaluation](workflows/well-log-evaluation/) | LAS/DLIS → QC → petrophysics → lithology → visualization |
+| [geological-modelling](workflows/geological-modelling/) | GIS data → implicit modelling → 3D visualization |
+| [geophysical-inversion](workflows/geophysical-inversion/) | Survey data → mesh → inversion → gridding → visualization |
+| [rock-physics-avo](workflows/rock-physics-avo/) | Well logs → elastic properties → AVO → fluid substitution |
+
 ---
 
 ## Skills by Star Count

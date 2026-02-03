@@ -12,6 +12,8 @@ author: Geoscience Skills
 license: MIT
 tags: [GPR, Ground-Penetrating Radar, Near-Surface, Signal Processing, GPRPy, Geophysics, Depth Conversion, Radargram]
 dependencies: [gprpy>=1.0.0, numpy, matplotlib, scipy]
+complements: [pyvista]
+workflow_role: data-loading
 ---
 
 # GPRPy - Ground Penetrating Radar Processing

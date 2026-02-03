@@ -13,6 +13,8 @@ author: Geoscience Skills
 license: MIT
 tags: [Data Download, Caching, Reproducibility, File Management, Pooch, Checksum, Data Registry, Scientific Data]
 dependencies: [pooch>=1.7.0]
+complements: [xarray]
+workflow_role: data-loading
 ---
 
 # Pooch - Data File Fetching

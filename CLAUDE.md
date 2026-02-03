@@ -43,6 +43,19 @@ skill-name/
     └── example.py        # Utility script
 ```
 
+### Workflow and Agent Architecture
+
+The library includes additional infrastructure beyond domain skills:
+
+- **`workflows/`** — Workflow skills that chain multiple domain skills together
+  - `workflows/SKILL.md` — Meta-skill for skill discovery and routing (loaded at session start)
+  - `workflows/<name>/SKILL.md` — 5 multi-step workflow skills
+- **`agents/`** — Agent specifications for specialized roles
+  - `agents/data-qc-reviewer.md` — Data QC specialist
+  - `agents/geoscience-mentor.md` — Skill selection guide
+- **`.claude/commands/`** — 5 slash commands for quick workflow access
+- **`.claude/settings.json`** — SessionStart hook to load the meta-skill
+
 ## Skill Quality Standards
 
 ### YAML Frontmatter Requirements
@@ -61,6 +74,13 @@ license: MIT
 tags: [Domain, Library Name, Key Concept]
 dependencies: [package>=1.0.0]
 ---
+```
+
+Optional fields for skill composition:
+
+```yaml
+complements: [welly, petropy, striplog]   # Skills that chain with this one
+workflow_role: data-loading               # One of: data-loading, processing, analysis, modelling, visualization
 ```
 
 ### Content Quality Standards
@@ -133,6 +153,10 @@ CI runs `scripts/validate_skills.py` on every push and PR via GitHub Actions. Se
 - **.claude-plugin/marketplace.json** - Plugin marketplace registration (with category groupings)
 - **.github/workflows/validate-skills.yml** - CI validation for skill quality
 - **scripts/validate_skills.py** - Local validation script
+- **workflows/SKILL.md** - Meta-skill: discovery and routing (loaded via SessionStart hook)
+- **agents/** - Agent specifications (data-qc-reviewer, geoscience-mentor)
+- **.claude/settings.json** - SessionStart hook configuration
+- **.claude/commands/** - Slash commands for workflow access
 
 ## Conventions
 

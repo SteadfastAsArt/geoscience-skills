@@ -13,6 +13,8 @@ author: Geoscience Skills
 license: MIT
 tags: [Geophysical Inversion, DC Resistivity, Magnetics, Gravity, EM, Forward Modelling]
 dependencies: [simpeg>=0.20.0, discretize, numpy]
+complements: [pygimli, verde, pyvista]
+workflow_role: modelling
 ---
 
 # SimPEG - Geophysical Simulation & Inversion

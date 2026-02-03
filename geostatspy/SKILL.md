@@ -11,6 +11,8 @@ author: Geoscience Skills
 license: MIT
 tags: [Geostatistics, Variogram, Kriging, SGSIM, GSLIB, Spatial Estimation]
 dependencies: [geostatspy>=0.0.40, numpy, pandas, matplotlib]
+complements: [verde, scikit-gstat]
+workflow_role: analysis
 ---
 
 # GeostatsPy - Geostatistical Analysis

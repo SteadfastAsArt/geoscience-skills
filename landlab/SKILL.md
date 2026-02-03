@@ -12,6 +12,8 @@ author: Geoscience Skills
 license: MIT
 tags: [Landscape Evolution, Geomorphology, Erosion, Surface Processes, Flow Routing]
 dependencies: [landlab>=2.6.0, numpy, matplotlib]
+complements: [pyvista]
+workflow_role: analysis
 ---
 
 # Landlab - Surface Process Modelling

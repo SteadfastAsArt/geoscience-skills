@@ -12,6 +12,8 @@ author: Geoscience Skills
 license: MIT
 tags: [Linear Operators, Inverse Problems, Deconvolution, Signal Processing]
 dependencies: [pylops>=2.0.0, numpy, scipy]
+complements: [devito, simpeg, segyio]
+workflow_role: modelling
 ---
 
 # PyLops - Linear Operators Library

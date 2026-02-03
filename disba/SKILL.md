@@ -12,6 +12,8 @@ author: Geoscience Skills
 license: MIT
 tags: [Surface Waves, Dispersion, Rayleigh, Love, Seismology, Disba, Phase Velocity, Group Velocity]
 dependencies: [disba>=0.5.0, numpy, numba]
+complements: [obspy, segyio]
+workflow_role: analysis
 ---
 
 # disba - Surface Wave Dispersion

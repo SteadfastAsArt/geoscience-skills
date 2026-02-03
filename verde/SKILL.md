@@ -13,6 +13,8 @@ author: Geoscience Skills
 license: MIT
 tags: [Gridding, Interpolation, Spatial Analysis, Fatiando, Cross-Validation, Verde, Spline, Block Reduction]
 dependencies: [verde>=1.8.0, numpy, scipy]
+complements: [harmonica, geostatspy, scikit-gstat, pyvista]
+workflow_role: analysis
 ---
 
 # Verde - Spatial Data Gridding

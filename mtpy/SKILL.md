@@ -12,6 +12,8 @@ author: Geoscience Skills
 license: MIT
 tags: [Magnetotellurics, MT, EDI, Impedance Tensor, EM, Geophysics]
 dependencies: [mtpy>=2.0.0, numpy, matplotlib]
+complements: [simpeg, pyvista]
+workflow_role: analysis
 ---
 
 # mtpy - Magnetotelluric Analysis

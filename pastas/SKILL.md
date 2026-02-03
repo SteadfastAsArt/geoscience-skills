@@ -12,6 +12,8 @@ author: Geoscience Skills
 license: MIT
 tags: [Groundwater, Hydrology, Time Series, Transfer Function, Well Response]
 dependencies: [pastas>=1.0.0, pandas, scipy]
+complements: [xarray]
+workflow_role: analysis
 ---
 
 # Pastas - Groundwater Time Series Analysis

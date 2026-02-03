@@ -12,6 +12,8 @@ author: Geoscience Skills
 license: MIT
 tags: [Geochemistry, REE, Spider Diagram, TAS, Compositional Data]
 dependencies: [pyrolite>=0.3.0, pandas, matplotlib]
+complements: []
+workflow_role: visualization
 ---
 
 # pyrolite - Geochemistry Analysis

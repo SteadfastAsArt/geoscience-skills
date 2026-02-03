@@ -12,6 +12,8 @@ author: Geoscience Skills
 license: MIT
 tags: [3D Visualization, VTK, Mesh, Geological Models, Point Clouds]
 dependencies: [pyvista>=0.42.0, numpy, vtk]
+complements: [gempy, simpeg, verde, segyio, xarray]
+workflow_role: visualization
 ---
 
 # PyVista - 3D Visualization

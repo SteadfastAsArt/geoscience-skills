@@ -12,6 +12,8 @@ author: Geoscience Skills
 license: MIT
 tags: [Structural Geology, Stereonet, Orientation Data, Matplotlib, Visualization]
 dependencies: [mplstereonet>=0.6, matplotlib, numpy]
+complements: []
+workflow_role: visualization
 ---
 
 # mplstereonet - Stereonets for Matplotlib

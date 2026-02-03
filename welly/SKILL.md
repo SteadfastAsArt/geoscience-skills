@@ -12,6 +12,8 @@ author: Geoscience Skills
 license: MIT
 tags: [Well Logs, Petrophysics, Data Analysis, Multi-Well, Welly, LAS, Formation Tops, Curve Processing]
 dependencies: [welly>=0.5.0, lasio]
+complements: [lasio, dlisio, petropy, striplog, pyvista]
+workflow_role: processing
 ---
 
 # welly - Well Data Analysis

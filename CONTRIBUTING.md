@@ -148,6 +148,30 @@ All 7 fields are required:
 - Cover advanced topics, detailed API docs, or edge cases
 - Link from SKILL.md: `**[Topic](references/topic.md)** - Description`
 
+## Workflow Skills
+
+Workflow skills chain multiple domain skills into end-to-end pipelines. They live in `workflows/<name>/SKILL.md` and use extended frontmatter:
+
+```yaml
+skill_type: workflow
+complements: [skill1, skill2]
+workflow_role: processing
+```
+
+When adding workflow skills:
+- Include a skill chain diagram showing the progression
+- Add decision points for choosing between alternative libraries
+- Provide step-by-step orchestration with code examples from each domain skill
+- Include common pipeline checklists
+
+## Agent Specifications
+
+Agent specs live in `agents/<name>.md` and define specialized roles. Include:
+- YAML frontmatter with `name` and `description`
+- Role description
+- Domain-specific checks or guidance
+- Output format specification
+
 ## Getting Help
 
 - Open an [issue](https://github.com/SteadfastAsArt/geoscience-skills/issues)

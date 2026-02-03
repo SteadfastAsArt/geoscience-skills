@@ -13,6 +13,8 @@ author: Geoscience Skills
 license: MIT
 tags: [PDE Solver, Wave Propagation, Seismic Modelling, FWI, RTM, Finite Difference]
 dependencies: [devito>=4.8.0, numpy]
+complements: [pylops, simpeg, segyio]
+workflow_role: modelling
 ---
 
 # Devito - Symbolic PDE Solver

@@ -1,6 +1,6 @@
 {
   "name": "geoscience-skills",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "29 geoscience skills for AI coding assistants covering seismic, well logs, geological modelling, geophysical inversion, geostatistics, and more.",
   "author": "Geoscience Skills",
   "license": "MIT",
@@ -65,6 +65,10 @@
     {
       "name": "Visualization",
       "skills": ["pyvista"]
+    },
+    {
+      "name": "Workflows",
+      "skills": ["seismic-interpretation", "well-log-evaluation", "geological-modelling", "geophysical-inversion", "rock-physics-avo"]
     }
   ],
   "plugins": [
@@ -212,6 +216,31 @@
       "name": "pooch",
       "source": "./pooch",
       "description": "Data file fetching and caching. Download with checksum verification, archive extraction, data registries. Use for reproducible data downloads."
+    },
+    {
+      "name": "seismic-interpretation",
+      "source": "./workflows/seismic-interpretation",
+      "description": "End-to-end seismic interpretation workflow from SEG-Y loading through signal processing, rock physics, and visualization."
+    },
+    {
+      "name": "well-log-evaluation",
+      "source": "./workflows/well-log-evaluation",
+      "description": "Complete well log evaluation workflow from LAS/DLIS loading through QC, petrophysical analysis, lithology, and visualization."
+    },
+    {
+      "name": "geological-modelling",
+      "source": "./workflows/geological-modelling",
+      "description": "3D geological modelling workflow from spatial data preparation through implicit surface modelling and 3D visualization."
+    },
+    {
+      "name": "geophysical-inversion",
+      "source": "./workflows/geophysical-inversion",
+      "description": "Geophysical data inversion workflow from data loading through mesh creation, inversion, and result visualization."
+    },
+    {
+      "name": "rock-physics-avo",
+      "source": "./workflows/rock-physics-avo",
+      "description": "Rock physics and AVO analysis workflow from well log preparation through elastic properties, fluid substitution, and synthetics."
     }
   ]
 }

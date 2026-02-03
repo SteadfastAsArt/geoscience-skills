@@ -12,6 +12,8 @@ author: Geoscience Skills
 license: MIT
 tags: [Well Logs, LAS, Petrophysics, Data I/O, Lasio, CWLS, Wireline, Borehole]
 dependencies: [lasio>=0.30]
+complements: [welly, petropy, striplog]
+workflow_role: data-loading
 ---
 
 # lasio - LAS Well Log Files

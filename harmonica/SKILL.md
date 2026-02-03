@@ -12,6 +12,8 @@ author: Geoscience Skills
 license: MIT
 tags: [Gravity, Magnetics, Potential Fields, Forward Modelling, Fatiando]
 dependencies: [harmonica>=0.6.0, numpy, verde]
+complements: [verde, pyvista]
+workflow_role: analysis
 ---
 
 # Harmonica - Gravity and Magnetics

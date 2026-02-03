@@ -13,6 +13,8 @@ author: Geoscience Skills
 license: MIT
 tags: [Geological Modelling, 3D, Implicit Surfaces, Faults, Structural Geology]
 dependencies: [gempy>=2.3.0, numpy, pyvista]
+complements: [gemgis, loopstructural, pyvista]
+workflow_role: modelling
 ---
 
 # GemPy - 3D Geological Modelling

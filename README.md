@@ -109,6 +109,15 @@ Visualization            → pyvista
 
 ### Slash Commands
 ```
+/seismic-workflow   → Seismic data analysis pipeline
+/well-analysis      → Well log evaluation pipeline
+/model-3d           → 3D geological modelling pipeline
+/inversion-workflow → Geophysical inversion pipeline
+/spatial-gridding   → Spatial data gridding pipeline
+```
+
+### Domain Skills
+```
 /obspy      → Seismology workflows
 /lasio      → LAS file operations
 /gempy      → 3D geological modelling
@@ -132,6 +141,27 @@ Just describe what you need:
 | Domains Covered | 17 |
 | Combined GitHub Stars | 18,000+ |
 | File Formats Supported | SEG-Y, LAS, DLIS, NetCDF, HDF5, Zarr, GRIB, VTK |
+
+---
+
+## 🔄 Workflow Skills
+
+Multi-step workflows that chain domain skills together:
+
+| Workflow | Skills Used | Use Case |
+|----------|------------|----------|
+| Seismic Interpretation | segyio → obspy → bruges → pyvista | Seismic data analysis |
+| Well Log Evaluation | lasio/dlisio → welly → petropy → striplog | Formation evaluation |
+| Geological Modelling | gemgis → gempy/loopstructural → pyvista | 3D model building |
+| Geophysical Inversion | simpeg/pygimli → verde → pyvista | ERT, magnetics, gravity |
+| Rock Physics & AVO | lasio/welly → bruges → segyio | AVO feasibility studies |
+
+## 🤖 Agents
+
+| Agent | Role |
+|-------|------|
+| data-qc-reviewer | Check well log, seismic, and spatial data quality |
+| geoscience-mentor | Guide skill and workflow selection |
 
 ---
 

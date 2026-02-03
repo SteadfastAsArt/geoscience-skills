@@ -13,6 +13,8 @@ author: Geoscience Skills
 license: MIT
 tags: [Seismology, Waveforms, FDSN, Earthquake, Time Series, ObsPy, MiniSEED, Signal Processing]
 dependencies: [obspy>=1.4.0]
+complements: [segyio, disba]
+workflow_role: processing
 ---
 
 # ObsPy - Seismology Data Processing

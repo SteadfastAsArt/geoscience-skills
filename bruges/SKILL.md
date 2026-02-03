@@ -11,6 +11,8 @@ author: Geoscience Skills
 license: MIT
 tags: [Rock Physics, AVO, Gassmann, Wavelets, Seismic Modelling]
 dependencies: [bruges>=0.5.0, numpy, scipy]
+complements: [segyio, obspy, lasio, welly]
+workflow_role: analysis
 ---
 
 # bruges - Geophysics Equations

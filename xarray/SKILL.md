@@ -13,6 +13,8 @@ author: Geoscience Skills
 license: MIT
 tags: [NetCDF, Climate Data, Multi-Dimensional Arrays, Dask, Zarr, Geoscience]
 dependencies: [xarray>=2023.0, numpy, pandas, netcdf4]
+complements: [verde, pyvista, pooch]
+workflow_role: data-loading
 ---
 
 # xarray - Multi-Dimensional Geoscience Data

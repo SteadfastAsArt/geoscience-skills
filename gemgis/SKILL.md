@@ -12,6 +12,8 @@ author: Geoscience Skills
 license: MIT
 tags: [GIS, Geospatial, Data Preparation, DEM, Geological Modelling]
 dependencies: [gemgis>=1.0.0, geopandas, rasterio]
+complements: [gempy, loopstructural, pyvista]
+workflow_role: processing
 ---
 
 # GemGIS - Geospatial Data for Geological Modelling

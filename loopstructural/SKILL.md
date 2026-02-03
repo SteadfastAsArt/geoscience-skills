@@ -12,6 +12,8 @@ author: Geoscience Skills
 license: MIT
 tags: [Geological Modelling, 3D, Faults, Folds, Structural Geology]
 dependencies: [LoopStructural>=1.5.0, numpy, pandas]
+complements: [gemgis, gempy, pyvista]
+workflow_role: modelling
 ---
 
 # LoopStructural - 3D Geological Modelling

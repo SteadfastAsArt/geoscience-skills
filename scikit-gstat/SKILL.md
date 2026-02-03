@@ -13,6 +13,8 @@ author: Geoscience Skills
 license: MIT
 tags: [Geostatistics, Variogram, Kriging, Scikit-Learn, Spatial Statistics, Scikit-Gstat, Interpolation, Directional Analysis]
 dependencies: [scikit-gstat>=1.0.0, numpy, scipy, scikit-learn]
+complements: [verde, geostatspy]
+workflow_role: analysis
 ---
 
 # SciKit-GStat - Geostatistics
