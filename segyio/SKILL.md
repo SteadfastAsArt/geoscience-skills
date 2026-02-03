@@ -9,7 +9,7 @@ description: |
 version: 1.0.0
 author: Geoscience Skills
 license: MIT
-tags: [Seismic, SEG-Y, Data I/O, Traces, Headers]
+tags: [Seismic, SEG-Y, Data I/O, Traces, Headers, Segyio, Inlines, Crosslines]
 dependencies: [segyio>=1.9.0, numpy]
 ---
 

@@ -1,10 +1,72 @@
 {
   "name": "geoscience-skills",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "29 geoscience skills for AI coding assistants covering seismic, well logs, geological modelling, geophysical inversion, geostatistics, and more.",
   "author": "Geoscience Skills",
   "license": "MIT",
   "repository": "https://github.com/SteadfastAsArt/geoscience-skills",
+  "categories": [
+    {
+      "name": "Seismic & Seismology",
+      "skills": ["obspy", "segyio", "disba"]
+    },
+    {
+      "name": "Well Log Analysis",
+      "skills": ["lasio", "welly", "dlisio", "striplog", "petropy"]
+    },
+    {
+      "name": "Geological Modelling",
+      "skills": ["gempy", "loopstructural", "gemgis"]
+    },
+    {
+      "name": "Geophysical Simulation & Inversion",
+      "skills": ["simpeg", "devito", "pylops", "pygimli"]
+    },
+    {
+      "name": "Potential Fields",
+      "skills": ["harmonica"]
+    },
+    {
+      "name": "Rock Physics",
+      "skills": ["bruges"]
+    },
+    {
+      "name": "Spatial Analysis & Geostatistics",
+      "skills": ["verde", "geostatspy", "scikit-gstat"]
+    },
+    {
+      "name": "Hydrology",
+      "skills": ["pastas"]
+    },
+    {
+      "name": "Surface Processes",
+      "skills": ["landlab"]
+    },
+    {
+      "name": "Structural Geology",
+      "skills": ["mplstereonet"]
+    },
+    {
+      "name": "Geochemistry",
+      "skills": ["pyrolite"]
+    },
+    {
+      "name": "Ground-Penetrating Radar",
+      "skills": ["gprpy"]
+    },
+    {
+      "name": "Magnetotellurics",
+      "skills": ["mtpy"]
+    },
+    {
+      "name": "Scientific Data Formats",
+      "skills": ["xarray"]
+    },
+    {
+      "name": "Visualization",
+      "skills": ["pyvista"]
+    }
+  ],
   "plugins": [
     {
       "name": "obspy",

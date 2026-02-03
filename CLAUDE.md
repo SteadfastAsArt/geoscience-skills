@@ -104,6 +104,9 @@ Based on Anthropic official best practices:
 ### Quality Validation
 
 ```bash
+# Run full validation suite
+python3 scripts/validate_skills.py
+
 # Check YAML frontmatter
 head -20 skill-name/SKILL.md
 
@@ -117,13 +120,19 @@ python3 -c "import yaml; yaml.safe_load(open('skill-name/SKILL.md').read().split
 grep -A 1 '```' skill-name/SKILL.md | head -20
 ```
 
+CI runs `scripts/validate_skills.py` on every push and PR via GitHub Actions. See [CONTRIBUTING.md](CONTRIBUTING.md) for full contribution guidelines.
+
 ## Key Files
 
 - **README.md** - Project overview and installation guide
 - **SKILLS.md** - Complete skill reference with categories and stars
 - **CLAUDE.md** - This file: repo guidance for AI agents
+- **CONTRIBUTING.md** - How to add or improve skills (quality checklist, tag conventions)
 - **docs/SKILL_TEMPLATE.md** - Template for creating new skills
-- **.claude-plugin/marketplace.json** - Plugin marketplace registration
+- **docs/ROADMAP.md** - Planned skills and infrastructure improvements
+- **.claude-plugin/marketplace.json** - Plugin marketplace registration (with category groupings)
+- **.github/workflows/validate-skills.yml** - CI validation for skill quality
+- **scripts/validate_skills.py** - Local validation script
 
 ## Conventions
 

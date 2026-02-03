@@ -137,12 +137,14 @@ Just describe what you need:
 
 ## 🤝 Contributing
 
-PRs welcome! To add a skill:
+PRs welcome! See **[CONTRIBUTING.md](CONTRIBUTING.md)** for the full guide, including:
 
-1. Create `skill-name/SKILL.md` with YAML frontmatter
-2. Include installation, core concepts, and workflow examples
-3. Update [SKILLS.md](SKILLS.md)
-4. Submit PR
+- Step-by-step instructions for adding a new skill
+- YAML frontmatter requirements (all 7 fields)
+- Quality checklist and tag conventions
+- Automated validation with `python3 scripts/validate_skills.py`
+
+See **[docs/ROADMAP.md](docs/ROADMAP.md)** for planned skills and infrastructure improvements.
 
 ---
 

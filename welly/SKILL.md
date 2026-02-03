@@ -10,7 +10,7 @@ description: |
 version: 1.0.0
 author: Geoscience Skills
 license: MIT
-tags: [Well Logs, Petrophysics, Data Analysis, Multi-Well]
+tags: [Well Logs, Petrophysics, Data Analysis, Multi-Well, Welly, LAS, Formation Tops, Curve Processing]
 dependencies: [welly>=0.5.0, lasio]
 ---
 

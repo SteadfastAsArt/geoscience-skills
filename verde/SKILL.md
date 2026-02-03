@@ -11,7 +11,7 @@ description: |
 version: 1.0.0
 author: Geoscience Skills
 license: MIT
-tags: [Gridding, Interpolation, Spatial Analysis, Fatiando, Cross-Validation]
+tags: [Gridding, Interpolation, Spatial Analysis, Fatiando, Cross-Validation, Verde, Spline, Block Reduction]
 dependencies: [verde>=1.8.0, numpy, scipy]
 ---
 

@@ -11,7 +11,7 @@ description: |
 version: 1.0.0
 author: Geoscience Skills
 license: MIT
-tags: [Seismology, Waveforms, FDSN, Earthquake, Time Series]
+tags: [Seismology, Waveforms, FDSN, Earthquake, Time Series, ObsPy, MiniSEED, Signal Processing]
 dependencies: [obspy>=1.4.0]
 ---
 

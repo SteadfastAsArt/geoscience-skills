@@ -11,7 +11,7 @@ description: |
 version: 1.0.0
 author: Geoscience Skills
 license: MIT
-tags: [Data Download, Caching, Reproducibility, File Management]
+tags: [Data Download, Caching, Reproducibility, File Management, Pooch, Checksum, Data Registry, Scientific Data]
 dependencies: [pooch>=1.7.0]
 ---
 

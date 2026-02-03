@@ -10,7 +10,7 @@ description: |
 version: 1.0.0
 author: Geoscience Skills
 license: MIT
-tags: [Well Logs, DLIS, RP66, Data I/O]
+tags: [Well Logs, DLIS, RP66, Data I/O, Dlisio, Petrophysics, LIS, Wireline]
 dependencies: [dlisio>=0.3.0]
 ---
 

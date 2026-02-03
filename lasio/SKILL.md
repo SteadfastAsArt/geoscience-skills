@@ -10,7 +10,7 @@ description: |
 version: 1.0.0
 author: Geoscience Skills
 license: MIT
-tags: [Well Logs, LAS, Petrophysics, Data I/O]
+tags: [Well Logs, LAS, Petrophysics, Data I/O, Lasio, CWLS, Wireline, Borehole]
 dependencies: [lasio>=0.30]
 ---
 

@@ -11,7 +11,7 @@ description: |
 version: 1.0.0
 author: Geoscience Skills
 license: MIT
-tags: [Petrophysics, Formation Evaluation, Water Saturation, Porosity]
+tags: [Petrophysics, Formation Evaluation, Water Saturation, Porosity, PetroPy, Well Logs, Permeability, Archie]
 dependencies: [petropy>=0.1.6, lasio, numpy]
 ---
 

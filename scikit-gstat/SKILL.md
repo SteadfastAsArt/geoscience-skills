@@ -11,7 +11,7 @@ description: |
 version: 1.0.0
 author: Geoscience Skills
 license: MIT
-tags: [Geostatistics, Variogram, Kriging, Scikit-Learn, Spatial Statistics]
+tags: [Geostatistics, Variogram, Kriging, Scikit-Learn, Spatial Statistics, Scikit-Gstat, Interpolation, Directional Analysis]
 dependencies: [scikit-gstat>=1.0.0, numpy, scipy, scikit-learn]
 ---
 

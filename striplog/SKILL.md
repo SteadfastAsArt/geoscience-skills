@@ -10,7 +10,7 @@ description: |
 version: 1.0.0
 author: Geoscience Skills
 license: MIT
-tags: [Lithology, Stratigraphy, Well Correlation, Visualization]
+tags: [Lithology, Stratigraphy, Well Correlation, Visualization, Well Logs, Striplog, Net-to-Gross, Sedimentology]
 dependencies: [striplog>=0.9.0, matplotlib]
 ---
 
