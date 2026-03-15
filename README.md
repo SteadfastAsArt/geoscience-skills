@@ -39,7 +39,33 @@
 
 ## 📦 Installation
 
-### Option 1: Clone Repository
+### Option 1: npx skills (recommended)
+
+```bash
+# Install all skills to all detected agents
+npx skills add SteadfastAsArt/geoscience-skills
+
+# Install specific skills only
+npx skills add SteadfastAsArt/geoscience-skills -s obspy -s gnnwr -s verde
+
+# Install globally (all projects)
+npx skills add SteadfastAsArt/geoscience-skills -g
+
+# Target a specific agent
+npx skills add SteadfastAsArt/geoscience-skills -a claude-code
+npx skills add SteadfastAsArt/geoscience-skills -a cursor
+```
+
+Manage installed skills:
+
+```bash
+npx skills list       # List installed skills
+npx skills check      # Check for updates
+npx skills update     # Update to latest versions
+```
+
+### Option 2: Manual install
+
 ```bash
 git clone https://github.com/SteadfastAsArt/geoscience-skills.git
 
@@ -48,11 +74,6 @@ cp -r geoscience-skills/* ~/.claude/skills/
 
 # For VS Code / GitHub Copilot
 cp -r geoscience-skills/* .github/skills/
-```
-
-### Option 2: OpenSkills
-```bash
-npx openskills install geoscience-skills
 ```
 
 ### Python Dependencies
