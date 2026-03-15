@@ -2,7 +2,7 @@
 
 **AI-powered geoscience assistant capabilities for Claude Code, Cursor, Windsurf, GitHub Copilot, and any agent supporting the [Agent Skills spec](https://github.com/anthropics/skills).**
 
-[![Skills](https://img.shields.io/badge/Skills-29-blue)](SKILLS.md)
+[![Skills](https://img.shields.io/badge/Skills-30-blue)](SKILLS.md)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
@@ -39,7 +39,33 @@
 
 ## 📦 Installation
 
-### Option 1: Clone Repository
+### Option 1: npx skills (recommended)
+
+```bash
+# Install all skills to all detected agents
+npx skills add SteadfastAsArt/geoscience-skills
+
+# Install specific skills only
+npx skills add SteadfastAsArt/geoscience-skills -s obspy -s gnnwr -s verde
+
+# Install globally (all projects)
+npx skills add SteadfastAsArt/geoscience-skills -g
+
+# Target a specific agent
+npx skills add SteadfastAsArt/geoscience-skills -a claude-code
+npx skills add SteadfastAsArt/geoscience-skills -a cursor
+```
+
+Manage installed skills:
+
+```bash
+npx skills list       # List installed skills
+npx skills check      # Check for updates
+npx skills update     # Update to latest versions
+```
+
+### Option 2: Manual install
+
 ```bash
 git clone https://github.com/SteadfastAsArt/geoscience-skills.git
 
@@ -48,11 +74,6 @@ cp -r geoscience-skills/* ~/.claude/skills/
 
 # For VS Code / GitHub Copilot
 cp -r geoscience-skills/* .github/skills/
-```
-
-### Option 2: OpenSkills
-```bash
-npx openskills install geoscience-skills
 ```
 
 ### Python Dependencies
@@ -68,7 +89,7 @@ pip install obspy segyio lasio welly gempy simpeg verde xarray pyvista pooch
 
 ---
 
-## 🧠 29 Integrated Skills
+## 🧠 30 Integrated Skills
 
 ### By Popularity (GitHub Stars)
 
@@ -91,7 +112,7 @@ Well Logs & Petrophysics → lasio, welly, dlisio, striplog, petropy
 Geophysical Inversion    → simpeg, devito, pylops, pygimli
 Potential Fields         → harmonica
 Rock Physics             → bruges
-Geostatistics            → verde, geostatspy, scikit-gstat
+Geostatistics            → verde, geostatspy, scikit-gstat, gnnwr
 Hydrology                → pastas
 Surface Processes        → landlab
 Structural Geology       → mplstereonet
@@ -137,7 +158,7 @@ Just describe what you need:
 
 | Metric | Value |
 |--------|-------|
-| Total Skills | 29 |
+| Total Skills | 30 |
 | Domains Covered | 17 |
 | Combined GitHub Stars | 18,000+ |
 | File Formats Supported | SEG-Y, LAS, DLIS, NetCDF, HDF5, Zarr, GRIB, VTK |

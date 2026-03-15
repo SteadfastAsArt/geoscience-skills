@@ -31,6 +31,7 @@
 - Cross-validation agent for model quality assessment
 
 ### Completed
+- v2.3.0: Added GNNWR spatial regression skill (30th skill) to Spatial Analysis & Geostatistics category
 - v2.2.0: Added workflow skills, agents, slash commands, and SessionStart hook
 - v2.2.0: Enriched all 29 skill frontmatter with complements and workflow_role fields
 - v2.0.0: Standardized all 29 skills to Anthropic skill format

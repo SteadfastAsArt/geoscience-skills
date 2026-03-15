@@ -1,7 +1,7 @@
 {
   "name": "geoscience-skills",
-  "version": "2.2.0",
-  "description": "29 geoscience skills for AI coding assistants covering seismic, well logs, geological modelling, geophysical inversion, geostatistics, and more.",
+  "version": "2.3.0",
+  "description": "30 geoscience skills for AI coding assistants covering seismic, well logs, geological modelling, geophysical inversion, geostatistics, spatial regression, and more.",
   "author": "Geoscience Skills",
   "license": "MIT",
   "repository": "https://github.com/SteadfastAsArt/geoscience-skills",
@@ -32,7 +32,7 @@
     },
     {
       "name": "Spatial Analysis & Geostatistics",
-      "skills": ["verde", "geostatspy", "scikit-gstat"]
+      "skills": ["verde", "geostatspy", "scikit-gstat", "gnnwr"]
     },
     {
       "name": "Hydrology",
@@ -216,6 +216,11 @@
       "name": "pooch",
       "source": "./pooch",
       "description": "Data file fetching and caching. Download with checksum verification, archive extraction, data registries. Use for reproducible data downloads."
+    },
+    {
+      "name": "gnnwr",
+      "source": "./gnnwr",
+      "description": "Geographically Neural Network Weighted Regression. Spatially varying coefficient regression, GTNNWR for spatiotemporal data, KNN mode for large datasets. Use for spatial non-stationarity analysis and coefficient mapping."
     },
     {
       "name": "seismic-interpretation",

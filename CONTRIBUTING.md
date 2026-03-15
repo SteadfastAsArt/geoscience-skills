@@ -64,6 +64,9 @@ See [docs/SKILL_TEMPLATE.md](docs/SKILL_TEMPLATE.md) for a complete template.
 Update these files:
 
 - **SKILLS.md** - Add to the appropriate category table and star-count ranking
+- **README.md** - Update skill count badge, domain listing, and coverage table
+- **CLAUDE.md** - Update skill count and directory structure listing
+- **workflows/SKILL.md** - Add to domain routing table and skill listing
 - **.claude-plugin/marketplace.json** - Add entry to `plugins[]` array and to the appropriate `categories[]` group
 
 ### 4. Validate
@@ -109,6 +112,8 @@ All 7 fields are required:
 - [ ] All code blocks have language tags
 - [ ] Tags array has 7+ entries
 - [ ] Skill registered in SKILLS.md
+- [ ] Skill count updated in README.md, CLAUDE.md, workflows/SKILL.md
+- [ ] Skill added to domain routing table in workflows/SKILL.md
 - [ ] Skill registered in .claude-plugin/marketplace.json (plugins + categories)
 - [ ] python3 scripts/validate_skills.py passes
 ```
