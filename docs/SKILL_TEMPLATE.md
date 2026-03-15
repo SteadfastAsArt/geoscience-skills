@@ -7,7 +7,7 @@ description: |
 version: 1.0.0
 author: Geoscience Skills
 license: MIT
-tags: [Domain, Library Name, Key Concept, Method]
+tags: [Domain, Library Name, Key Concept, Method, Format, Application, Technique]
 dependencies: [package>=1.0.0]
 ---
 

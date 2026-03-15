@@ -1,6 +1,6 @@
 {
   "name": "geoscience-skills",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "30 geoscience skills for AI coding assistants covering seismic, well logs, geological modelling, geophysical inversion, geostatistics, spatial regression, and more.",
   "author": "Geoscience Skills",
   "license": "MIT",
