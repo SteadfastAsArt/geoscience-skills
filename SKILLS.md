@@ -1,6 +1,6 @@
 # Complete Skills Reference
 
-Detailed list of all 29 geoscience skills with GitHub stars and descriptions.
+Detailed list of all 30 geoscience skills with GitHub stars and descriptions.
 
 ## Skills by Category
 
@@ -51,6 +51,7 @@ Detailed list of all 29 geoscience skills with GitHub stars and descriptions.
 | [verde](verde/) | 648 | Spatial data gridding and interpolation (ML-style API) |
 | [geostatspy](geostatspy/) | 554 | Geostatistics, variograms, kriging (GSLIB-style) |
 | [scikit-gstat](scikit-gstat/) | 246 | Geostatistics with scikit-learn style API |
+| [gnnwr](gnnwr/) | 100+ | Geographically Neural Network Weighted Regression (spatially varying coefficients) |
 
 ### Hydrology
 | Skill | Stars | Description |
@@ -131,7 +132,7 @@ Detailed list of all 29 geoscience skills with GitHub stars and descriptions.
 # Full installation (all skills)
 pip install obspy segyio disba lasio welly dlisio striplog petropy \
     gempy LoopStructural gemgis simpeg devito pylops pygimli \
-    harmonica bruges verde geostatspy scikit-gstat pastas landlab \
+    harmonica bruges verde geostatspy scikit-gstat gnnwr pastas landlab \
     mplstereonet pyrolite gprpy mtpy xarray netcdf4 pyvista pooch
 ```
 
@@ -154,7 +155,7 @@ pip install simpeg devito pylops pygimli
 pip install harmonica bruges
 
 # Geostatistics & Spatial
-pip install verde geostatspy scikit-gstat
+pip install verde geostatspy scikit-gstat gnnwr
 
 # Climate & Ocean Data
 pip install xarray netcdf4 h5netcdf dask

@@ -43,6 +43,7 @@ Match user intent keywords to the appropriate domain skill.
 | gridding, interpolation, spatial, Verde | `verde` | Spatial Analysis |
 | variogram, kriging, GSLIB, geostatistics | `geostatspy` | Geostatistics |
 | variogram fitting, scikit-learn style geostat | `scikit-gstat` | Geostatistics |
+| spatial regression, GWR, GNNWR, non-stationarity, coefficient mapping | `gnnwr` | Spatial Regression |
 | groundwater, time series, pumping test | `pastas` | Hydrology |
 | landscape, erosion, surface processes, DEM | `landlab` | Surface Processes |
 | stereonet, strike, dip, poles, structural | `mplstereonet` | Structural Geology |
@@ -72,7 +73,7 @@ Workflow skills chain multiple domain skills into end-to-end pipelines.
 | `data-qc-reviewer` | Automated data quality checks across formats | "QC my data", "check data quality" |
 | `geoscience-mentor` | Guided explanations of geoscience concepts and methods | "explain", "teach me", "what is" |
 
-## All 29 Domain Skills by Category
+## All 30 Domain Skills by Category
 
 ### Seismic and Seismology
 - `segyio` -- SEG-Y file I/O, trace and header access
@@ -105,6 +106,7 @@ Workflow skills chain multiple domain skills into end-to-end pipelines.
 - `verde` -- spatial gridding and interpolation
 - `geostatspy` -- variograms, kriging (GSLIB-style)
 - `scikit-gstat` -- geostatistics with scikit-learn API
+- `gnnwr` -- geographically weighted neural network regression
 
 ### Hydrology and Surface Processes
 - `pastas` -- groundwater time series modelling

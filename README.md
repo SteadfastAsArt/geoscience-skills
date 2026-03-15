@@ -2,7 +2,7 @@
 
 **AI-powered geoscience assistant capabilities for Claude Code, Cursor, Windsurf, GitHub Copilot, and any agent supporting the [Agent Skills spec](https://github.com/anthropics/skills).**
 
-[![Skills](https://img.shields.io/badge/Skills-29-blue)](SKILLS.md)
+[![Skills](https://img.shields.io/badge/Skills-30-blue)](SKILLS.md)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
@@ -68,7 +68,7 @@ pip install obspy segyio lasio welly gempy simpeg verde xarray pyvista pooch
 
 ---
 
-## 🧠 29 Integrated Skills
+## 🧠 30 Integrated Skills
 
 ### By Popularity (GitHub Stars)
 
@@ -91,7 +91,7 @@ Well Logs & Petrophysics → lasio, welly, dlisio, striplog, petropy
 Geophysical Inversion    → simpeg, devito, pylops, pygimli
 Potential Fields         → harmonica
 Rock Physics             → bruges
-Geostatistics            → verde, geostatspy, scikit-gstat
+Geostatistics            → verde, geostatspy, scikit-gstat, gnnwr
 Hydrology                → pastas
 Surface Processes        → landlab
 Structural Geology       → mplstereonet
@@ -137,7 +137,7 @@ Just describe what you need:
 
 | Metric | Value |
 |--------|-------|
-| Total Skills | 29 |
+| Total Skills | 30 |
 | Domains Covered | 17 |
 | Combined GitHub Stars | 18,000+ |
 | File Formats Supported | SEG-Y, LAS, DLIS, NetCDF, HDF5, Zarr, GRIB, VTK |

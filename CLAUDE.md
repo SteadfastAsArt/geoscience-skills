@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Geoscience Skills Library** - A comprehensive open-source library of 29 geoscience skills for AI coding assistants. Each skill provides expert-level guidance for Python geoscience libraries, covering seismic processing, well log analysis, geological modelling, geophysical inversion, geostatistics, and more.
+**Geoscience Skills Library** - A comprehensive open-source library of 30 geoscience skills for AI coding assistants. Each skill provides expert-level guidance for Python geoscience libraries, covering seismic processing, well log analysis, geological modelling, geophysical inversion, geostatistics, and more.
 
 **Mission**: Enable AI coding agents to assist geoscientists with domain-specific Python workflows, from data loading to interpretation and visualization.
 
 ## Repository Architecture
 
-### Directory Structure (29 Skills Across 17 Domains)
+### Directory Structure (30 Skills Across 17 Domains)
 
 Skills are organized by Python library name in a flat directory structure:
 
@@ -20,7 +20,7 @@ Skills are organized by Python library name in a flat directory structure:
 - **Geophysical Inversion**: `simpeg/`, `devito/`, `pylops/`, `pygimli/`
 - **Potential Fields**: `harmonica/`
 - **Rock Physics**: `bruges/`
-- **Geostatistics & Spatial**: `verde/`, `geostatspy/`, `scikit-gstat/`
+- **Geostatistics & Spatial**: `verde/`, `geostatspy/`, `scikit-gstat/`, `gnnwr/`
 - **Hydrology**: `pastas/`
 - **Surface Processes**: `landlab/`
 - **Structural Geology**: `mplstereonet/`
