@@ -1,6 +1,6 @@
 # 🌍 Geoscience Skills
 
-**AI-powered geoscience assistant capabilities for Claude Code, Cursor, Windsurf, GitHub Copilot, and any agent supporting the [Agent Skills spec](https://github.com/anthropics/skills).**
+**AI-powered geoscience assistant capabilities for Claude Code, OpenClaw, NanoClaw, Cursor, Windsurf, GitHub Copilot, and any agent supporting the [Agent Skills spec](https://github.com/anthropics/skills).**
 
 [![Skills](https://img.shields.io/badge/Skills-30-blue)](SKILLS.md)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -75,6 +75,60 @@ cp -r geoscience-skills/* ~/.claude/skills/
 # For VS Code / GitHub Copilot
 cp -r geoscience-skills/* .github/skills/
 ```
+
+### Option 3: OpenClaw / NanoClaw
+
+**Initial install** — clone the repo and copy skills into your workspace:
+
+```bash
+git clone https://github.com/SteadfastAsArt/geoscience-skills.git
+cp -r geoscience-skills/segyio geoscience-skills/obspy geoscience-skills/lasio \
+      geoscience-skills/welly geoscience-skills/gempy geoscience-skills/simpeg \
+      geoscience-skills/verde geoscience-skills/xarray geoscience-skills/pyvista \
+      <your-workspace>/skills/
+
+# Or copy all 30 domain skills at once
+for d in geoscience-skills/*/; do
+  name=$(basename "$d")
+  [[ "$name" == "workflows" || "$name" == "agents" || "$name" == "docs" \
+     || "$name" == "scripts" || "$name" == ".claude"* ]] && continue
+  cp -r "$d" <your-workspace>/skills/
+done
+```
+
+**Sync (update to latest):**
+
+```bash
+cd geoscience-skills
+git pull
+cp -r segyio obspy lasio welly gempy simpeg verde xarray pyvista \
+      <your-workspace>/skills/
+```
+
+**Selective install** — pick only the domains you need:
+
+```bash
+# Seismic only
+cp -r geoscience-skills/segyio geoscience-skills/obspy geoscience-skills/disba \
+      <your-workspace>/skills/
+
+# Well log only
+cp -r geoscience-skills/lasio geoscience-skills/welly geoscience-skills/dlisio \
+      geoscience-skills/petropy geoscience-skills/striplog <your-workspace>/skills/
+```
+
+**Using git submodule** (keeps skills auto-updatable):
+
+```bash
+cd <your-workspace>
+git submodule add https://github.com/SteadfastAsArt/geoscience-skills.git geoscience-skills
+# Then reference skills from geoscience-skills/ directly, or copy as above
+
+# Update later:
+git submodule update --remote geoscience-skills
+```
+
+> The `openclaw.plugin.json` at the repo root registers all 35 skills (30 domain + 5 workflow) for the OpenClaw plugin system.
 
 ### Python Dependencies
 ```bash
