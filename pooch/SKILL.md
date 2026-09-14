@@ -3,18 +3,20 @@ name: pooch
 description: |
   Data file fetching and caching for geoscience applications. Download sample
   datasets with automatic caching, checksum verification, and multiple download
-  sources. Use when Claude needs to: (1) Download datasets from URLs or DOIs,
+  sources. Use when the agent needs to: (1) Download datasets from URLs or DOIs,
   (2) Cache files locally with automatic verification, (3) Verify file integrity
   with SHA256/MD5 hashes, (4) Extract compressed archives (ZIP, TAR, GZIP),
   (5) Create data registries for reproducible workflows, (6) Fetch from Zenodo
   or other repositories.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [Data Download, Caching, Reproducibility, File Management, Pooch, Checksum, Data Registry, Scientific Data]
-dependencies: [pooch>=1.7.0]
-complements: [xarray]
-workflow_role: data-loading
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["Data Download", "Caching", "Reproducibility", "File Management", "Pooch", "Checksum", "Data Registry", "Scientific Data"]'
+  dependencies: '["pooch>=1.7.0"]'
+  complements: '["xarray"]'
+  workflow_role: data-loading
+  skill_type: domain
 ---
 
 # Pooch - Data File Fetching

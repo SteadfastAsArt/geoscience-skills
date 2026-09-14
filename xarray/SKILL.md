@@ -3,18 +3,20 @@ name: xarray
 description: |
   N-dimensional labeled arrays for geoscience data. Read/write NetCDF, work with
   climate and oceanographic datasets, perform multi-dimensional analysis with
-  labeled coordinates. Use when Claude needs to: (1) Read/write NetCDF or Zarr
+  labeled coordinates. Use when the agent needs to: (1) Read/write NetCDF or Zarr
   files, (2) Work with multidimensional arrays with labeled dimensions, (3)
   Analyze climate, ocean, or atmosphere data, (4) Compute temporal aggregations
   (daily/monthly/annual means), (5) Perform area-weighted statistics, (6)
   Process large datasets with Dask, (7) Apply CF conventions to scientific data.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [NetCDF, Climate Data, Multi-Dimensional Arrays, Dask, Zarr, Geoscience]
-dependencies: [xarray>=2023.0, numpy, pandas, netcdf4]
-complements: [verde, pyvista, pooch]
-workflow_role: data-loading
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["NetCDF", "Climate Data", "Multi-Dimensional Arrays", "Dask", "Zarr", "Geoscience"]'
+  dependencies: '["xarray>=2023.0", "numpy", "pandas", "netcdf4"]'
+  complements: '["verde", "pyvista", "pooch"]'
+  workflow_role: data-loading
+  skill_type: domain
 ---
 
 # xarray - Multi-Dimensional Geoscience Data

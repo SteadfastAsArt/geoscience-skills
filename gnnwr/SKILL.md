@@ -2,19 +2,21 @@
 name: gnnwr
 description: |
   Spatial and spatiotemporal regression with GNNWR (Geographically Neural Network
-  Weighted Regression). Use when Claude needs to: (1) Build spatially varying coefficient
+  Weighted Regression). Use when the agent needs to: (1) Build spatially varying coefficient
   regression models, (2) Analyze geographic non-stationarity in spatial data,
   (3) Generate spatial coefficient maps for publication, (4) Run spatiotemporal
   regression with GTNNWR, (5) Scale geographically weighted regression to large
   datasets (N > 10k) with KNN mode, (6) Diagnose spatial model performance with
   F-tests, AIC, and residual maps.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [Spatial Regression, GNNWR, GTNNWR, GWR, Non-Stationarity, Coefficient Mapping, Spatial Analysis, Geographic Weighting]
-dependencies: [gnnwr>=0.1.0, pandas, torch]
-complements: [verde, geostatspy, scikit-gstat, pyvista, xarray]
-workflow_role: analysis
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["Spatial Regression", "GNNWR", "GTNNWR", "GWR", "Non-Stationarity", "Coefficient Mapping", "Spatial Analysis", "Geographic Weighting"]'
+  dependencies: '["gnnwr>=0.1.0", "pandas", "torch"]'
+  complements: '["verde", "geostatspy", "scikit-gstat", "pyvista", "xarray"]'
+  workflow_role: analysis
+  skill_type: domain
 ---
 
 # GNNWR - Geographically Neural Network Weighted Regression

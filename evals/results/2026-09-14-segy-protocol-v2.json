@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "protocol_version": "2",
+  "recorded_at": "2026-09-14T05:34:08.328142+00:00",
+  "evaluation_mode": "explicit-file",
+  "selection_tested": true,
+  "native_activation_tested": false,
+  "scope": "explicit skill-library selection on synthetic tasks; not native discovery",
+  "runtime": {
+    "python": "3.11.14",
+    "libraries": {
+      "lasio": "0.32",
+      "segyio": "1.9.14",
+      "numpy": "1.26.4"
+    }
+  },
+  "results": [
+    {
+      "agent": "codex",
+      "task": "segy-subset",
+      "configured_model": "gpt-5.5",
+      "seed": 20260914,
+      "protocol_version": "2",
+      "prompt_sha256": "92b45e83f9425d930d2e68b569263db21b81e8cc8d539d4a93e8679f646fb6f8",
+      "input_sha256": "d5513ae514d2256d34720a416ff199cb93cd3955b11a658fe447be10b6357ad7",
+      "skill_catalog_sha256": "c9f4147abe8f02b262fe0772881dbf3704daf10fd2c09c501dad1921284f9458",
+      "command": [
+        "codex",
+        "exec",
+        "--json",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "--sandbox",
+        "workspace-write",
+        "-c",
+        "approval_policy=\"never\"",
+        "-c",
+        "features.multi_agent=false",
+        "-"
+      ],
+      "isolation": "bubblewrap-allowlist",
+      "limits": {
+        "timeout_seconds": 300.0,
+        "budget_usd": null
+      },
+      "expected_skill": "segyio",
+      "status": "passed",
+      "reason": null,
+      "observed_skill_reads": [
+        "segyio"
+      ],
+      "tool_commands": [
+        {
+          "tool": "command_execution",
+          "sha256": "d5f0b4567ca168e2f4045fd9839a9d718c409af8671b5a03e62d9d4200eb02ba",
+          "command": "ls"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "d3a15c663f49ade1c8a069f9b7306248dea01d0af7a802120bb7cba0c3fbe746",
+          "command": "cat skill-catalog.json"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "e722cce82ea79d22613871849caa17efce48c0d3a119251b4143ee6aa775e217"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "3dd0f6466fa97246d9d90d674251163c1ab57ec51e809fa8afc418e3585a444b"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "2af83110422b87235badf5e50e07617a2430473431f9bb02caa5713e430a6b5c",
+          "command": "cat TASK.md"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "4ff45f1063c1d79778c70e24d59f4fb4f59f9a3d6d871f2af3c51b7799980b18",
+          "command": "cat skills/segyio/SKILL.md"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "cf70f75b1a226dcec9813434947a7bb6543f720464504ad08e83eb83f4cf5048",
+          "command": "sed -n 1,240p skills/segyio/scripts/extract_subset.py"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "bd41a788b393fd6b9f6a80c25302b6b0726d3909a58f736ef16afee7f4586445",
+          "command": "sed -n 1,220p skills/segyio/scripts/inspect_segy.py"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "44d50a195e7bb37e62b4ea8a276e0dfc6631507d33d8aa255d6bce0c09d7cecd",
+          "command": "sed -n 1,220p skills/segyio/references/header_fields.md"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "bb52a5c8775a1a0a3f5f5c690f2e86b6c850e0c3d22e92cb123d77eec0fe0832"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "0bca0132cef212a1caf86e2a62a75bbc7617f754de511f004474464c9dc77449"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "3c1215f891f279212b2ae760341480f8430ae73829722b859cc943b581e51dbf"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "c09604f7922111c674f3089791349ea783c4d4cc82fde47ad4cad9bec0a3c448"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "e09fdad85b875b6562b1726df9f65a32ae8a8a7f8d385ff2662e7785d83b36d9",
+          "command": "python solution.py"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "843a07cef18056f4bda7c32c83335eec54b7472d0d96d89446a9b891bd12b374"
+        }
+      ],
+      "skill_read_evidence": [
+        {
+          "skill": "segyio",
+          "tool": "command_execution",
+          "output_sha256": "7d46ac492f7e69f8f5f9ada98bd889701cbd2a37f3f871344c9f9efad6b5a2bb"
+        }
+      ],
+      "observed_models": [],
+      "exit_code": 0,
+      "numerical_checks": {
+        "passed": true,
+        "failures": [],
+        "output_sha256": "7d768a2b817400af806e4679b13225af809803225755ed111e2ed13a5745ce0a"
+      },
+      "claimed_skills": [
+        "segyio"
+      ],
+      "skill_selection_verified": true,
+      "skill_content_sha256": {
+        "segyio": "7d46ac492f7e69f8f5f9ada98bd889701cbd2a37f3f871344c9f9efad6b5a2bb"
+      },
+      "transcript_sha256": "667b2681f451a620136e0decdd10c185889e88e5e4501cd1bb68e849b5972273",
+      "artifacts": {
+        "solution.py": "fb5247e8f821db1a616315dab41baf836351906e015c5060ffbbc5eead906719",
+        "evidence.json": "c93824ed1b99cfb2304f2fe830dc1e4ab600e00cc0d303d8b4de3b8b5b0f9b04",
+        "subset.sgy": "7d768a2b817400af806e4679b13225af809803225755ed111e2ed13a5745ce0a"
+      },
+      "source_retained": true,
+      "source_replay_verified": false,
+      "duration_seconds": 153.847,
+      "cli_version": "0.154.0",
+      "prompt_artifact": "evals/results/prompts/v2-segy-subset.md",
+      "revision_of": "evals/results/2026-09-14.json#codex/segy-subset",
+      "token_usage": {
+        "input_tokens": 321738,
+        "cached_input_tokens": 293376,
+        "output_tokens": 6486
+      }
+    }
+  ]
+}

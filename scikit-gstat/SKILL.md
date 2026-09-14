@@ -2,19 +2,21 @@
 name: scikit-gstat
 description: |
   Geostatistical analysis with scikit-learn style API. Compute variograms, kriging
-  interpolation, and spatial correlation analysis. Use when Claude needs to: (1) Compute
+  interpolation, and spatial correlation analysis. Use when the agent needs to: (1) Compute
   experimental variograms from spatial data, (2) Fit variogram models (spherical,
   exponential, gaussian, matern), (3) Perform Ordinary or Universal Kriging interpolation,
   (4) Assess spatial anisotropy with directional variograms, (5) Cross-validate spatial
   models, (6) Analyze spatio-temporal data, (7) Export variogram parameters for other
   geostatistical software.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [Geostatistics, Variogram, Kriging, Scikit-Learn, Spatial Statistics, Scikit-Gstat, Interpolation, Directional Analysis]
-dependencies: [scikit-gstat>=1.0.0, numpy, scipy, scikit-learn]
-complements: [verde, geostatspy]
-workflow_role: analysis
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["Geostatistics", "Variogram", "Kriging", "Scikit-Learn", "Spatial Statistics", "Scikit-Gstat", "Interpolation", "Directional Analysis"]'
+  dependencies: '["scikit-gstat>=1.0.0", "numpy", "scipy", "scikit-learn"]'
+  complements: '["verde", "geostatspy"]'
+  workflow_role: analysis
+  skill_type: domain
 ---
 
 # SciKit-GStat - Geostatistics

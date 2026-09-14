@@ -1,8 +1,10 @@
 # 🌍 Geoscience Skills
 
-**AI-powered geoscience assistant capabilities for Claude Code, OpenClaw, NanoClaw, Cursor, Windsurf, GitHub Copilot, and any agent supporting the [Agent Skills spec](https://github.com/anthropics/skills).**
+**Portable geoscience skills for Codex, Claude Code, GitHub Copilot, Gemini CLI, Windsurf, OpenCode, Cline, Roo Code, OpenClaw, and other coding agents using the [Agent Skills format](https://agentskills.io/specification).**
 
-[![Skills](https://img.shields.io/badge/Skills-30-blue)](SKILLS.md)
+30 domain skills + 5 workflows + 1 discovery skill. The same skill files are shared across agents; platform commands, hooks, and subagents are optional. See the [compatibility matrix and verification scope](docs/COMPATIBILITY.md).
+
+[![Skills](https://img.shields.io/badge/Skills-36-blue)](SKILLS.md)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
@@ -39,111 +41,78 @@
 
 ## 📦 Installation
 
-### Option 1: npx skills (recommended)
+### Upstream skills CLI (recommended)
+
+Run from the project where you want to use the skills. The installer supports
+multiple coding agents and manages their destination directories.
 
 ```bash
-# Install all skills to all detected agents
-npx skills add SteadfastAsArt/geoscience-skills
+# Inspect all domain, workflow, and routing skills
+npx skills add SteadfastAsArt/geoscience-skills --full-depth --list
 
-# Install specific skills only
-npx skills add SteadfastAsArt/geoscience-skills -s obspy -s gnnwr -s verde
+# Select skills and target agents interactively
+npx skills add SteadfastAsArt/geoscience-skills --full-depth
 
-# Install globally (all projects)
-npx skills add SteadfastAsArt/geoscience-skills -g
+# Install a starting set for multiple agents
+npx skills add SteadfastAsArt/geoscience-skills --full-depth \
+  --skill using-geoscience-skills lasio segyio --agent codex claude-code
 
-# Target a specific agent
-npx skills add SteadfastAsArt/geoscience-skills -a claude-code
-npx skills add SteadfastAsArt/geoscience-skills -a cursor
+# Install the whole collection for one agent
+npx skills add SteadfastAsArt/geoscience-skills --full-depth \
+  --skill '*' --agent gemini-cli
+
+# Install a workflow and the domain skills needed for it
+npx skills add SteadfastAsArt/geoscience-skills --full-depth \
+  --skill well-log-evaluation lasio dlisio welly petropy striplog pyvista \
+  --agent github-copilot
 ```
 
-Manage installed skills:
+Keep `--full-depth` to include workflows nested under `workflows/`. Add `--global`
+for user scope; use `--copy` if you prefer copies to symlinks. Choosing a workflow
+does not automatically install its complementary skills or Python dependencies.
+Other targets include `windsurf`, `opencode`, `cline`, `roo`, and `openclaw`;
+consult the [upstream supported-agent list](https://github.com/vercel-labs/skills#supported-agents).
 
 ```bash
-npx skills list       # List installed skills
-npx skills check      # Check for updates
-npx skills update     # Update to latest versions
+npx skills list
+# Explicitly update installed skills when desired
+npx skills update
 ```
 
-### Option 2: Manual install
+### From a local checkout
 
 ```bash
 git clone https://github.com/SteadfastAsArt/geoscience-skills.git
-
-# For Claude Code
-cp -r geoscience-skills/* ~/.claude/skills/
-
-# For VS Code / GitHub Copilot
-cp -r geoscience-skills/* .github/skills/
+# Run this in your target project; replace the path with your checkout location.
+npx skills add /path/to/geoscience-skills --full-depth --agent codex
 ```
 
-### Option 3: OpenClaw / NanoClaw
+For manual installation, copy each selected **skill directory** to a directory
+supported by your agent. Preserve its `SKILL.md`, `references/`, and `scripts/`.
+For a workflow, copy `workflows/<name>/` as `<name>/` alongside the domain skills.
+Do not copy the whole repository into an agent's skill directory. Platform
+configuration and optional role guides are separate from skill installation.
+See [platform notes and the manual reading fallback](docs/COMPATIBILITY.md).
 
-**Initial install** — clone the repo and copy skills into your workspace:
+### Python dependencies
+
+Install the packages needed for your task in its Python environment. For example:
 
 ```bash
-git clone https://github.com/SteadfastAsArt/geoscience-skills.git
-cp -r geoscience-skills/segyio geoscience-skills/obspy geoscience-skills/lasio \
-      geoscience-skills/welly geoscience-skills/gempy geoscience-skills/simpeg \
-      geoscience-skills/verde geoscience-skills/xarray geoscience-skills/pyvista \
-      <your-workspace>/skills/
+# LAS inspection and conversion
+python -m pip install lasio pandas
 
-# Or copy all 30 domain skills at once
-for d in geoscience-skills/*/; do
-  name=$(basename "$d")
-  [[ "$name" == "workflows" || "$name" == "agents" || "$name" == "docs" \
-     || "$name" == "scripts" || "$name" == ".claude"* ]] && continue
-  cp -r "$d" <your-workspace>/skills/
-done
+# SEG-Y inspection and subsetting
+python -m pip install segyio numpy
 ```
 
-**Sync (update to latest):**
-
-```bash
-cd geoscience-skills
-git pull
-cp -r segyio obspy lasio welly gempy simpeg verde xarray pyvista \
-      <your-workspace>/skills/
-```
-
-**Selective install** — pick only the domains you need:
-
-```bash
-# Seismic only
-cp -r geoscience-skills/segyio geoscience-skills/obspy geoscience-skills/disba \
-      <your-workspace>/skills/
-
-# Well log only
-cp -r geoscience-skills/lasio geoscience-skills/welly geoscience-skills/dlisio \
-      geoscience-skills/petropy geoscience-skills/striplog <your-workspace>/skills/
-```
-
-**Using git submodule** (keeps skills auto-updatable):
-
-```bash
-cd <your-workspace>
-git submodule add https://github.com/SteadfastAsArt/geoscience-skills.git geoscience-skills
-# Then reference skills from geoscience-skills/ directly, or copy as above
-
-# Update later:
-git submodule update --remote geoscience-skills
-```
-
-> The `openclaw.plugin.json` at the repo root registers all 35 skills (30 domain + 5 workflow) for the OpenClaw plugin system.
-
-### Python Dependencies
-```bash
-# Core (most common)
-pip install obspy lasio xarray netcdf4 pyvista
-
-# Full installation
-pip install obspy segyio lasio welly gempy simpeg verde xarray pyvista pooch
-```
-
-> 📋 See [SKILLS.md](SKILLS.md) for domain-specific installation commands.
+Skill `metadata.dependencies` records library requirements; installing a skill
+does not install or validate those packages. See [SKILLS.md](SKILLS.md) for
+additional domain-specific package lists.
 
 ---
 
-## 🧠 30 Integrated Skills
+## 🧠 30 Domain Skills
 
 ### By Popularity (GitHub Stars)
 
@@ -182,29 +151,21 @@ Visualization            → pyvista
 
 ## 🔧 Usage
 
-### Slash Commands
-```
-/seismic-workflow   → Seismic data analysis pipeline
-/well-analysis      → Well log evaluation pipeline
-/model-3d           → 3D geological modelling pipeline
-/inversion-workflow → Geophysical inversion pipeline
-/spatial-gridding   → Spatial data gridding pipeline
-```
+Describe the task naturally, or select an installed skill using your agent's
+skill interface:
 
-### Domain Skills
-```
-/obspy      → Seismology workflows
-/lasio      → LAS file operations
-/gempy      → 3D geological modelling
-/xarray     → NetCDF and climate data
-/pyvista    → 3D visualization
-```
+- "Use lasio to inspect the headers and curves in this LAS file."
+- "Use well-log-evaluation to evaluate these logs."
+- "Use using-geoscience-skills to choose the tools for this task."
 
-### Natural Language
-Just describe what you need:
-- *"Process this miniseed file and remove instrument response"*
-- *"Create a Bouguer gravity anomaly map"*
-- *"Run ordinary kriging with a spherical variogram"*
+The router selects domain and workflow skills by name. Workflows can run within
+one agent session and do not require a particular delegation tool. Only the
+references and workflow stages needed for the task should be loaded.
+
+Claude Code users working in this checkout can also use the optional aliases
+in `.claude/commands/`: `/seismic-workflow`, `/well-analysis`, `/model-3d`,
+`/inversion-workflow`, and `/spatial-gridding`. These aliases and the local
+SessionStart hook are not installed by the generic skills CLI.
 
 ---
 
@@ -212,7 +173,7 @@ Just describe what you need:
 
 | Metric | Value |
 |--------|-------|
-| Total Skills | 30 |
+| Installable Skills | 36 (30 domain + 5 workflow + 1 router) |
 | Domains Covered | 17 |
 | Combined GitHub Stars | 18,000+ |
 | File Formats Supported | SEG-Y, LAS, DLIS, NetCDF, HDF5, Zarr, GRIB, VTK |
@@ -231,9 +192,19 @@ Multi-step workflows that chain domain skills together:
 | Geophysical Inversion | simpeg/pygimli → verde → pyvista | ERT, magnetics, gravity |
 | Rock Physics & AVO | lasio/welly → bruges → segyio | AVO feasibility studies |
 
-## 🤖 Agents
+The audited examples have separate [scientific regression checks](docs/SCIENTIFIC_TESTING.md)
+using generated LAS/SEG-Y files, elastic logs, geological/inversion models, and
+[published GNSS station data](docs/FIELD_DATA_VALIDATION.md). These check numerical
+outputs, coordinates and uncertainty assumptions. Recorded [Codex task evaluations](docs/AGENT_EVALUATIONS.md)
+also check skill selection and produced files; native automatic discovery and
+Claude runtime execution remain untested.
 
-| Agent | Role |
+## 🤖 Optional Role Guides
+
+The files in `agents/` provide optional role guidance. A generic skill installation
+does not register them as subagents; use them explicitly when available.
+
+| Guide | Role |
 |-------|------|
 | data-qc-reviewer | Check well log, seismic, and spatial data quality |
 | geoscience-mentor | Guide skill and workflow selection |
@@ -245,18 +216,21 @@ Multi-step workflows that chain domain skills together:
 PRs welcome! See **[CONTRIBUTING.md](CONTRIBUTING.md)** for the full guide, including:
 
 - Step-by-step instructions for adding a new skill
-- YAML frontmatter requirements (all 7 fields)
-- Quality checklist and tag conventions
-- Automated validation with `python3 scripts/validate_skills.py`
+- Portable frontmatter and project metadata conventions
+- Task boundaries, resource loading, and scientific validation guidance
+- Recursive skill validation, generated platform manifests, and installation smoke tests
 
 See **[docs/ROADMAP.md](docs/ROADMAP.md)** for planned skills and infrastructure improvements.
+
+[Dependency maintenance](docs/DEPENDENCY_MAINTENANCE.md) describes the weekly
+registry report and the checks required before adopting new library or installer versions.
 
 ---
 
 ## 📚 Resources
 
 - **Source**: [awesome-open-geoscience](https://github.com/softwareunderground/awesome-open-geoscience)
-- **Skills Spec**: [anthropics/skills](https://github.com/anthropics/skills)
+- **Skills Spec**: [Agent Skills specification](https://agentskills.io/specification)
 - **Community**: [Software Underground](https://softwareunderground.org/)
 
 ---
@@ -264,3 +238,6 @@ See **[docs/ROADMAP.md](docs/ROADMAP.md)** for planned skills and infrastructure
 ## 📄 License
 
 MIT © 2024
+
+The bundled [Alps GNSS data](tests/fixtures/field/alps_gps/ATTRIBUTION.md) retain
+their original CC BY 3.0 and curated-data CC BY 4.0 licenses and attribution.

@@ -3,20 +3,26 @@ name: welly
 description: |
   Subsurface well data analysis toolkit for loading, processing, and analyzing
   well logs, projects, and formation tops. Built on lasio with enhanced curve
-  processing. Use when Claude needs to: (1) Load wells from LAS files with
+  processing. Use when the agent needs to: (1) Load wells from LAS files with
   metadata, (2) Work with multi-well Projects, (3) Process curves (despike,
   smooth, resample, normalize), (4) Manage formation tops, (5) Export well
   data to DataFrame/LAS/CSV, (6) Perform cross-well analysis and QC.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [Well Logs, Petrophysics, Data Analysis, Multi-Well, Welly, LAS, Formation Tops, Curve Processing]
-dependencies: [welly>=0.5.0, lasio]
-complements: [lasio, dlisio, petropy, striplog, pyvista]
-workflow_role: processing
+metadata:
+  version: 1.0.2
+  author: Geoscience Skills
+  tags: '["Well Logs", "Petrophysics", "Data Analysis", "Multi-Well", "Welly", "LAS", "Formation Tops", "Curve Processing"]'
+  dependencies: '["welly>=0.5.0", "lasio", "setuptools<81"]'
+  complements: '["lasio", "dlisio", "petropy", "striplog", "pyvista"]'
+  workflow_role: processing
+  skill_type: domain
 ---
 
 # welly - Well Data Analysis
+
+The examples are checked with welly 0.5.2. This release imports
+`pkg_resources`, so its environment needs `setuptools<81`. The repository's
+scientific test requirements record the other tested dependency versions.
 
 ## Quick Reference
 
@@ -61,17 +67,28 @@ print(gr.start, gr.stop, gr.step)  # Depth range
 
 ### Process Curves
 ```python
+import numpy as np
+
 gr = w.data['GR']
 
 # Clean and filter
-gr_clean = gr.despike(window=5, z=2)
-gr_smooth = gr.smooth(window=11)
+gr_clean = gr.despike(window_length=5, z=2)
+gr_smooth = gr_clean.apply(window_length=11, func1d=np.nanmean)
+w.data['GR'] = gr_clean  # Use the cleaned curve in subsequent well exports.
 
-# Transform
-gr_norm = gr.normalize()         # 0-1 range
-gr_resampled = gr.resample(step=0.5)
-gr_clipped = gr.clip(top=1500, bottom=2000)
+# Optional dimensionless display array; retain GR's physical API units in w.
+values = gr_clean.as_numpy().ravel()
+finite = np.isfinite(values)
+gr_norm = np.full_like(values, np.nan, dtype=float)
+if finite.any() and np.ptp(values[finite]) > 0:
+    gr_norm[finite] = (values[finite] - values[finite].min()) / np.ptp(values[finite])
+gr_resampled = gr_clean.to_basis(step=0.5)
+gr_window = gr_clean.to_basis(start=1500, stop=1510)  # Outside support is NaN.
 ```
+
+See the [Curve API](https://code.agilescientific.com/welly/welly.html) for
+`despike`, `apply`, and `to_basis` parameters. Review filtering against thin beds
+before treating the processed curve as interpretation input.
 
 ### Work with Formation Tops
 ```python
@@ -148,7 +165,7 @@ malformed headers, or need fine control over LAS formatting.
 ## Common Workflows
 
 ### Load and QC a multi-well project
-```
+```text
 - [ ] Load wells with `Project.from_las('wells/*.las')`
 - [ ] Check well count and names: `len(p)`, iterate wells
 - [ ] Verify required curves exist in each well (`'GR' in w.data`)

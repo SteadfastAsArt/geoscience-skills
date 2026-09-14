@@ -2,18 +2,20 @@
 name: striplog
 description: |
   Create, visualize, and analyze lithological and stratigraphic logs for well
-  data. Use when Claude needs to: (1) Create lithology columns from depth intervals,
+  data. Use when the agent needs to: (1) Create lithology columns from depth intervals,
   (2) Parse geological descriptions into structured logs, (3) Visualize stratigraphic
   columns with patterns and colors, (4) Perform well-to-well correlations, (5) Extract
   statistics like net-to-gross ratios, (6) Define rock type lexicons and legends,
   (7) Export lithology data to CSV/LAS/JSON.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [Lithology, Stratigraphy, Well Correlation, Visualization, Well Logs, Striplog, Net-to-Gross, Sedimentology]
-dependencies: [striplog>=0.9.0, matplotlib]
-complements: [lasio, welly, petropy]
-workflow_role: visualization
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["Lithology", "Stratigraphy", "Well Correlation", "Visualization", "Well Logs", "Striplog", "Net-to-Gross", "Sedimentology"]'
+  dependencies: '["striplog>=0.9.0", "matplotlib"]'
+  complements: '["lasio", "welly", "petropy"]'
+  workflow_role: visualization
+  skill_type: domain
 ---
 
 # striplog - Lithological Logs
@@ -148,7 +150,7 @@ where you don't need interval querying or net-to-gross calculations.
 ## Common Workflows
 
 ### Create lithological log from CSV data
-```
+```text
 - [ ] Prepare CSV with columns: top, base, lithology (optionally color)
 - [ ] Load with `Striplog.from_csv('lithology.csv')`
 - [ ] Define Legend with colors and hatch patterns for each lithology

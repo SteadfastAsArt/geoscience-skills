@@ -4,7 +4,7 @@ AVO Analysis and Classification.
 
 Usage:
     python avo_analysis.py --vp1 3000 --vs1 1500 --rho1 2.4 --vp2 3500 --vs2 1800 --rho2 2.5
-    python avo_analysis.py --csv rock_properties.csv
+    python avo_analysis.py --vp1 3000 --vs1 1500 --rho1 2.4 --vp2 3500 --vs2 1800 --rho2 2.5 --no-plot
 """
 
 import argparse
@@ -22,9 +22,16 @@ class LayerProperties:
     vs: float   # S-wave velocity (m/s)
     rho: float  # Density (g/cc)
 
+    def __post_init__(self):
+        values = np.asarray([self.vp, self.vs, self.rho], dtype=float)
+        if values.shape != (3,) or not np.all(np.isfinite(values)) or np.any(values <= 0):
+            raise ValueError("Solid-layer Vp, Vs and density must be finite positive scalars")
+        if self.vp**2 <= (4.0 / 3.0) * self.vs**2:
+            raise ValueError("Solid-layer elastic bulk modulus must be positive")
+
     @property
     def impedance(self) -> float:
-        """Acoustic impedance."""
+        """Acoustic impedance in (m/s)*(g/cm3); multiply by 1000 for SI."""
         return self.vp * self.rho
 
     @property
@@ -52,13 +59,25 @@ def zoeppritz(layer1: LayerProperties, layer2: LayerProperties,
     Returns:
         Reflection coefficients (Rpp)
     """
+    theta = _validate_angles(theta)
     try:
         from bruges.reflection import zoeppritz as brg_zoeppritz
-        return brg_zoeppritz(layer1.vp, layer1.vs, layer1.rho,
-                            layer2.vp, layer2.vs, layer2.rho, theta)
-    except ImportError:
-        # Fallback to Shuey approximation
-        return shuey(layer1, layer2, theta)
+    except ImportError as error:
+        raise ImportError("Bruges is required for exact Zoeppritz reflectivity; "
+                          "install its dependencies in an isolated environment") from error
+    result = np.atleast_1d(brg_zoeppritz(layer1.vp, layer1.vs, layer1.rho,
+                                       layer2.vp, layer2.vs, layer2.rho, theta))
+    if not np.all(np.isfinite(result)):
+        raise ValueError("Zoeppritz produced nonfinite reflectivity for these inputs")
+    return result
+
+
+def _validate_angles(theta):
+    theta = np.atleast_1d(np.asarray(theta, dtype=float))
+    if (theta.ndim != 1 or not theta.size or not np.all(np.isfinite(theta))
+            or np.any(theta < 0) or np.any(theta >= 90)):
+        raise ValueError("Incidence angles must be finite and satisfy 0 <= angle < 90 degrees")
+    return theta
 
 
 def shuey(layer1: LayerProperties, layer2: LayerProperties,
@@ -74,7 +93,7 @@ def shuey(layer1: LayerProperties, layer2: LayerProperties,
     Returns:
         Reflection coefficients (Rpp)
     """
-    theta_rad = np.deg2rad(theta)
+    theta_rad = np.deg2rad(_validate_angles(theta))
 
     # Contrasts
     dvp = layer2.vp - layer1.vp
@@ -122,11 +141,14 @@ def calculate_intercept_gradient(layer1: LayerProperties,
 
 def classify_avo(intercept: float, gradient: float) -> str:
     """
-    Classify AVO response.
+    Heuristic Class I-IV screening using an illustrative intercept threshold.
 
     Returns:
-        AVO class (I, II, IIp, III, or IV)
+        AVO class or an unclassified label. IIp requires checking a polarity
+        reversal over the measured angle range and is not inferred here.
     """
+    if not np.isfinite(intercept) or not np.isfinite(gradient):
+        raise ValueError("AVO intercept and gradient must be finite")
     if intercept > 0.02:
         if gradient < 0:
             return "I"
@@ -136,7 +158,7 @@ def classify_avo(intercept: float, gradient: float) -> str:
         if gradient < 0:
             return "II"
         else:
-            return "IIp"
+            return "Unclassified (near-zero intercept, nonnegative gradient)"
     else:  # intercept < -0.02
         if gradient < 0:
             return "III"
@@ -158,7 +180,10 @@ def analyze_avo(layer1: LayerProperties, layer2: LayerProperties,
     Returns:
         Dictionary with analysis results
     """
-    theta = np.arange(0, theta_max + theta_step, theta_step)
+    _validate_angles([theta_max])
+    if not np.isscalar(theta_step) or not np.isfinite(theta_step) or theta_step <= 0:
+        raise ValueError("Angle step must be finite and positive")
+    theta = np.append(np.arange(0, theta_max, theta_step), theta_max)
 
     # Calculate reflectivity
     Rpp = zoeppritz(layer1, layer2, theta)
@@ -201,22 +226,29 @@ def print_report(results: dict) -> None:
           f"rho={layer2.rho:.2f} g/cc")
 
     print("\nDerived Properties:")
-    print(f"  Upper Zp: {layer1.impedance:.0f}")
-    print(f"  Lower Zp: {layer2.impedance:.0f}")
+    print(f"  Upper Zp: {layer1.impedance * 1000:.0f} kg/(m² s)")
+    print(f"  Lower Zp: {layer2.impedance * 1000:.0f} kg/(m² s)")
     print(f"  Impedance contrast: {results['impedance_contrast']:.4f}")
 
     print("\nAVO Attributes:")
     print(f"  Intercept (A): {results['intercept']:.4f}")
     print(f"  Gradient (B): {results['gradient']:.4f}")
-    print(f"  AVO Class: {results['avo_class']}")
+    print(f"  Heuristic AVO Class: {results['avo_class']}")
+    print("  Screening uses |intercept| = 0.02; interpret with polarity, "
+          "angle coverage and geology. IIp is not assigned automatically.")
 
     print("\nReflectivity at key angles:")
     theta = results["theta"]
     Rpp = results["Rpp"]
+    reported_indices = set()
     for angle in [0, 15, 30, 45]:
         if angle <= theta.max():
             idx = np.argmin(np.abs(theta - angle))
-            print(f"  R({angle:2d}deg): {Rpp[idx]:.4f}")
+            if idx not in reported_indices:
+                print(f"  R({theta[idx]:g} deg): {Rpp[idx]:.4f}")
+                reported_indices.add(idx)
+    if np.any(np.abs(np.imag(Rpp)) > 1e-10):
+        print("  Complex reflectivity retained; interpret both amplitude and phase.")
 
     print("=" * 60)
 
@@ -229,23 +261,21 @@ def plot_avo(results: dict, output_path: Optional[str] = None) -> None:
         results: Analysis results from analyze_avo
         output_path: If provided, save figure to this path
     """
-    try:
-        import matplotlib.pyplot as plt
-    except ImportError:
-        print("matplotlib not available for plotting")
-        return
+    import matplotlib.pyplot as plt
 
     theta = results["theta"]
     Rpp = results["Rpp"]
 
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    ax.plot(theta, Rpp, 'b-', linewidth=2, label='Zoeppritz')
+    ax.plot(theta, np.real(Rpp), 'b-', linewidth=2, label='Zoeppritz (real)')
+    if np.any(np.abs(np.imag(Rpp)) > 1e-10):
+        ax.plot(theta, np.imag(Rpp), 'g:', linewidth=2, label='Zoeppritz (imaginary)')
 
     # Add intercept + gradient line
     sin2 = np.sin(np.deg2rad(theta))**2
     Rpp_linear = results["intercept"] + results["gradient"] * sin2
-    ax.plot(theta, Rpp_linear, 'r--', linewidth=1.5, label='Linear approx.')
+    ax.plot(theta, Rpp_linear, 'r--', linewidth=1.5, label='Shuey two-term approximation')
 
     ax.axhline(y=0, color='k', linestyle='-', linewidth=0.5)
     ax.set_xlabel('Incidence Angle (degrees)', fontsize=12)
@@ -267,6 +297,8 @@ def plot_avo(results: dict, output_path: Optional[str] = None) -> None:
         print(f"Figure saved to: {output_path}")
     else:
         plt.show()
+    plt.close(fig)
+    return fig
 
 
 def main():
@@ -312,20 +344,18 @@ Examples:
 
     args = parser.parse_args()
 
-    # Create layer objects
-    layer1 = LayerProperties(vp=args.vp1, vs=args.vs1, rho=args.rho1)
-    layer2 = LayerProperties(vp=args.vp2, vs=args.vs2, rho=args.rho2)
-
-    # Run analysis
-    results = analyze_avo(layer1, layer2, theta_max=args.theta_max)
-
-    # Print report
-    print_report(results)
-
-    # Plot if requested
-    if not args.no_plot:
-        plot_avo(results, output_path=args.plot)
+    try:
+        layer1 = LayerProperties(vp=args.vp1, vs=args.vs1, rho=args.rho1)
+        layer2 = LayerProperties(vp=args.vp2, vs=args.vs2, rho=args.rho2)
+        results = analyze_avo(layer1, layer2, theta_max=args.theta_max)
+        print_report(results)
+        if args.plot or not args.no_plot:
+            plot_avo(results, output_path=args.plot)
+    except (ValueError, ImportError, OSError, np.linalg.LinAlgError) as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

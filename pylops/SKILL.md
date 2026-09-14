@@ -2,18 +2,20 @@
 name: pylops
 description: |
   Linear operators for large-scale inverse problems with matrix-free representations.
-  Use when Claude needs to: (1) Define linear operators for forward/adjoint operations,
+  Use when the agent needs to: (1) Define linear operators for forward/adjoint operations,
   (2) Solve inverse problems (deconvolution, imaging, tomography), (3) Apply signal
   processing transforms (FFT, convolution, derivatives), (4) Compose operators for
   complex workflows, (5) Perform regularized inversion with smoothness or sparsity
   constraints, (6) Process seismic or image data at scale.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [Linear Operators, Inverse Problems, Deconvolution, Signal Processing]
-dependencies: [pylops>=2.0.0, numpy, scipy]
-complements: [devito, simpeg, segyio]
-workflow_role: modelling
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["Linear Operators", "Inverse Problems", "Deconvolution", "Signal Processing"]'
+  dependencies: '["pylops>=2.0.0", "numpy", "scipy"]'
+  complements: '["devito", "simpeg", "segyio"]'
+  workflow_role: modelling
+  skill_type: domain
 ---
 
 # PyLops - Linear Operators Library

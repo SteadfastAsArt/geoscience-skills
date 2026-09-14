@@ -1,0 +1,27 @@
+name: Dependency Version Report
+
+on:
+  schedule:
+    - cron: '19 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Read registry versions without installing or updating packages
+        run: python scripts/check_dependency_updates.py --output dependency-versions.json
+      - name: Save version report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-versions
+          path: dependency-versions.json
+          if-no-files-found: error

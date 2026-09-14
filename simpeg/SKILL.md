@@ -2,19 +2,21 @@
 name: simpeg
 description: |
   Simulation and Parameter Estimation in Geophysics. Framework for geophysical
-  forward modeling and inversion. Use when Claude needs to: (1) Run geophysical
+  forward modeling and inversion. Use when the agent needs to: (1) Run geophysical
   inversions (DC resistivity, magnetics, gravity, EM), (2) Create forward models
   for potential fields or electromagnetic methods, (3) Build survey geometries
   and receiver configurations, (4) Design mesh discretizations for simulations,
   (5) Apply regularization and optimization to inverse problems, (6) Model
   subsurface physical properties from geophysical data.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [Geophysical Inversion, DC Resistivity, Magnetics, Gravity, EM, Forward Modelling]
-dependencies: [simpeg>=0.20.0, discretize, numpy]
-complements: [pygimli, verde, pyvista]
-workflow_role: modelling
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["Geophysical Inversion", "DC Resistivity", "Magnetics", "Gravity", "EM", "Forward Modelling"]'
+  dependencies: '["simpeg>=0.20.0", "discretize", "numpy"]'
+  complements: '["pygimli", "verde", "pyvista"]'
+  workflow_role: modelling
+  skill_type: domain
 ---
 
 # SimPEG - Geophysical Simulation & Inversion

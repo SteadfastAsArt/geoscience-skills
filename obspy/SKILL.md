@@ -3,18 +3,20 @@ name: obspy
 description: |
   Seismology data processing with ObsPy. Helps with reading seismic waveforms,
   filtering/processing time series, fetching data from FDSN services, and
-  earthquake analysis. Use when Claude needs to: (1) Read seismic data formats
+  earthquake analysis. Use when the agent needs to: (1) Read seismic data formats
   (MiniSEED, SAC, GSE2, SEGY), (2) Filter or process waveforms, (3) Fetch data
   from IRIS/USGS/FDSN services, (4) Search for earthquakes by magnitude/location,
   (5) Plot seismograms or spectrograms, (6) Remove instrument response,
   (7) Analyze station metadata.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [Seismology, Waveforms, FDSN, Earthquake, Time Series, ObsPy, MiniSEED, Signal Processing]
-dependencies: [obspy>=1.4.0]
-complements: [segyio, disba]
-workflow_role: processing
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["Seismology", "Waveforms", "FDSN", "Earthquake", "Time Series", "ObsPy", "MiniSEED", "Signal Processing"]'
+  dependencies: '["obspy>=1.4.0"]'
+  complements: '["segyio", "disba"]'
+  workflow_role: processing
+  skill_type: domain
 ---
 
 # ObsPy - Seismology Data Processing
@@ -158,7 +160,7 @@ analysis and don't need seismology-specific metadata or data access.
 ## Common Workflows
 
 ### Fetch and process earthquake waveforms
-```
+```text
 - [ ] Initialize FDSN client: `Client("IRIS")`
 - [ ] Search events with `client.get_events()` for target magnitude/region
 - [ ] Fetch waveforms with `client.get_waveforms()` for desired stations

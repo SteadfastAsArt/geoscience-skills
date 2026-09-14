@@ -1,0 +1,12 @@
+# Verified on Python 3.11; keep separate from the core (NumPy 1) baseline.
+numpy==2.4.6
+pandas==2.3.3
+scipy==1.17.1
+gempy==2026.0.3
+gempy-engine==2026.0.3.post1
+pyvista==0.49.0
+pygimli==1.6.0
+pgcore==1.6.0
+simpeg==0.25.2
+discretize==0.12.0
+verde==1.9.0

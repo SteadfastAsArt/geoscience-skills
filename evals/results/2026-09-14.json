@@ -1,0 +1,358 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-14T05:25:39.713556+00:00",
+  "evaluation_mode": "explicit-file",
+  "selection_tested": true,
+  "native_activation_tested": false,
+  "scope": "Explicit selection from a public skill catalog on synthetic tasks; no native discovery claim.",
+  "runtime": {
+    "python": "3.11.14",
+    "libraries": {
+      "lasio": "0.32",
+      "segyio": "1.9.14",
+      "numpy": "1.26.4"
+    }
+  },
+  "results": [
+    {
+      "agent": "codex",
+      "task": "las-qc",
+      "configured_model": "gpt-5.5",
+      "seed": 20260914,
+      "prompt_sha256": "43902f0207b9a68ca8a3fb84608b33439c9919e03453b9e8119b7403e8c55a50",
+      "input_sha256": "715053faac2efe4f6d220a7a066204e5575c492cf9705c669f5969252652e463",
+      "skill_catalog_sha256": "95872985ebd33eb15ada0e3ce6d1c28fda2a43fc9d84346ba9b644e80b68edfd",
+      "command": [
+        "codex",
+        "exec",
+        "--json",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "--sandbox",
+        "workspace-write",
+        "-c",
+        "approval_policy=\"never\"",
+        "-c",
+        "features.multi_agent=false",
+        "-"
+      ],
+      "isolation": "bubblewrap-allowlist",
+      "expected_skill": "lasio",
+      "status": "passed",
+      "reason": null,
+      "observed_skill_reads": [
+        "lasio"
+      ],
+      "tool_commands": [
+        {
+          "tool": "command_execution",
+          "sha256": "05bdc76f6c8e8735ebb669e17ef137325db16c9b6acea12a04f6ef3dcb618b1f",
+          "command": "rg --files"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "b9b88d65cf7cf5afaf892f0601378d9c1160c2dd25e6a13f63aa0388841e0b65",
+          "command": "ls -la"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "d3a15c663f49ade1c8a069f9b7306248dea01d0af7a802120bb7cba0c3fbe746",
+          "command": "cat skill-catalog.json"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "2af83110422b87235badf5e50e07617a2430473431f9bb02caa5713e430a6b5c",
+          "command": "cat TASK.md"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "95e8dffb7fde258905cb1db313986f1220cdfde677ea1c30ab3afad55d51e731",
+          "command": "cat skills/lasio/SKILL.md"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "f25747ca3ebbd44f53e8aa2817137bedc5c72cff89dddbaf222d5e086af8edd0",
+          "command": "sed -n 1,220p inputs/well.las"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "e09fdad85b875b6562b1726df9f65a32ae8a8a7f8d385ff2662e7785d83b36d9",
+          "command": "python solution.py"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "b24cf1ac76aa98d6bc779155daa9509a5154aa774ed337cbaf218342deaa8e9d",
+          "command": "cat result.json"
+        }
+      ],
+      "observed_models": [],
+      "exit_code": 0,
+      "numerical_checks": {
+        "passed": true,
+        "failures": [],
+        "output_sha256": "568e8260dc05e51b96ce6e84abfa27c32ccffe74e1eb4d274e74e1dca620eecb"
+      },
+      "claimed_skills": [
+        "lasio"
+      ],
+      "skill_selection_verified": true,
+      "transcript_sha256": "453fe34a588afca8c1def39d41c84a781408dee5e320f455bf885fb9e41a607b",
+      "artifacts": {
+        "solution.py": "cf5db7f57356d6db0cb901a3174ca9e367fe9d256642215bfbaaf8afca912feb",
+        "evidence.json": "96756a72cd52466e82d373fb4ee570518e0c68b19be2c83755b18013577e04c7",
+        "result.json": "568e8260dc05e51b96ce6e84abfa27c32ccffe74e1eb4d274e74e1dca620eecb"
+      },
+      "duration_seconds": 107.981,
+      "cli_version": "0.154.0",
+      "skill_read_evidence": [
+        {
+          "skill": "lasio",
+          "tool": "command_execution",
+          "output_sha256": "e722b61473ff9df2416f88094c91352179d7e49986fd4a68d4f2720a13b57cbe"
+        }
+      ],
+      "recorded_at": "2026-09-14T05:23:17.099868+00:00",
+      "skill_content_sha256": {
+        "lasio": "e722b61473ff9df2416f88094c91352179d7e49986fd4a68d4f2720a13b57cbe"
+      },
+      "source_retained": true,
+      "source_replay_verified": false,
+      "limits": {
+        "timeout_seconds": 150,
+        "budget_usd": null
+      },
+      "protocol_version": "1",
+      "prompt_artifact": "evals/results/prompts/v1-las-qc.md"
+    },
+    {
+      "agent": "codex",
+      "task": "segy-subset",
+      "configured_model": "gpt-5.5",
+      "seed": 20260914,
+      "prompt_sha256": "8f77edbff183bed201e7c0516ca7eee87c04a45c37d4afdcc507954f697e5200",
+      "input_sha256": "d5513ae514d2256d34720a416ff199cb93cd3955b11a658fe447be10b6357ad7",
+      "skill_catalog_sha256": "c9f4147abe8f02b262fe0772881dbf3704daf10fd2c09c501dad1921284f9458",
+      "command": [
+        "codex",
+        "exec",
+        "--json",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "--sandbox",
+        "workspace-write",
+        "-c",
+        "approval_policy=\"never\"",
+        "-c",
+        "features.multi_agent=false",
+        "-"
+      ],
+      "isolation": "bubblewrap-allowlist",
+      "expected_skill": "segyio",
+      "status": "failed",
+      "reason": "timeout",
+      "observed_skill_reads": [
+        "segyio"
+      ],
+      "tool_commands": [
+        {
+          "tool": "command_execution",
+          "sha256": "d5f0b4567ca168e2f4045fd9839a9d718c409af8671b5a03e62d9d4200eb02ba",
+          "command": "ls"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "05bdc76f6c8e8735ebb669e17ef137325db16c9b6acea12a04f6ef3dcb618b1f",
+          "command": "rg --files"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "d3a15c663f49ade1c8a069f9b7306248dea01d0af7a802120bb7cba0c3fbe746",
+          "command": "cat skill-catalog.json"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "2af83110422b87235badf5e50e07617a2430473431f9bb02caa5713e430a6b5c",
+          "command": "cat TASK.md"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "4ff45f1063c1d79778c70e24d59f4fb4f59f9a3d6d871f2af3c51b7799980b18",
+          "command": "cat skills/segyio/SKILL.md"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "c2cb9ad64c92d9e2c37ebcffa455b023131cf3cd97c5d425a997780fb8c99ba5",
+          "command": "cat skills/segyio/references/header_fields.md"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "798a4322270e6108ea9ca6c10511f82502d6324aead4c3a529a0ed86e7dcb736",
+          "command": "cat skills/segyio/scripts/extract_subset.py"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "98631a0e4063083ddb0464ec3d9d41013266181b450147d34bf4e513f21855cb"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "43b0075d132a7c6d3568adfbb68c5e395bdc52773e709321c1a5c477924c8217"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "e09fdad85b875b6562b1726df9f65a32ae8a8a7f8d385ff2662e7785d83b36d9",
+          "command": "python solution.py"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "038a695ecde76804ff09b058ec5a3e216b1d9d9f22eb55e1674735da363f33bb"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "7b88809acc805dc87995941c062995b1acdc91846fa7c0e572dce15a0f9105bb"
+        }
+      ],
+      "skill_read_evidence": [
+        {
+          "skill": "segyio",
+          "tool": "command_execution",
+          "output_sha256": "7d46ac492f7e69f8f5f9ada98bd889701cbd2a37f3f871344c9f9efad6b5a2bb"
+        }
+      ],
+      "observed_models": [],
+      "exit_code": -9,
+      "numerical_checks": {
+        "passed": true,
+        "failures": [],
+        "output_sha256": "7d768a2b817400af806e4679b13225af809803225755ed111e2ed13a5745ce0a"
+      },
+      "claimed_skills": [
+        "segyio"
+      ],
+      "skill_selection_verified": true,
+      "transcript_sha256": "d086815b5f03ed2aed5f4567ed30460ed7faf2b8b998da0ad33ef0d49e995e28",
+      "artifacts": {
+        "solution.py": "b050605464beb4edd4024aa4092d18bdfea431738fee3d4f29d749c92ed2023c",
+        "evidence.json": "dd89b6a6a5484d6b39ffc191fcaa2130d685ad53c350fbcd74d4feb6ef41f6c7",
+        "subset.sgy": "7d768a2b817400af806e4679b13225af809803225755ed111e2ed13a5745ce0a"
+      },
+      "duration_seconds": 180.024,
+      "cli_version": "0.154.0",
+      "recorded_at": "2026-09-14T05:25:39.713556+00:00",
+      "skill_content_sha256": {
+        "segyio": "7d46ac492f7e69f8f5f9ada98bd889701cbd2a37f3f871344c9f9efad6b5a2bb"
+      },
+      "source_retained": true,
+      "source_replay_verified": false,
+      "limits": {
+        "timeout_seconds": 180,
+        "budget_usd": null
+      },
+      "protocol_version": "1",
+      "prompt_artifact": "evals/results/prompts/v1-segy-subset.md"
+    },
+    {
+      "agent": "claude",
+      "task": "las-qc",
+      "configured_model": null,
+      "seed": 20260914,
+      "prompt_sha256": "43902f0207b9a68ca8a3fb84608b33439c9919e03453b9e8119b7403e8c55a50",
+      "input_sha256": "715053faac2efe4f6d220a7a066204e5575c492cf9705c669f5969252652e463",
+      "skill_catalog_sha256": "95872985ebd33eb15ada0e3ce6d1c28fda2a43fc9d84346ba9b644e80b68edfd",
+      "command": [
+        "claude",
+        "-p",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--no-session-persistence",
+        "--max-budget-usd",
+        "1.5",
+        "--setting-sources",
+        "user",
+        "--strict-mcp-config",
+        "--mcp-config",
+        "{\"mcpServers\":{}}",
+        "--permission-mode",
+        "dontAsk",
+        "--permission-prompts",
+        "none",
+        "--tools",
+        "Read,Write,Edit,Bash,Glob,Grep",
+        "--allowedTools",
+        "Read,Write,Edit,Bash,Glob,Grep"
+      ],
+      "isolation": "bubblewrap-allowlist",
+      "expected_skill": "lasio",
+      "status": "blocked",
+      "reason": "authentication_unavailable",
+      "observed_skill_reads": [],
+      "tool_commands": [],
+      "observed_models": [],
+      "exit_code": 1,
+      "numerical_checks": {
+        "passed": false,
+        "failures": [
+          "solution.py: missing reproducible source",
+          "output: unreadable or invalid (FileNotFoundError)"
+        ],
+        "output_sha256": null
+      },
+      "claimed_skills": [],
+      "skill_selection_verified": false,
+      "transcript_sha256": "e957d4b2a66346cc22c4e4ce8c550135d2190d331cca4e27ddd6b60caa92c7b3",
+      "artifacts": {},
+      "duration_seconds": 2.021,
+      "cli_version": "2.1.270",
+      "blocker_detail": "OAuth session expired and could not be refreshed; no model task completed.",
+      "recorded_at": "2026-09-14T05:23:38.509453+00:00",
+      "skill_read_evidence": [],
+      "skill_content_sha256": {},
+      "source_retained": false,
+      "source_replay_verified": false,
+      "limits": {
+        "timeout_seconds": 150,
+        "budget_usd": 1.5
+      },
+      "current_disposition": "user-skipped / not-runtime-validated",
+      "protocol_version": "1",
+      "prompt_artifact": "evals/results/prompts/v1-las-qc.md"
+    },
+    {
+      "agent": "claude",
+      "task": "segy-subset",
+      "status": "not-run",
+      "reason": "user_skipped",
+      "cli_version": "2.1.270",
+      "runtime_validated": false
+    },
+    {
+      "agent": "gemini",
+      "task": "las-qc",
+      "status": "not-run",
+      "reason": "cli_missing",
+      "cli_version": null
+    },
+    {
+      "agent": "gemini",
+      "task": "segy-subset",
+      "status": "not-run",
+      "reason": "cli_missing",
+      "cli_version": null
+    },
+    {
+      "agent": "github-copilot",
+      "task": "las-qc",
+      "status": "not-run",
+      "reason": "cli_missing",
+      "cli_version": null
+    },
+    {
+      "agent": "github-copilot",
+      "task": "segy-subset",
+      "status": "not-run",
+      "reason": "cli_missing",
+      "cli_version": null
+    }
+  ],
+  "protocol_version": "1"
+}

@@ -2,18 +2,20 @@
 name: pyvista
 description: |
   3D visualization and mesh analysis for geoscience data using PyVista/VTK.
-  Use when Claude needs to: (1) Create 3D visualizations of geological models,
+  Use when the agent needs to: (1) Create 3D visualizations of geological models,
   (2) Render seismic volumes or voxel data, (3) Visualize point clouds or well
   paths, (4) Plot surfaces and meshes in 3D, (5) Read/write VTK, STL, OBJ files,
   (6) Create cross-sections through 3D models, (7) Export publication-quality
   figures or interactive HTML.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [3D Visualization, VTK, Mesh, Geological Models, Point Clouds]
-dependencies: [pyvista>=0.42.0, numpy, vtk]
-complements: [gempy, simpeg, verde, segyio, xarray]
-workflow_role: visualization
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["3D Visualization", "VTK", "Mesh", "Geological Models", "Point Clouds"]'
+  dependencies: '["pyvista>=0.42.0", "numpy", "vtk"]'
+  complements: '["gempy", "simpeg", "verde", "segyio", "xarray"]'
+  workflow_role: visualization
+  skill_type: domain
 ---
 
 # PyVista - 3D Visualization

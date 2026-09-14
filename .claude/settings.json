@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cat \"$CLAUDE_PROJECT_DIR/workflows/SKILL.md\"",
+            "command": "cat \"$CLAUDE_PROJECT_DIR/using-geoscience-skills/SKILL.md\"",
             "timeout": 10
           }
         ]

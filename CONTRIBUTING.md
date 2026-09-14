@@ -1,184 +1,123 @@
 # Contributing to Geoscience Skills
 
-Thank you for contributing to the Geoscience Skills library! This guide covers everything you need to add or improve skills.
+Build skills that improve geoscience tasks across coding agents. Use the
+[Agent Skills specification](https://agentskills.io/specification) as the shared
+format; keep platform integrations separate. See [AGENTS.md](AGENTS.md) for
+repository guidance and [compatibility](docs/COMPATIBILITY.md) for installation.
 
-## Quick Start
+## Add or update a skill
 
-1. Fork and clone the repository
-2. Create a branch: `git checkout -b add-skill-name`
-3. Add your skill following the structure below
-4. Run validation: `python3 scripts/validate_skills.py`
-5. Submit a pull request
+1. Create `<name>/SKILL.md`, or `workflows/<name>/SKILL.md` for a workflow. The
+   directory name must match the frontmatter `name`.
+2. Start from [the template](docs/SKILL_TEMPLATE.md). Add only references and
+   scripts that help with real tasks, and link resources from the skill.
+3. Include when to use the skill, relevant alternatives, necessary inputs,
+   operational constraints, and observable completion criteria.
+4. Add the skill to [SKILLS.md](SKILLS.md). Update the router's domain or workflow
+   table when it adds a new routing choice.
+5. Run `python3 scripts/sync_manifests.py` to regenerate platform adapters from
+   the skill files. Do not maintain separate copies of their descriptions.
+6. Run the checks below, then submit a pull request describing behavior and
+   validation. Bump `metadata.version` when changing an existing skill.
 
-## Adding a New Skill
-
-### 1. Create Directory Structure
-
-```
-skill-name/
-├── SKILL.md              # Main guidance (200-300 lines)
-├── references/           # Deep documentation
-│   ├── topic1.md         # Specific reference topic
-│   └── topic2.md         # Another reference topic
-└── scripts/              # Helper scripts (optional)
-    └── example.py        # Utility script
-```
-
-### 2. Write SKILL.md
-
-Start with the YAML frontmatter (all 7 fields required):
+## Frontmatter
 
 ```yaml
 ---
-name: library-name
-description: |
-  Third-person description of what this skill does and when to use it.
-  Include key terms for discovery. Use when Claude needs to: (1) ...,
-  (2) ..., (3) ...
-version: 1.0.0
-author: Geoscience Skills
+name: example-library
+description: Read and validate Example files. Use when inspecting headers or converting Example data to arrays.
 license: MIT
-tags: [Domain, Library Name, Key Concept, Method, Format, Application, Technique]
-dependencies: [package>=1.0.0]
+metadata:
+  version: "1.0.0"
+  author: Geoscience Skills
+  skill_type: domain
+  tags: '["Data I/O", "Example"]'
+  dependencies: '["example-library>=1.0"]'
+  complements: '[]'
+  workflow_role: data-loading
 ---
 ```
 
-Then structure the body with these sections:
+`name` and `description` are required by the shared format. Supported optional
+root fields are `license`, `compatibility`, `metadata`, and `allowed-tools`.
+Names use lowercase letters, digits, and single hyphens, up to 64 characters;
+descriptions are nonempty and at most 1024 characters. Avoid agent-specific
+tool restrictions in shared skills.
 
-```markdown
-# Library Name - Short Description
+All `metadata` values must be strings. Project list fields (`tags`,
+`dependencies`, `complements`) use JSON arrays encoded as YAML strings. This
+keeps richer project information without requiring agents to understand custom
+top-level fields. Dependencies document Python requirements; skill installation
+does not install or verify those packages.
 
-## Quick Reference
-## Key Classes
-## Essential Operations
-## When to use vs alternatives
-## Common workflows
-## Common Issues
-## References
-```
+Project conventions:
 
-See [docs/SKILL_TEMPLATE.md](docs/SKILL_TEMPLATE.md) for a complete template.
+| Metadata field | Meaning |
+|---|---|
+| `version` | Skill revision, as a quoted semantic version |
+| `author` | Maintainer attribution |
+| `skill_type` | `domain`, `workflow`, or `meta` |
+| `tags` | Relevant concepts; no minimum number |
+| `dependencies` | Python requirements for the documented operations |
+| `complements` | Related skill names; optional, not automatically installed |
+| `workflow_role` | `data-loading`, `processing`, `analysis`, `modelling`, or `visualization` |
 
-### 3. Register the Skill
+## Content and portability
 
-Update these files:
+- Use neutral wording such as "the agent" or describe the task directly.
+- Keep the entrypoint short enough to load usefully. There is no minimum length;
+  keep it under 500 lines and put conditional detail in linked references.
+- Give code fences language tags, including `text` for checklists or diagrams.
+- Distinguish runnable examples from fragments that require user data.
+- Resolve resource paths relative to the skill directory, not the user's cwd.
+- Workflows select stages according to the user's task and available inputs;
+  file loading, plotting, and delegation are not mandatory for every task.
+- Use a companion skill when available. If it is missing, use the available
+  tools and authoritative documentation, or explain the specific missing
+  capability. Do not claim to invoke unavailable skills or agents.
+- Declare units, array/index conventions, CRS and vertical reference where
+  relevant. Check outputs using meaningful scientific invariants.
 
-- **SKILLS.md** - Add to the appropriate category table and star-count ranking
-- **README.md** - Update skill count badge, domain listing, and coverage table
-- **CLAUDE.md** - Update skill count and directory structure listing
-- **workflows/SKILL.md** - Add to domain routing table and skill listing
-- **.claude-plugin/marketplace.json** - Add entry to `plugins[]` array and to the appropriate `categories[]` group
-
-### 4. Validate
+## Checks
 
 ```bash
+python3 -m pip install pyyaml
 python3 scripts/validate_skills.py
+python3 scripts/sync_manifests.py --check
+python3 -m unittest discover -s tests -v
 ```
 
-## Quality Standards
+The validator discovers domain, workflow, and routing skills recursively. It
+checks portable frontmatter and resources, and validates platform manifests
+separately when present. Structural validation does not establish scientific
+correctness or that an agent will select a skill for a particular prompt.
 
-### YAML Frontmatter
+For changes to scientific examples or processing scripts, also run the relevant
+[scientific checks](docs/SCIENTIFIC_TESTING.md) in an isolated environment. Add
+small generated inputs and assert known numerical results, missing-value
+semantics, units, or exported coordinates. Prefer executing the documented
+example over copying its formula into a test.
 
-All 7 fields are required:
+For installation or layout changes:
 
-| Field | Format | Example |
-|-------|--------|---------|
-| `name` | lowercase library name | `lasio` |
-| `description` | Multi-line, third person, includes WHAT and WHEN | See template |
-| `version` | Semantic versioning | `1.0.0` |
-| `author` | `Geoscience Skills` | `Geoscience Skills` |
-| `license` | `MIT` | `MIT` |
-| `tags` | Array, 7+ items | `[Well Logs, LAS, ...]` |
-| `dependencies` | Array with version specs | `[lasio>=0.30]` |
-
-### Content Requirements
-
-| Criterion | Requirement |
-|-----------|-------------|
-| SKILL.md body length | 150-500 lines (target 200-300) |
-| "When to use vs alternatives" section | Required |
-| Workflow checklists | Required for multi-step operations |
-| Common issues section | Required |
-| Code block language tags | All code blocks must have tags (`python`, `bash`) |
-| References depth | ONE level deep from SKILL.md |
-| Tone | Third person, concise, no over-explaining |
-
-### Checklist Before Submitting
-
-```
-- [ ] SKILL.md has valid YAML frontmatter with all 7 fields
-- [ ] SKILL.md is 150-500 lines (target 200-300)
-- [ ] "When to use vs alternatives" section exists
-- [ ] All code blocks have language tags
-- [ ] Tags array has 7+ entries
-- [ ] Skill registered in SKILLS.md
-- [ ] Skill count updated in README.md, CLAUDE.md, workflows/SKILL.md
-- [ ] Skill added to domain routing table in workflows/SKILL.md
-- [ ] Skill registered in .claude-plugin/marketplace.json (plugins + categories)
-- [ ] python3 scripts/validate_skills.py passes
+```bash
+python3 scripts/check_installation.py
 ```
 
-## Tag Conventions
+This installs through a pinned upstream `skills` CLI in temporary projects and
+checks that all skills and resources arrive intact. It requires Node.js and
+network access. Agent task evaluations are separate from installation checks.
 
-- Use **Title Case** for words: `Well Logs`, `Spatial Analysis`
-- Use **UPPERCASE** for acronyms: `ERT`, `GPR`, `MT`, `AVO`, `SEG-Y`
-- Include at minimum:
-  - Domain name (e.g., `Seismology`, `Petrophysics`)
-  - Library name (e.g., `ObsPy`, `Lasio`)
-  - Key methods/concepts (e.g., `Kriging`, `Fluid Substitution`)
-  - Data formats if applicable (e.g., `LAS`, `DLIS`, `SEG-Y`)
-  - Application area (e.g., `Well Logs`, `Near-Surface`)
-- Target 7+ tags per skill for discoverability
+For dependency maintenance, use the [read-only version report](docs/DEPENDENCY_MAINTENANCE.md)
+and validate proposed upgrades in an isolated environment before changing pins.
 
-## Code Style
+## Platform extensions
 
-- All code examples use language tags: ` ```python `, ` ```bash `
-- Examples should be concise and runnable
-- Include imports in examples
-- Use realistic geoscience variable names (not `x`, `y`, `foo`)
-- Show expected output shapes/types where helpful
+Keep optional command aliases, hooks, and agent registrations out of shared
+skill instructions. The `.claude/` configuration is specific to Claude Code;
+the Markdown role guides in `agents/` can be read explicitly but are not
+automatically registered by a generic skills installer.
 
-## Improving Existing Skills
-
-1. Keep SKILL.md under 500 lines; split into reference files if needed
-2. Maintain YAML frontmatter format and all 7 fields
-3. Bump the `version` field in YAML frontmatter
-4. Ensure "When to use vs alternatives" section exists
-5. Run `python3 scripts/validate_skills.py` before submitting
-
-## Reference Files
-
-- Place in `skill-name/references/`
-- One level deep only (no nested references)
-- Cover advanced topics, detailed API docs, or edge cases
-- Link from SKILL.md: `**[Topic](references/topic.md)** - Description`
-
-## Workflow Skills
-
-Workflow skills chain multiple domain skills into end-to-end pipelines. They live in `workflows/<name>/SKILL.md` and use extended frontmatter:
-
-```yaml
-skill_type: workflow
-complements: [skill1, skill2]
-workflow_role: processing
-```
-
-When adding workflow skills:
-- Include a skill chain diagram showing the progression
-- Add decision points for choosing between alternative libraries
-- Provide step-by-step orchestration with code examples from each domain skill
-- Include common pipeline checklists
-
-## Agent Specifications
-
-Agent specs live in `agents/<name>.md` and define specialized roles. Include:
-- YAML frontmatter with `name` and `description`
-- Role description
-- Domain-specific checks or guidance
-- Output format specification
-
-## Getting Help
-
-- Open an [issue](https://github.com/SteadfastAsArt/geoscience-skills/issues)
-- See [SKILLS.md](SKILLS.md) for existing skills and categories
-- See [docs/ROADMAP.md](docs/ROADMAP.md) for planned skills
+When adding another platform, verify its current official requirements, link
+the source in `docs/COMPATIBILITY.md`, and test the relevant installation path.
+Do not describe installer support as proof of end-to-end agent behavior.

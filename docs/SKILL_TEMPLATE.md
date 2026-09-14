@@ -1,103 +1,44 @@
 ---
 name: library-name
-description: |
-  Third-person description of what this skill does and when to use it.
-  Include key terms for discovery. Use when Claude needs to: (1) ...,
-  (2) ..., (3) ...
-version: 1.0.0
-author: Geoscience Skills
+description: Describe the capability and the specific user tasks that should select it.
 license: MIT
-tags: [Domain, Library Name, Key Concept, Method, Format, Application, Technique]
-dependencies: [package>=1.0.0]
+metadata:
+  version: "1.0.0"
+  author: Geoscience Skills
+  skill_type: domain
+  tags: '["Domain", "Library Name"]'
+  dependencies: '["package>=1.0.0"]'
+  complements: '[]'
+  workflow_role: analysis
 ---
 
-# Library Name - Short Description
+# Library Name
 
-## Quick Reference
+State the intended result and the non-obvious constraints needed to obtain it.
+Replace the scaffold text with concrete guidance before registering the skill.
 
-```python
-import library
+## When to use
 
-# Minimal working example (5-10 lines)
-result = library.function(input)
-print(result)
-```
+Explain the task boundary and relevant alternatives. Do not depend on a named
+coding agent, a slash command, a session hook, or a delegation tool.
 
-## Key Classes
+## Inputs and conventions
 
-| Class | Purpose |
-|-------|---------|
-| `MainClass` | Primary functionality |
-| `HelperClass` | Supporting operations |
+Specify the required data, units, coordinate/index conventions, and any
+environment requirements. Explain how missing inputs affect the task.
 
-## Essential Operations
+## Workflow
 
-### Operation 1
-```python
-# Concise code example
-```
+Describe the useful decision points and steps. Include a minimal runnable
+example when it clarifies the operation, or explicitly label a data-dependent
+fragment. Skip stages that the user's existing inputs already satisfy.
 
-### Operation 2
-```python
-# Concise code example
-```
+## Validation and outputs
 
-## When to use vs alternatives
+Specify observable output types and correctness checks, including scientific
+assumptions and failure conditions. Record meaningful provenance.
 
-**Use this when:**
-- Specific scenario 1
-- Specific scenario 2
+## References and scripts
 
-**Use [Alternative] instead when:**
-- Different scenario requiring different tool
-
-## Common workflows
-
-### Workflow 1: Primary Use Case
-
-```
-Task Progress:
-- [ ] Step 1: Load/prepare data
-- [ ] Step 2: Process/analyze
-- [ ] Step 3: Validate results
-- [ ] Step 4: Export/visualize
-```
-
-**Step 1: Load/prepare data**
-
-```python
-# Code for step 1
-```
-
-**Step 2: Process/analyze**
-
-```python
-# Code for step 2
-```
-
-**Step 3: Validate results**
-
-```python
-# Validation code
-```
-
-**Step 4: Export/visualize**
-
-```python
-# Export code
-```
-
-## Common Issues
-
-| Issue | Solution |
-|-------|----------|
-| Error message | Fix description |
-
-## References
-
-- **[Topic 1](references/topic1.md)** - Detailed reference
-- **[Topic 2](references/topic2.md)** - Another reference
-
-## Scripts
-
-- **[scripts/example.py](scripts/example.py)** - Description of script
+Link only resources that exist, using paths relative to this directory, and
+explain when to read or run each one. Remove this section if none are needed.

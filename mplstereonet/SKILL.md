@@ -2,18 +2,20 @@
 name: mplstereonet
 description: |
   Stereonet plots for structural geology using matplotlib. Create lower-hemisphere
-  stereographic projections for orientation data. Use when Claude needs to: (1) Create
+  stereographic projections for orientation data. Use when the agent needs to: (1) Create
   stereonet plots for structural data, (2) Plot planes as great circles or poles,
   (3) Plot lineations with trend/plunge, (4) Generate density contours for orientations,
   (5) Calculate mean orientations and statistics, (6) Analyze fold axes with pi-diagrams,
   (7) Convert between strike/dip and trend/plunge formats.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [Structural Geology, Stereonet, Orientation Data, Matplotlib, Visualization]
-dependencies: [mplstereonet>=0.6, matplotlib, numpy]
-complements: []
-workflow_role: visualization
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["Structural Geology", "Stereonet", "Orientation Data", "Matplotlib", "Visualization"]'
+  dependencies: '["mplstereonet>=0.6", "matplotlib", "numpy"]'
+  complements: '[]'
+  workflow_role: visualization
+  skill_type: domain
 ---
 
 # mplstereonet - Stereonets for Matplotlib

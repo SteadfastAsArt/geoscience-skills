@@ -2,18 +2,20 @@
 name: loopstructural
 description: |
   Build 3D geological models with implicit surfaces, faults, folds, and stratigraphic
-  constraints from structural geology data. Use when Claude needs to: (1) Build 3D
+  constraints from structural geology data. Use when the agent needs to: (1) Build 3D
   geological models from structural data, (2) Model fault networks and displacements,
   (3) Create folded geology representations, (4) Interpolate geological surfaces,
   (5) Export models to VTK for visualization, (6) Perform uncertainty analysis on
   geological models, (7) Evaluate model values on grids.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [Geological Modelling, 3D, Faults, Folds, Structural Geology]
-dependencies: [LoopStructural>=1.5.0, numpy, pandas]
-complements: [gemgis, gempy, pyvista]
-workflow_role: modelling
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["Geological Modelling", "3D", "Faults", "Folds", "Structural Geology"]'
+  dependencies: '["LoopStructural>=1.5.0", "numpy", "pandas"]'
+  complements: '["gemgis", "gempy", "pyvista"]'
+  workflow_role: modelling
+  skill_type: domain
 ---
 
 # LoopStructural - 3D Geological Modelling

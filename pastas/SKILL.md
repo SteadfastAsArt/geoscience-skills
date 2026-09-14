@@ -2,18 +2,20 @@
 name: pastas
 description: |
   Groundwater time series analysis and modelling using transfer function noise
-  models. Use when Claude needs to: (1) Analyze groundwater level time series,
+  models. Use when the agent needs to: (1) Analyze groundwater level time series,
   (2) Model well responses to precipitation/pumping, (3) Calibrate aquifer
   parameters from head data, (4) Forecast or hindcast groundwater levels,
   (5) Decompose hydrological signals into components, (6) Compare response
   functions, (7) Perform model diagnostics and uncertainty analysis.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [Groundwater, Hydrology, Time Series, Transfer Function, Well Response]
-dependencies: [pastas>=1.0.0, pandas, scipy]
-complements: [xarray]
-workflow_role: analysis
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["Groundwater", "Hydrology", "Time Series", "Transfer Function", "Well Response"]'
+  dependencies: '["pastas>=1.0.0", "pandas", "scipy"]'
+  complements: '["xarray"]'
+  workflow_role: analysis
+  skill_type: domain
 ---
 
 # Pastas - Groundwater Time Series Analysis

@@ -1,211 +1,419 @@
 #!/usr/bin/env python3
-"""Validate all geoscience skills against quality standards."""
+"""Check portable Agent Skills files and optional local platform registries.
 
+Only PyYAML is required. Import validate_repository for structured results,
+or use --root to check another skill repository. Platform checks cover local
+skill registration; use the platform's own validator for its complete schema.
+"""
+
+import argparse
+from dataclasses import dataclass
 import json
-import re
-import sys
+import os
 from pathlib import Path
+import re
+from urllib.parse import unquote, urlsplit
 
-REQUIRED_FRONTMATTER_FIELDS = [
-    "name", "description", "version", "author", "license", "tags", "dependencies"
-]
-MIN_LINES = 150
-MAX_LINES = 500
-MIN_TAGS = 7
+import yaml
 
-# Directories that are not skills
+
+FRONTMATTER_FIELDS = {
+    "name", "description", "license", "compatibility", "metadata", "allowed-tools",
+}
 SKIP_DIRS = {
-    ".claude-plugin", ".git", ".github", "docs", "scripts",
-    "node_modules", "__pycache__", "workflows", "agents",
+    "agents", "assets", "build", "dist", "docs", "examples", "node_modules",
+    "references", "scripts", "test", "tests", "__pycache__",
 }
+LIST_METADATA_FIELDS = {"tags", "dependencies", "complements"}
+WORKFLOW_ROLES = {"data-loading", "processing", "analysis", "modelling", "visualization"}
+SKILL_TYPES = {"domain", "workflow", "meta"}
+NAME_PATTERN = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
+FENCE_PATTERN = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
+LINK_PATTERN = re.compile(
+    r"!?\[[^\]\n]*\]\(\s*(?:<([^>\n]+)>|([^\s)]+))"
+    r"(?:\s+[\"'][^\n]*?[\"'])?\s*\)"
+)
+REFERENCE_PATTERN = re.compile(r"^ {0,3}\[[^\]]+\]:\s*(?:<([^>]+)>|(\S+))")
 
-# Valid workflow roles for optional frontmatter field
-VALID_WORKFLOW_ROLES = {
-    "data-loading", "processing", "analysis", "modelling", "visualization",
-}
+
+@dataclass(frozen=True)
+class Issue:
+    level: str
+    path: Path
+    message: str
+    line: int | None = None
+
+
+@dataclass
+class ValidationResult:
+    skill_dirs: list[Path]
+    issues: list[Issue]
+
+    @property
+    def errors(self):
+        return [issue for issue in self.issues if issue.level == "ERROR"]
+
+    @property
+    def warnings(self):
+        return [issue for issue in self.issues if issue.level == "WARN"]
+
+
+class UniqueKeyLoader(yaml.SafeLoader):
+    """Reject duplicate keys instead of silently retaining the last value."""
+
+
+def _construct_mapping(loader, node, deep=False):
+    loader.flatten_mapping(node)
+    mapping = {}
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        try:
+            duplicate = key in mapping
+        except TypeError as exc:
+            raise yaml.constructor.ConstructorError(
+                None, None, "mapping keys must be scalar values", key_node.start_mark
+            ) from exc
+        if duplicate:
+            raise yaml.constructor.ConstructorError(
+                None, None, f"duplicate key: {key!r}", key_node.start_mark
+            )
+        mapping[key] = loader.construct_object(value_node, deep=deep)
+    return mapping
+
+
+UniqueKeyLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _construct_mapping)
+
+
+def _split_frontmatter(text):
+    lines = text.splitlines()
+    if not lines or lines[0] != "---":
+        raise ValueError("Missing YAML frontmatter opening delimiter")
+    try:
+        end = lines.index("---", 1)
+    except ValueError as exc:
+        raise ValueError("Missing YAML frontmatter closing delimiter") from exc
+    try:
+        data = yaml.load("\n".join(lines[1:end]), Loader=UniqueKeyLoader)
+    except yaml.YAMLError as exc:
+        raise ValueError(f"Invalid YAML: {exc}") from exc
+    if not isinstance(data, dict):
+        raise ValueError("YAML frontmatter must be a mapping")
+    return data, "\n".join(lines[end + 1:]), end + 2
 
 
 def parse_frontmatter(text):
-    """Extract YAML frontmatter from markdown text."""
-    if not text.startswith("---"):
-        return None
-    parts = text.split("---", 2)
-    if len(parts) < 3:
-        return None
-    try:
-        import yaml
-        return yaml.safe_load(parts[1])
-    except Exception as e:
-        return {"_error": str(e)}
+    """Return a frontmatter mapping, or raise a descriptive ValueError."""
+    return _split_frontmatter(text)[0]
 
 
 def find_skill_dirs(root):
-    """Find all skill directories (contain SKILL.md)."""
-    skill_dirs = []
-    for d in sorted(root.iterdir()):
-        if d.is_dir() and d.name not in SKIP_DIRS and not d.name.startswith("."):
-            skill_md = d / "SKILL.md"
-            if skill_md.exists():
-                skill_dirs.append(d)
-    return skill_dirs
+    """Discover formal skills recursively, including nested workflow skills."""
+    root = Path(root).resolve()
+    found = []
+    for current, directories, files in os.walk(root, followlinks=False):
+        directories[:] = sorted(
+            name for name in directories
+            if not name.startswith(".") and name not in SKIP_DIRS
+        )
+        if "SKILL.md" in files:
+            found.append(Path(current))
+    return sorted(found)
 
 
-def validate_skill(skill_dir):
-    """Validate a single skill. Returns list of (level, message) tuples."""
+def _check_frontmatter(data, skill_dir):
+    path = skill_dir / "SKILL.md"
     issues = []
-    skill_md = skill_dir / "SKILL.md"
-    text = skill_md.read_text(encoding="utf-8")
-    lines = text.splitlines()
-    line_count = len(lines)
-
-    # YAML frontmatter
-    fm = parse_frontmatter(text)
-    if fm is None:
-        issues.append(("ERROR", "Missing YAML frontmatter"))
+    for key in data:
+        if key not in FRONTMATTER_FIELDS:
+            issues.append(Issue("ERROR", path, f"Unsupported frontmatter field {key!r}; use metadata"))
+    for field, limit in (("name", 64), ("description", 1024), ("compatibility", 500)):
+        if field == "compatibility" and field not in data:
+            continue
+        value = data.get(field)
+        if not isinstance(value, str) or not value.strip():
+            issues.append(Issue("ERROR", path, f"{field} must be a non-empty string"))
+        elif len(value) > limit:
+            issues.append(Issue("ERROR", path, f"{field} exceeds {limit} characters"))
+    name = data.get("name")
+    if isinstance(name, str):
+        if not NAME_PATTERN.fullmatch(name):
+            issues.append(Issue("ERROR", path, "name must use lowercase letters, digits, and single hyphens"))
+        if name != skill_dir.name:
+            issues.append(Issue("ERROR", path, f"name {name!r} must match directory {skill_dir.name!r}"))
+    for field in ("license", "allowed-tools"):
+        if field in data and (not isinstance(data[field], str) or not data[field].strip()):
+            issues.append(Issue("ERROR", path, f"{field} must be a non-empty string"))
+    metadata = data.get("metadata", {})
+    if not isinstance(metadata, dict):
+        issues.append(Issue("ERROR", path, "metadata must be a string-to-string mapping"))
         return issues
-    if "_error" in fm:
-        issues.append(("ERROR", f"Invalid YAML: {fm['_error']}"))
-        return issues
-
-    for field in REQUIRED_FRONTMATTER_FIELDS:
-        if field not in fm:
-            issues.append(("ERROR", f"Missing frontmatter field: {field}"))
-
-    # Tags count
-    tags = fm.get("tags", [])
-    if isinstance(tags, list) and len(tags) < MIN_TAGS:
-        issues.append(("WARN", f"Only {len(tags)} tags (recommend {MIN_TAGS}+)"))
-
-    # Line count
-    if line_count < MIN_LINES:
-        issues.append(("WARN", f"Only {line_count} lines (minimum {MIN_LINES})"))
-    elif line_count > MAX_LINES:
-        issues.append(("ERROR", f"{line_count} lines exceeds maximum {MAX_LINES}"))
-
-    # Code block language tags
-    code_block_pattern = re.compile(r"^```(\w*)$", re.MULTILINE)
-    for match in code_block_pattern.finditer(text):
-        if not match.group(1):
-            line_num = text[:match.start()].count("\n") + 1
-            issues.append(("WARN", f"Code block without language tag at line {line_num}"))
-
-    # "When to use" section
-    if "when to use" not in text.lower():
-        issues.append(("WARN", "Missing 'When to use vs alternatives' section"))
-
-    # Optional frontmatter: workflow_role
-    workflow_role = fm.get("workflow_role")
-    if workflow_role is not None and workflow_role not in VALID_WORKFLOW_ROLES:
-        issues.append(("WARN", f"Invalid workflow_role '{workflow_role}' (allowed: {sorted(VALID_WORKFLOW_ROLES)})"))
-
-    # Optional frontmatter: complements
-    complements = fm.get("complements")
-    if complements is not None:
-        if not isinstance(complements, list):
-            issues.append(("WARN", "complements should be a list"))
-
+    for key, value in metadata.items():
+        if not isinstance(key, str) or not isinstance(value, str):
+            issues.append(Issue("ERROR", path, f"metadata entry {key!r} must have a string key and value"))
+            continue
+        if key in LIST_METADATA_FIELDS:
+            try:
+                items = json.loads(value)
+            except json.JSONDecodeError:
+                items = None
+            if not isinstance(items, list) or any(not isinstance(item, str) or not item.strip() for item in items):
+                issues.append(Issue("ERROR", path, f"metadata.{key} must encode a JSON array of non-empty strings"))
+        if key == "workflow_role" and value not in WORKFLOW_ROLES:
+            issues.append(Issue("ERROR", path, f"Invalid metadata.workflow_role: {value!r}"))
+        if key == "skill_type" and value not in SKILL_TYPES:
+            issues.append(Issue("ERROR", path, f"Invalid metadata.skill_type: {value!r}"))
     return issues
 
 
-def validate_marketplace(root, skill_names):
-    """Validate marketplace.json references all skills."""
-    issues = []
-    mp_path = root / ".claude-plugin" / "marketplace.json"
-    if not mp_path.exists():
-        issues.append(("ERROR", "Missing .claude-plugin/marketplace.json"))
-        return issues
+def markdown_prose(text, path, start_line=1, check_fences=True):
+    """Return prose lines and fence issues, ignoring contents of fenced blocks."""
+    prose, issues = [], []
+    opened = None
+    for number, line in enumerate(text.splitlines(), start_line):
+        match = FENCE_PATTERN.match(line)
+        if opened:
+            if match:
+                marker, rest = match.groups()
+                if marker[0] == opened[0] and len(marker) >= opened[1] and not rest.strip():
+                    opened = None
+            continue
+        if match:
+            marker, info = match.groups()
+            if marker[0] == "`" and "`" in info:
+                prose.append((number, line))
+                continue
+            opened = (marker[0], len(marker), number)
+            if check_fences and not info.strip():
+                issues.append(Issue("WARN", path, "Code block opening has no language tag", number))
+            continue
+        prose.append((number, line))
+    if opened and check_fences:
+        issues.append(Issue("ERROR", path, "Unclosed fenced code block", opened[2]))
+    return prose, issues
 
+
+def _check_links(prose, path, known_skills=None):
+    issues = []
+    for number, line in prose:
+        line = re.sub(r"(`+).*?\1", "", line)
+        matches = list(LINK_PATTERN.finditer(line))
+        reference = REFERENCE_PATTERN.match(line)
+        if reference:
+            matches.append(reference)
+        for match in matches:
+            destination = match.group(1) or match.group(2)
+            try:
+                url = urlsplit(destination)
+            except ValueError:
+                issues.append(Issue("ERROR", path, f"Invalid link: {destination}", number))
+                continue
+            if url.scheme or url.netloc or not url.path:
+                continue
+            target = (path.parent / unquote(url.path)).resolve()
+            if not target.exists():
+                issues.append(Issue("ERROR", path, f"Broken relative link: {destination}", number))
+            elif known_skills is not None and target.name == "SKILL.md" and target.parent not in known_skills:
+                issues.append(Issue("ERROR", path, f"Link targets a skill outside discovery: {destination}", number))
+    return issues
+
+
+def validate_skill(skill_dir, known_skills=None):
+    """Return (frontmatter or None, issues) for one skill and its references."""
+    skill_dir = Path(skill_dir).resolve()
+    path = skill_dir / "SKILL.md"
     try:
-        data = json.loads(mp_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as e:
-        issues.append(("ERROR", f"Invalid JSON: {e}"))
+        text = path.read_text(encoding="utf-8-sig")
+        data, body, start_line = _split_frontmatter(text)
+    except (OSError, UnicodeError, ValueError) as exc:
+        return None, [Issue("ERROR", path, str(exc))]
+    issues = _check_frontmatter(data, skill_dir)
+    if len(body.splitlines()) > 500:
+        issues.append(Issue("WARN", path, "Skill body exceeds 500 lines; move details to references"))
+    prose, fence_issues = markdown_prose(body, path, start_line)
+    issues.extend(fence_issues)
+    issues.extend(_check_links(prose, path, known_skills))
+    for reference in sorted((skill_dir / "references").rglob("*.md")):
+        try:
+            prose, _ = markdown_prose(reference.read_text(encoding="utf-8-sig"), reference, check_fences=False)
+            issues.extend(_check_links(prose, reference, known_skills))
+        except (OSError, UnicodeError) as exc:
+            issues.append(Issue("ERROR", reference, str(exc)))
+    return data, issues
+
+
+def _read_manifest(path):
+    try:
+        data = json.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        return None, [Issue("ERROR", path, f"Cannot read JSON manifest: {exc}")]
+    if not isinstance(data, dict):
+        return None, [Issue("ERROR", path, "Manifest must be a JSON object")]
+    return data, []
+
+
+def _local_path(value, base, root, manifest, label, issues):
+    if not isinstance(value, str) or not value or (value != "." and not value.startswith("./")):
+        issues.append(Issue("ERROR", manifest, f"{label} must be a local relative path beginning with ./"))
+        return None
+    target = (base / value).resolve()
+    if not target.is_relative_to(root):
+        issues.append(Issue("ERROR", manifest, f"{label} escapes repository: {value}"))
+        return None
+    if not target.is_dir():
+        issues.append(Issue("ERROR", manifest, f"{label} directory does not exist: {value}"))
+        return None
+    return target
+
+
+def _register_paths(paths, base, root, manifest, label, known_skills, registered, issues):
+    if isinstance(paths, str):
+        paths = [paths]
+    if not isinstance(paths, list):
+        issues.append(Issue("ERROR", manifest, f"{label} must be a path or an array of paths"))
+        return
+    for value in paths:
+        target = _local_path(value, base, root, manifest, label, issues)
+        if target is None:
+            continue
+        targets = [target] if (target / "SKILL.md").is_file() else find_skill_dirs(target)
+        if not targets:
+            issues.append(Issue("ERROR", manifest, f"{label} contains no skills: {value}"))
+        for skill in targets:
+            if skill not in known_skills:
+                issues.append(Issue("ERROR", manifest, f"{label} references an undiscovered skill: {skill.relative_to(root)}"))
+            if skill in registered:
+                issues.append(Issue("ERROR", manifest, f"Duplicate skill registration: {skill.relative_to(root)}"))
+            registered.add(skill)
+
+
+def _check_coverage(manifest, root, known_skills, registered, issues):
+    for skill in sorted(known_skills - registered):
+        issues.append(Issue("ERROR", manifest, f"Missing skill registration: {skill.relative_to(root)}"))
+
+
+def validate_marketplace(root, skill_dirs):
+    """Check an optional Claude marketplace's local registration and coverage."""
+    root = Path(root).resolve()
+    path = root / ".claude-plugin" / "marketplace.json"
+    if not path.exists():
+        return []
+    data, issues = _read_manifest(path)
+    if data is None:
         return issues
-
-    plugin_names = {p["name"] for p in data.get("plugins", [])}
-    for skill in skill_names:
-        if skill not in plugin_names:
-            issues.append(("ERROR", f"Skill '{skill}' not in marketplace.json plugins"))
-
-    # Check plugins exist as either top-level skills or workflow subdirectories
-    workflow_dir = root / "workflows"
-    workflow_names = set()
-    if workflow_dir.is_dir():
-        for d in workflow_dir.iterdir():
-            if d.is_dir() and (d / "SKILL.md").exists():
-                workflow_names.add(d.name)
-
-    for plugin in plugin_names:
-        if plugin not in skill_names and plugin not in workflow_names:
-            issues.append(("WARN", f"Plugin '{plugin}' in marketplace.json but no skill directory found"))
-
+    if not isinstance(data.get("name"), str) or not data["name"].strip():
+        issues.append(Issue("ERROR", path, "Marketplace name must be a non-empty string"))
+    owner = data.get("owner")
+    if not isinstance(owner, dict) or not isinstance(owner.get("name"), str) or not owner["name"].strip():
+        issues.append(Issue("ERROR", path, "Marketplace owner must be an object with a non-empty name"))
+    plugins = data.get("plugins")
+    if not isinstance(plugins, list):
+        issues.append(Issue("ERROR", path, "Marketplace plugins must be an array"))
+        return issues
+    known_skills = {Path(skill).resolve() for skill in skill_dirs}
+    registered, names = set(), set()
+    for index, plugin in enumerate(plugins):
+        label = f"plugins[{index}]"
+        if not isinstance(plugin, dict):
+            issues.append(Issue("ERROR", path, f"{label} must be an object"))
+            continue
+        name = plugin.get("name")
+        if not isinstance(name, str) or not name.strip():
+            issues.append(Issue("ERROR", path, f"{label}.name must be a non-empty string"))
+        elif name in names:
+            issues.append(Issue("ERROR", path, f"Duplicate plugin name: {name}"))
+        else:
+            names.add(name)
+        if "strict" in plugin and not isinstance(plugin["strict"], bool):
+            issues.append(Issue("ERROR", path, f"{label}.strict must be boolean"))
+        source = _local_path(plugin.get("source"), root, root, path, f"{label}.source", issues)
+        if source is None:
+            continue
+        paths = plugin.get("skills")
+        if paths is None:
+            issues.append(Issue("ERROR", path, f"{label} must explicitly declare its local skills paths"))
+            continue
+        _register_paths(paths, source, root, path, f"{label}.skills", known_skills, registered, issues)
+    _check_coverage(path, root, known_skills, registered, issues)
     return issues
 
 
-def main():
-    root = Path(__file__).resolve().parent.parent
+def validate_openclaw(root, skill_dirs):
+    """Check an optional OpenClaw manifest's local registration and coverage."""
+    root = Path(root).resolve()
+    path = root / "openclaw.plugin.json"
+    if not path.exists():
+        return []
+    data, issues = _read_manifest(path)
+    if data is None:
+        return issues
+    if not isinstance(data.get("id"), str) or not data["id"].strip():
+        issues.append(Issue("ERROR", path, "OpenClaw id must be a non-empty string"))
+    if not isinstance(data.get("configSchema"), dict):
+        issues.append(Issue("ERROR", path, "OpenClaw configSchema must be an object"))
+    if not isinstance(data.get("skills"), list):
+        issues.append(Issue("ERROR", path, "OpenClaw skills must be an array"))
+        return issues
+    known_skills = {Path(skill).resolve() for skill in skill_dirs}
+    registered = set()
+    _register_paths(data["skills"], root, root, path, "skills", known_skills, registered, issues)
+    _check_coverage(path, root, known_skills, registered, issues)
+    return issues
+
+
+def validate_repository(root, check_manifests=True):
+    """Validate portable skills first, then optionally validate platform files."""
+    root = Path(root).resolve()
     skill_dirs = find_skill_dirs(root)
-
+    issues, records = [], []
+    known_skills, names = set(skill_dirs), {}
     if not skill_dirs:
-        print("ERROR: No skill directories found")
-        sys.exit(1)
-
-    print(f"Found {len(skill_dirs)} skills\n")
-
-    total_errors = 0
-    total_warnings = 0
-
+        issues.append(Issue("ERROR", root, "No SKILL.md files found"))
     for skill_dir in skill_dirs:
-        issues = validate_skill(skill_dir)
-        errors = [i for i in issues if i[0] == "ERROR"]
-        warnings = [i for i in issues if i[0] == "WARN"]
-        total_errors += len(errors)
-        total_warnings += len(warnings)
+        data, skill_issues = validate_skill(skill_dir, known_skills)
+        issues.extend(skill_issues)
+        if data is None:
+            continue
+        records.append((skill_dir, data))
+        name = data.get("name")
+        if isinstance(name, str):
+            if name in names:
+                issues.append(Issue("ERROR", skill_dir / "SKILL.md", f"Duplicate skill name {name!r}; also in {names[name].relative_to(root)}"))
+            else:
+                names[name] = skill_dir
+    for skill_dir, data in records:
+        metadata = data.get("metadata", {})
+        if not isinstance(metadata, dict) or not isinstance(metadata.get("complements"), str):
+            continue
+        try:
+            complements = json.loads(metadata["complements"])
+        except json.JSONDecodeError:
+            continue
+        if isinstance(complements, list):
+            for name in complements:
+                if isinstance(name, str) and name not in names:
+                    issues.append(Issue("ERROR", skill_dir / "SKILL.md", f"Unknown complementary skill: {name}"))
+    if check_manifests:
+        issues.extend(validate_marketplace(root, skill_dirs))
+        issues.extend(validate_openclaw(root, skill_dirs))
+    return ValidationResult(skill_dirs, issues)
 
-        if issues:
-            status = "FAIL" if errors else "WARN"
-            print(f"  {status}  {skill_dir.name}")
-            for level, msg in issues:
-                print(f"        {level}: {msg}")
-        else:
-            print(f"  PASS  {skill_dir.name}")
 
-    # Cross-validate complements references
-    skill_names = {d.name for d in skill_dirs}
-    for skill_dir in skill_dirs:
-        text = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
-        fm = parse_frontmatter(text)
-        if fm and "complements" in fm and isinstance(fm["complements"], list):
-            for comp in fm["complements"]:
-                if comp not in skill_names:
-                    total_warnings += 1
-                    print(f"  WARN  {skill_dir.name}")
-                    print(f"        WARN: complements entry '{comp}' is not a known skill")
-
-    # Marketplace validation
-    mp_issues = validate_marketplace(root, skill_names)
-    mp_errors = [i for i in mp_issues if i[0] == "ERROR"]
-    mp_warnings = [i for i in mp_issues if i[0] == "WARN"]
-    total_errors += len(mp_errors)
-    total_warnings += len(mp_warnings)
-
-    print(f"\nMarketplace:")
-    if mp_issues:
-        for level, msg in mp_issues:
-            print(f"  {level}: {msg}")
-    else:
-        print("  PASS")
-
-    # Summary
-    print(f"\n{'='*50}")
-    print(f"Skills: {len(skill_dirs)}  Errors: {total_errors}  Warnings: {total_warnings}")
-
-    if total_errors > 0:
-        print("FAILED")
-        sys.exit(1)
-    else:
-        print("PASSED")
-        sys.exit(0)
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parent.parent)
+    parser.add_argument("--skills-only", action="store_true", help="Skip optional platform manifest checks")
+    args = parser.parse_args(argv)
+    result = validate_repository(args.root, check_manifests=not args.skills_only)
+    root = args.root.resolve()
+    for issue in result.issues:
+        location = issue.path.relative_to(root) if issue.path.is_relative_to(root) else issue.path
+        if issue.line is not None:
+            location = f"{location}:{issue.line}"
+        print(f"{issue.level} {location}: {issue.message}")
+    print(f"Skills: {len(result.skill_dirs)}  Errors: {len(result.errors)}  Warnings: {len(result.warnings)}")
+    print("FAILED" if result.errors else "PASSED")
+    return 1 if result.errors else 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

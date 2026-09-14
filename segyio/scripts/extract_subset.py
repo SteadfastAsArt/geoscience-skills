@@ -17,6 +17,7 @@ Usage:
 """
 
 import argparse
+from pathlib import Path
 import sys
 
 import numpy as np
@@ -37,6 +38,85 @@ def parse_range(range_str: str) -> tuple:
         raise ValueError(f"Invalid range format: {range_str}")
 
 
+def _check_output_path(src_path, dst_path):
+    source, destination = Path(src_path), Path(dst_path)
+    if source.resolve() == destination.resolve() or (
+        destination.exists() and source.samefile(destination)
+    ):
+        raise ValueError("Input and output must be different files")
+
+
+def _range_mask(values, bounds, *, inclusive_end=False):
+    """Select a bounded interval, allowing either end to be omitted."""
+    mask = np.ones(len(values), dtype=bool)
+    if bounds is None:
+        return mask
+    start, end = bounds
+    for bound in (start, end):
+        if bound is not None and not np.isfinite(bound):
+            raise ValueError("Range bounds must be finite")
+    if start is not None and end is not None and start > end:
+        raise ValueError("Range start must not exceed its end")
+    if start is not None:
+        mask &= values >= start
+    if end is not None:
+        mask &= values <= end if inclusive_end else values < end
+    return mask
+
+
+def _write_subset(src, dst_path, trace_indices, time_range):
+    """Copy selected traces, preserving their order, headers, and time basis."""
+    if not len(trace_indices):
+        raise ValueError("The selected range contains no traces")
+    sample_mask = _range_mask(src.samples, time_range, inclusive_end=True)
+    samples = src.samples[sample_mask]
+    if not len(samples):
+        raise ValueError("The selected time range contains no samples")
+
+    delays = []
+    if time_range is not None:
+        interval = segyio.tools.dt(src)
+        for index in trace_indices:
+            header = src.header[int(index)]
+            scalar = header[segyio.TraceField.ScalarTraceHeader]
+            scale = 1.0 / abs(scalar) if scalar < 0 else scalar or 1
+            start = header[segyio.TraceField.DelayRecordingTime] * scale
+            if not np.isclose(start, src.samples[0], rtol=0, atol=1e-7):
+                raise ValueError("Time cropping requires a common trace start time")
+            if header[segyio.TraceField.TRACE_SAMPLE_INTERVAL] not in (0, interval):
+                raise ValueError("Time cropping requires a common sample interval")
+            delay = samples[0] / scale
+            encoded = int(round(delay))
+            if not np.isclose(delay, encoded, rtol=0, atol=1e-7) or not (
+                -32768 <= encoded <= 32767
+            ):
+                raise ValueError(
+                    "Cropped start time cannot be represented by the source "
+                    "DelayRecordingTime and ScalarTraceHeader"
+                )
+            delays.append(encoded)
+
+    # An unstructured spec preserves arbitrary trace subsets, including offsets.
+    # Geometry is inferred from the copied trace headers when the file is reopened.
+    spec = segyio.tools.metadata(src)
+    spec.ilines = spec.xlines = spec.offsets = None
+    spec.tracecount = len(trace_indices)
+    spec.samples = samples
+    with segyio.create(dst_path, spec) as dst:
+        for index in range(src.ext_headers + 1):
+            dst.text[index] = src.text[index]
+        dst.bin = src.bin
+        dst.bin[segyio.BinField.Samples] = len(samples)
+        for output_index, source_index in enumerate(trace_indices):
+            source_index = int(source_index)
+            dst.trace[output_index] = src.trace[source_index][sample_mask]
+            dst.header[output_index] = dict(src.header[source_index])
+            dst.header[output_index][segyio.TraceField.TRACE_SAMPLE_COUNT] = len(samples)
+            if time_range is not None:
+                dst.header[output_index][segyio.TraceField.DelayRecordingTime] = delays[output_index]
+    return len(trace_indices)
+
+
 def extract_by_traces(
     src_path: str,
     dst_path: str,
@@ -49,42 +129,13 @@ def extract_by_traces(
     Returns:
         Number of traces written
     """
-    with segyio.open(src_path, 'r', ignore_geometry=True, strict=False) as src:
-        start = trace_range[0] or 0
-        end = trace_range[1] or src.tracecount
-        trace_indices = list(range(start, min(end, src.tracecount)))
-
-        # Determine sample range
-        if time_range:
-            time_start, time_end = time_range
-            sample_mask = (src.samples >= time_start) & (src.samples <= time_end)
-            new_samples = src.samples[sample_mask]
-        else:
-            sample_mask = np.ones(len(src.samples), dtype=bool)
-            new_samples = src.samples
-
-        # Create spec
-        spec = segyio.spec()
-        spec.samples = new_samples
-        spec.tracecount = len(trace_indices)
-        spec.format = int(src.format)
-
-        with segyio.create(dst_path, spec) as dst:
-            # Copy text header
-            dst.text[0] = src.text[0]
-
-            # Copy binary header and update
-            dst.bin = src.bin
-            dst.bin[segyio.BinField.Samples] = len(new_samples)
-
-            # Copy traces
-            for i, src_idx in enumerate(trace_indices):
-                trace_data = src.trace[src_idx]
-                dst.trace[i] = trace_data[sample_mask]
-                dst.header[i] = dict(src.header[src_idx])
-                dst.header[i][segyio.TraceField.TRACE_SAMPLE_COUNT] = len(new_samples)
-
-        return len(trace_indices)
+    _check_output_path(src_path, dst_path)
+    if any(bound is not None and bound < 0 for bound in trace_range):
+        raise ValueError("Trace indices must be nonnegative")
+    with segyio.open(src_path, 'r', ignore_geometry=True) as src:
+        indices = np.arange(src.tracecount)
+        indices = indices[_range_mask(indices, trace_range)]
+        return _write_subset(src, dst_path, indices, time_range)
 
 
 def extract_by_geometry(
@@ -97,76 +148,20 @@ def extract_by_geometry(
     xline_byte: int = 193,
 ) -> int:
     """
-    Extract subset by inline/crossline ranges.
+    Extract by half-open inline/crossline header ranges.
+
+    Preserve source trace order and every selected offset. Irregular output
+    geometry can be read with ``ignore_geometry=True``.
 
     Returns:
         Number of traces written
     """
-    with segyio.open(src_path, 'r', iline=iline_byte, xline=xline_byte, strict=False) as src:
-        if src.ilines is None:
-            print("Warning: No geometry detected. Falling back to trace-based extraction.")
-            return extract_by_traces(src_path, dst_path, (0, src.tracecount), time_range)
-
-        # Determine inline subset
-        if inline_range:
-            il_start = inline_range[0] or src.ilines[0]
-            il_end = inline_range[1] or src.ilines[-1] + 1
-            sel_ilines = [il for il in src.ilines if il_start <= il < il_end]
-        else:
-            sel_ilines = list(src.ilines)
-
-        # Determine crossline subset
-        if xline_range:
-            xl_start = xline_range[0] or src.xlines[0]
-            xl_end = xline_range[1] or src.xlines[-1] + 1
-            sel_xlines = [xl for xl in src.xlines if xl_start <= xl < xl_end]
-        else:
-            sel_xlines = list(src.xlines)
-
-        # Determine sample range
-        if time_range:
-            time_start, time_end = time_range
-            sample_mask = (src.samples >= time_start) & (src.samples <= time_end)
-            new_samples = src.samples[sample_mask]
-        else:
-            sample_mask = np.ones(len(src.samples), dtype=bool)
-            new_samples = src.samples
-
-        # Create spec for 3D output
-        spec = segyio.spec()
-        spec.sorting = 2  # Inline sorting
-        spec.format = int(src.format)
-        spec.ilines = sel_ilines
-        spec.xlines = sel_xlines
-        spec.samples = new_samples
-
-        with segyio.create(dst_path, spec) as dst:
-            # Copy text header
-            dst.text[0] = src.text[0]
-
-            # Copy and update binary header
-            dst.bin = src.bin
-            dst.bin[segyio.BinField.Samples] = len(new_samples)
-
-            # Copy traces
-            trace_idx = 0
-            for il in sel_ilines:
-                for xl in sel_xlines:
-                    # Get source trace index
-                    src_idx = src.iline.index(il) * len(src.xlines) + src.xline.index(xl)
-
-                    trace_data = src.trace[src_idx]
-                    dst.trace[trace_idx] = trace_data[sample_mask]
-
-                    # Copy header and update geometry
-                    dst.header[trace_idx] = dict(src.header[src_idx])
-                    dst.header[trace_idx][segyio.TraceField.INLINE_3D] = il
-                    dst.header[trace_idx][segyio.TraceField.CROSSLINE_3D] = xl
-                    dst.header[trace_idx][segyio.TraceField.TRACE_SAMPLE_COUNT] = len(new_samples)
-
-                    trace_idx += 1
-
-        return trace_idx
+    _check_output_path(src_path, dst_path)
+    with segyio.open(src_path, 'r', ignore_geometry=True) as src:
+        inlines = src.attributes(iline_byte)[:]
+        xlines = src.attributes(xline_byte)[:]
+        mask = _range_mask(inlines, inline_range) & _range_mask(xlines, xline_range)
+        return _write_subset(src, dst_path, np.flatnonzero(mask), time_range)
 
 
 def main():
@@ -204,7 +199,7 @@ Examples:
     )
     parser.add_argument(
         "--time",
-        help="Time/depth range in ms (e.g., 500:2000)",
+        help="Inclusive time range in ms (e.g., 500:2000, 500:, or :2000)",
     )
     parser.add_argument(
         "--iline-byte",
@@ -220,19 +215,21 @@ Examples:
     )
     args = parser.parse_args()
 
-    # Parse ranges
-    trace_range = parse_range(args.traces) if args.traces else None
-    inline_range = parse_range(args.inlines) if args.inlines else None
-    xline_range = parse_range(args.xlines) if args.xlines else None
-    time_range = parse_range(args.time) if args.time else None
-
     try:
-        if trace_range and not (inline_range or xline_range):
+        trace_range = parse_range(args.traces) if args.traces else None
+        inline_range = parse_range(args.inlines) if args.inlines else None
+        xline_range = parse_range(args.xlines) if args.xlines else None
+        time_range = parse_range(args.time) if args.time else None
+        if trace_range is not None and (inline_range is not None or xline_range is not None):
+            raise ValueError("Use either --traces or --inlines/--xlines, not both")
+        if trace_range is not None or (
+            time_range is not None and inline_range is None and xline_range is None
+        ):
             # Trace-based extraction
             n_traces = extract_by_traces(
                 args.input,
                 args.output,
-                trace_range,
+                trace_range if trace_range is not None else (None, None),
                 time_range,
             )
         elif inline_range or xline_range:
@@ -247,7 +244,7 @@ Examples:
                 args.xline_byte,
             )
         else:
-            print("Error: Specify --traces or --inlines/--xlines for extraction")
+            print("Error: Specify --traces, --inlines/--xlines, or --time for extraction")
             sys.exit(1)
 
         print(f"Extracted {n_traces} traces to {args.output}")

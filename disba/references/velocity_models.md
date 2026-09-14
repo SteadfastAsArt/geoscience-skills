@@ -1,295 +1,120 @@
-# Velocity Model Configuration
+# Preparing layered velocity models
 
-## Table of Contents
-- [Model Structure](#model-structure)
-- [Parameter Units](#parameter-units)
-- [Common Velocity Profiles](#common-velocity-profiles)
-- [Model Constraints](#model-constraints)
-- [Empirical Relations](#empirical-relations)
+Use this reference when converting field-derived arrays or running parameter
+studies. disba uses thickness in km, Vp and Vs in km/s, density in g/cm³,
+and period in seconds. Convert m, m/s, and kg/m³ by dividing by 1000.
 
-## Model Structure
+## Solid-model validation
 
-### Layer Definition
-
-A disba velocity model consists of horizontal layers defined by four parameters:
+This helper deliberately covers **solid isotropic layers**. It rejects water
+layers, missing observations and malformed shapes rather than allowing them
+to reach a numerical root search. A fluid top layer needs a separate model
+and wave-specific boundary-condition check.
 
 ```python
 import numpy as np
 
-# Each array has one element per layer
-thickness = np.array([0.5, 1.0, 2.0, 0.0])  # km
-vp = np.array([1.5, 2.5, 4.0, 6.0])          # km/s
-vs = np.array([0.8, 1.4, 2.3, 3.5])          # km/s
-rho = np.array([1.8, 2.0, 2.3, 2.6])         # g/cm3
+def validate_solid_model(thickness, vp, vs, rho):
+    arrays = tuple(np.asarray(a, dtype=float) for a in (thickness, vp, vs, rho))
+    if any(a.ndim != 1 for a in arrays):
+        raise ValueError('Model properties must be one-dimensional arrays')
+    if not arrays[0].size or any(a.size != arrays[0].size for a in arrays):
+        raise ValueError('Model properties must have the same nonzero length')
+    if any(not np.all(np.isfinite(a)) for a in arrays):
+        raise ValueError('Model properties must be finite')
+    thickness, vp, vs, rho = arrays
+    if np.any(thickness[:-1] <= 0) or thickness[-1] != 0:
+        raise ValueError('Positive layer thicknesses must end with a zero half-space')
+    if np.any(vp <= 0) or np.any(vs <= 0) or np.any(rho <= 0):
+        raise ValueError('Solid velocities and density must be positive')
+    if np.any(vp**2 <= (4.0 / 3.0) * vs**2):
+        raise ValueError('Solid elastic bulk modulus must be positive')
+    return arrays
 ```
 
-### Half-Space Convention
+The zero final thickness records the half-space convention; disba does not
+interpret a nonzero final thickness as a finite bottom boundary. Positive
+bulk and shear moduli imply `-1 < Poisson ratio < 0.5`. Ratios outside a local
+empirical range warrant investigation but are not automatically unstable.
 
-The **last layer** represents a half-space (infinite thickness):
-- Set `thickness[-1] = 0.0` to indicate half-space
-- Properties of half-space affect long-period dispersion
+## Layer table
 
-```python
-# Correct: last layer is half-space
-thickness = np.array([1.0, 2.0, 0.0])  # 3 layers, last is infinite
-
-# Incorrect: no half-space
-thickness = np.array([1.0, 2.0, 3.0])  # Will cause errors
-```
-
-### Creating the Model
+Continue after defining `validate_solid_model`. Transpose row-per-layer input
+exactly once, then pass the four columns to the solver:
 
 ```python
 from disba import PhaseDispersion
 
-# Method 1: Zip arrays
-pd = PhaseDispersion(*zip(thickness, vp, vs, rho))
-
-# Method 2: Explicit tuples
-layers = [
-    (0.5, 1.5, 0.8, 1.8),  # (thickness, vp, vs, rho)
-    (1.0, 2.5, 1.4, 2.0),
-    (0.0, 4.0, 2.3, 2.3),  # half-space
-]
-pd = PhaseDispersion(*layers)
+model = np.array([
+    [0.5, 1.5, 0.8, 1.8],
+    [1.0, 2.5, 1.4, 2.0],
+    [0.0, 4.0, 2.3, 2.3],
+])  # thickness, Vp, Vs, density
+thickness, vp, vs, rho = validate_solid_model(*model.T)
+phase_solver = PhaseDispersion(thickness, vp, vs, rho)
 ```
 
-## Parameter Units
+`*model` passes rows as arguments. Likewise, `*zip(thickness, vp, vs, rho)`
+passes layer rows: neither is the four property columns the constructor needs.
 
-| Parameter | Unit | Notes |
-|-----------|------|-------|
-| thickness | km | Use 0 for half-space |
-| vp | km/s | P-wave velocity |
-| vs | km/s | S-wave velocity |
-| rho | g/cm3 | Density |
-| period | s | Input to dispersion calculation |
+## Forward function
 
-### Unit Conversion
+Continue after defining `validate_solid_model`. Provide periods and every
+model property explicitly so an outer-scope period axis or density fit cannot
+silently change an inversion's forward response.
 
 ```python
-# Meters to kilometers
-thickness_m = np.array([500, 1000, 2000, 0])
-thickness_km = thickness_m / 1000.0
+from disba import PhaseDispersion
 
-# m/s to km/s
-vs_ms = np.array([800, 1400, 2300, 3500])
-vs_kms = vs_ms / 1000.0
-
-# kg/m3 to g/cm3
-rho_kgm3 = np.array([1800, 2000, 2300, 2600])
-rho_gcc = rho_kgm3 / 1000.0
+def forward_model(thickness, vp, vs, rho, periods, mode=0, wave='rayleigh'):
+    model = validate_solid_model(thickness, vp, vs, rho)
+    periods = np.asarray(periods, dtype=float)
+    if (periods.ndim != 1 or not periods.size or
+            not np.all(np.isfinite(periods)) or np.any(periods <= 0) or
+            np.any(np.diff(periods) <= 0)):
+        raise ValueError('Periods must be finite, positive and strictly increasing')
+    if not isinstance(mode, (int, np.integer)) or mode < 0:
+        raise ValueError('Mode must be a nonnegative integer')
+    if wave not in ('rayleigh', 'love'):
+        raise ValueError('Wave must be rayleigh or love')
+    return PhaseDispersion(*model)(periods, mode=mode, wave=wave)
 ```
 
-## Common Velocity Profiles
+Compare predictions and observations only at matching returned periods and
+modes. Report unavailable predictions explicitly; dropping them from a misfit
+without a declared rule can bias an inversion.
 
-### Simple Gradient Model
+## Density estimates
+
+If density is not measured, select and label a calibrated empirical estimate.
+Gardner's standard coefficient `0.31` uses **m/s** to return **g/cm³**. The
+following standalone function accepts the **km/s** used by disba and converts
+before applying it:
 
 ```python
-def gradient_model(n_layers=10, vs_top=0.5, vs_bot=4.0, total_depth=10.0):
-    """Create a linear gradient Vs model."""
-    layer_thickness = total_depth / n_layers
-    thickness = np.full(n_layers + 1, layer_thickness)
-    thickness[-1] = 0.0  # half-space
+import numpy as np
 
-    vs = np.linspace(vs_top, vs_bot, n_layers + 1)
-    vp = vs * 1.73  # Vp/Vs ratio
-    rho = 0.32 * vp + 0.77  # Gardner
-
-    return thickness, vp, vs, rho
+def gardner_density(vp_km_s):
+    vp_km_s = np.asarray(vp_km_s, dtype=float)
+    if not np.all(np.isfinite(vp_km_s)) or np.any(vp_km_s <= 0):
+        raise ValueError('Vp must be finite and positive')
+    return 0.31 * (1000.0 * vp_km_s)**0.25
 ```
 
-### Low Velocity Zone (LVZ)
+For Vp = 3 km/s this gives approximately 2.294 g/cm³, not 0.408 g/cm³.
+The linear expression `0.32*vp + 0.77` is not Gardner's power law. Do not use
+any density or Vp/Vs relationship outside its calibration conditions without
+reporting that modelling assumption. Dispersion depends on density contrasts
+as well as shear velocity.
 
-```python
-def lvz_model():
-    """Model with a low velocity zone."""
-    thickness = np.array([1.0, 1.0, 2.0, 0.0])
-    vs = np.array([1.0, 0.7, 2.0, 3.5])  # LVZ at 1-2 km
-    vp = vs * 1.73
-    rho = 0.32 * vp + 0.77
+For a velocity gradient, refine layers until curves converge at the periods
+of interest. Constant-property layers are solved analytically; an arbitrary
+number of layers per wavelength is not a universal accuracy requirement.
 
-    return thickness, vp, vs, rho
-```
+## Sources
 
-### Continental Crust
+Checked **2026-09-14**:
 
-```python
-def continental_crust():
-    """Simplified continental crust model."""
-    # Sediments, upper crust, lower crust, mantle
-    thickness = np.array([2.0, 15.0, 18.0, 0.0])
-    vs = np.array([2.0, 3.5, 3.9, 4.5])
-    vp = np.array([3.5, 6.1, 6.8, 8.1])
-    rho = np.array([2.3, 2.7, 2.9, 3.3])
-
-    return thickness, vp, vs, rho
-```
-
-### Oceanic Crust
-
-```python
-def oceanic_crust():
-    """Simplified oceanic crust model."""
-    # Water, sediments, layer 2, layer 3, mantle
-    thickness = np.array([4.0, 0.5, 2.0, 5.0, 0.0])
-    vs = np.array([0.0, 1.5, 3.0, 3.8, 4.5])
-    vp = np.array([1.5, 2.5, 5.5, 7.0, 8.1])
-    rho = np.array([1.03, 2.0, 2.6, 2.9, 3.3])
-
-    return thickness, vp, vs, rho
-```
-
-### Near-Surface Engineering
-
-```python
-def engineering_site():
-    """Typical near-surface engineering model."""
-    # Soil, weathered rock, rock, bedrock
-    thickness = np.array([0.005, 0.010, 0.020, 0.0])  # km (5m, 10m, 20m)
-    vs = np.array([0.15, 0.30, 0.50, 1.0])  # km/s
-    vp = vs * 2.0  # Higher Vp/Vs in shallow soils
-    rho = np.array([1.6, 1.8, 2.0, 2.2])
-
-    return thickness, vp, vs, rho
-```
-
-## Model Constraints
-
-### Physical Constraints
-
-```python
-def validate_model(thickness, vp, vs, rho):
-    """Check model validity."""
-    errors = []
-
-    # Vs must be less than Vp
-    if np.any(vs >= vp):
-        errors.append("Vs must be less than Vp")
-
-    # All values must be positive
-    if np.any(vp <= 0) or np.any(vs <= 0) or np.any(rho <= 0):
-        errors.append("Velocities and density must be positive")
-
-    # Thickness must be non-negative
-    if np.any(thickness[:-1] <= 0):
-        errors.append("Layer thickness must be positive (except half-space)")
-
-    # Last layer should be half-space
-    if thickness[-1] != 0.0:
-        errors.append("Last layer should have thickness=0 (half-space)")
-
-    # Reasonable Vp/Vs ratio (1.5 - 2.5 typical)
-    ratio = vp / vs
-    if np.any(ratio < 1.4) or np.any(ratio > 3.0):
-        errors.append(f"Unusual Vp/Vs ratio detected: {ratio}")
-
-    return errors
-```
-
-### Poisson's Ratio Limits
-
-Vp/Vs ratio is related to Poisson's ratio:
-
-```python
-def vp_vs_to_poisson(vp_vs_ratio):
-    """Convert Vp/Vs ratio to Poisson's ratio."""
-    return (vp_vs_ratio**2 - 2) / (2 * (vp_vs_ratio**2 - 1))
-
-# Valid range: Poisson's ratio 0 to 0.5
-# Corresponds to Vp/Vs: sqrt(2) to infinity
-# Typical rocks: Vp/Vs 1.6-2.0, Poisson 0.18-0.33
-```
-
-## Empirical Relations
-
-### Vp-Vs Relations
-
-```python
-# Brocher (2005) empirical relation for Vp > 1.5 km/s
-def brocher_vs(vp):
-    """Estimate Vs from Vp using Brocher (2005)."""
-    return 0.7858 - 1.2344*vp + 0.7949*vp**2 - 0.1238*vp**3 + 0.0064*vp**4
-
-# Simple constant ratio
-def simple_vs(vp, ratio=1.73):
-    """Estimate Vs from Vp using constant ratio."""
-    return vp / ratio
-
-# Castagna mudrock line
-def castagna_vs(vp):
-    """Estimate Vs from Vp using Castagna mudrock line."""
-    return (vp - 1.36) / 1.16
-```
-
-### Density Relations
-
-```python
-# Gardner et al. (1974)
-def gardner_density(vp):
-    """Estimate density from Vp using Gardner relation."""
-    return 0.31 * vp**0.25  # vp in km/s, returns g/cm3
-
-# Nafe-Drake curve (approximation)
-def nafe_drake_density(vp):
-    """Estimate density from Vp using Nafe-Drake."""
-    return 1.6612 * vp - 0.4721 * vp**2 + 0.0671 * vp**3 - 0.0043 * vp**4 + 0.000106 * vp**5
-
-# Linear approximation (commonly used)
-def linear_density(vp):
-    """Simple linear density estimate."""
-    return 0.32 * vp + 0.77
-```
-
-### Complete Model from Vs Only
-
-```python
-def vs_to_full_model(vs, thickness, vp_vs_ratio=1.73):
-    """
-    Create full model from Vs profile only.
-
-    Args:
-        vs: S-wave velocity array (km/s)
-        thickness: Layer thickness array (km)
-        vp_vs_ratio: Vp/Vs ratio (default 1.73)
-
-    Returns:
-        thickness, vp, vs, rho
-    """
-    vp = vs * vp_vs_ratio
-    rho = 0.32 * vp + 0.77  # Linear density relation
-
-    return thickness, vp, vs, rho
-```
-
-## Model Resolution
-
-### Layer Thickness Guidelines
-
-| Application | Typical Layer Thickness | Period Range |
-|-------------|------------------------|--------------|
-| Engineering (MASW) | 1-5 m | 0.05-1 s |
-| Shallow crustal | 0.5-2 km | 1-20 s |
-| Regional | 2-10 km | 10-100 s |
-| Global | 10-50 km | 50-300 s |
-
-### Minimum Layers for Period
-
-Rule of thumb: At least 3-5 layers per wavelength for accurate dispersion.
-
-```python
-def minimum_layers(min_period, max_depth, avg_velocity=3.0):
-    """
-    Estimate minimum number of layers for accurate dispersion.
-
-    Args:
-        min_period: Minimum period in seconds
-        max_depth: Maximum model depth in km
-        avg_velocity: Average velocity in km/s
-
-    Returns:
-        Suggested number of layers
-    """
-    min_wavelength = avg_velocity * min_period
-    layers_per_wavelength = 4
-    return int(max_depth / min_wavelength * layers_per_wavelength) + 1
-```
+- [disba 0.7.0 model implementation](https://github.com/keurfonluu/disba/blob/v0.7.0/disba/_base.py)
+- [disba 0.7.0 dispersion implementation](https://github.com/keurfonluu/disba/blob/v0.7.0/disba/_dispersion.py)
+- [Gardner units in Bruges 0.5.4](https://github.com/agilescientific/bruges/blob/v0.5.4/bruges/petrophysics/petrophysics.py)
