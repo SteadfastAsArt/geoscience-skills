@@ -2,18 +2,20 @@
 name: harmonica
 description: |
   Gravity and magnetic data processing and forward modelling using Fatiando a Terra.
-  Use when Claude needs to: (1) Compute gravity forward models (point masses, prisms,
+  Use when the agent needs to: (1) Compute gravity forward models (point masses, prisms,
   tesseroids), (2) Apply terrain/Bouguer corrections, (3) Grid scattered potential
   field data with equivalent sources, (4) Perform upward/downward continuation,
   (5) Calculate magnetic anomalies from magnetized bodies, (6) Apply derivative
   filters (gradients, tilt angle), (7) Process regional or local gravity surveys.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [Gravity, Magnetics, Potential Fields, Forward Modelling, Fatiando]
-dependencies: [harmonica>=0.6.0, numpy, verde]
-complements: [verde, pyvista]
-workflow_role: analysis
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["Gravity", "Magnetics", "Potential Fields", "Forward Modelling", "Fatiando"]'
+  dependencies: '["harmonica>=0.6.0", "numpy", "verde"]'
+  complements: '["verde", "pyvista"]'
+  workflow_role: analysis
+  skill_type: domain
 ---
 
 # Harmonica - Gravity and Magnetics

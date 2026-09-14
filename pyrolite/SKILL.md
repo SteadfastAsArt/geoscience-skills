@@ -2,18 +2,20 @@
 name: pyrolite
 description: |
   Geochemistry data analysis and visualization for igneous, metamorphic, and
-  sedimentary rocks. Use when Claude needs to: (1) Create ternary diagrams for
+  sedimentary rocks. Use when the agent needs to: (1) Create ternary diagrams for
   compositional data, (2) Plot REE spider diagrams with normalization, (3) Build
   TAS or other classification diagrams, (4) Apply log-ratio transforms to
   compositional data, (5) Calculate CIPW norms, (6) Generate Harker variation
   diagrams, (7) Compute element ratios and anomalies.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [Geochemistry, REE, Spider Diagram, TAS, Compositional Data]
-dependencies: [pyrolite>=0.3.0, pandas, matplotlib]
-complements: []
-workflow_role: visualization
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["Geochemistry", "REE", "Spider Diagram", "TAS", "Compositional Data"]'
+  dependencies: '["pyrolite>=0.3.0", "pandas", "matplotlib"]'
+  complements: '[]'
+  workflow_role: visualization
+  skill_type: domain
 ---
 
 # pyrolite - Geochemistry Analysis

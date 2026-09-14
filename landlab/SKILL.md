@@ -2,18 +2,20 @@
 name: landlab
 description: |
   Landscape evolution and surface process modelling in Python. Build 2D numerical
-  models for erosion, hydrology, soil transport, and geomorphology. Use when Claude
+  models for erosion, hydrology, soil transport, and geomorphology. Use when the agent
   needs to: (1) Model landscape evolution over time, (2) Simulate river/stream erosion,
   (3) Route water flow across terrain, (4) Model hillslope diffusion processes,
   (5) Simulate weathering and soil production, (6) Analyze drainage networks,
   (7) Combine multiple geomorphic processes, (8) Load/save DEM data for modeling.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [Landscape Evolution, Geomorphology, Erosion, Surface Processes, Flow Routing]
-dependencies: [landlab>=2.6.0, numpy, matplotlib]
-complements: [pyvista]
-workflow_role: analysis
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["Landscape Evolution", "Geomorphology", "Erosion", "Surface Processes", "Flow Routing"]'
+  dependencies: '["landlab>=2.6.0", "numpy", "matplotlib"]'
+  complements: '["pyvista"]'
+  workflow_role: analysis
+  skill_type: domain
 ---
 
 # Landlab - Surface Process Modelling

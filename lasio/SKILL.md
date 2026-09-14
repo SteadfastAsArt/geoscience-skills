@@ -2,18 +2,20 @@
 name: lasio
 description: |
   Read, write, and manipulate LAS (Log ASCII Standard) well log files for borehole
-  geophysical and petrophysical data. Use when Claude needs to: (1) Read/parse LAS
+  geophysical and petrophysical data. Use when the agent needs to: (1) Read/parse LAS
   1.2 or 2.0 files, (2) Extract well headers or curve data, (3) Convert LAS to
   DataFrame/CSV/Excel, (4) Create new LAS files from arrays, (5) Modify existing
   LAS files, (6) Handle problematic or malformed LAS files, (7) Batch process
   multiple well files.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [Well Logs, LAS, Petrophysics, Data I/O, Lasio, CWLS, Wireline, Borehole]
-dependencies: [lasio>=0.30]
-complements: [welly, petropy, striplog]
-workflow_role: data-loading
+metadata:
+  version: 1.0.2
+  author: Geoscience Skills
+  tags: '["Well Logs", "LAS", "Petrophysics", "Data I/O", "Lasio", "CWLS", "Wireline", "Borehole"]'
+  dependencies: '["lasio>=0.30", "numpy", "pandas"]'
+  complements: '["welly", "petropy", "striplog"]'
+  workflow_role: data-loading
+  skill_type: domain
 ---
 
 # lasio - LAS Well Log Files
@@ -140,7 +142,7 @@ support multi-frame data and array logs -- lasio cannot read them.
 ## Common Workflows
 
 ### Read, QC, and export well log data
-```
+```text
 - [ ] Read LAS file with `lasio.read()`, handle encoding if needed
 - [ ] Inspect curves: `las.curves.keys()` and well headers
 - [ ] Replace null values: `df.replace(null_val, np.nan)`

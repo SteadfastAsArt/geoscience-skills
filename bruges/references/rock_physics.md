@@ -1,182 +1,103 @@
-# Rock Physics Equations
+# Rock physics calculations
 
-## Table of Contents
-- [Elastic Moduli](#elastic-moduli)
-- [Velocity-Moduli Relations](#velocity-moduli-relations)
-- [Empirical Relations](#empirical-relations)
-- [Fluid Substitution](#fluid-substitution)
-- [Effective Medium Models](#effective-medium-models)
-- [Common Mineral Properties](#common-mineral-properties)
-- [Common Fluid Properties](#common-fluid-properties)
+These independent examples use Bruges 0.5.4. Use m/s, kg/m³ and Pa consistently;
+mineral/fluid tables expressed in GPa or g/cm³ require conversion first.
 
-## Elastic Moduli
+## Elastic moduli and velocities
 
-### From Velocities
+Use keyword arguments: several moduli functions share long signatures, so
+positional arguments can bind to a different property than intended.
+
 ```python
+import numpy as np
 from bruges.rockphysics import moduli
 
-# Bulk modulus (K) in GPa
-K = moduli.bulk(vp, vs, rho)  # K = rho * (Vp^2 - 4/3 * Vs^2)
-
-# Shear modulus (mu) in GPa
-mu = moduli.shear(vs, rho)    # mu = rho * Vs^2
-
-# Young's modulus (E) in GPa
-E = moduli.youngs(vp, vs, rho)
-
-# Poisson's ratio (nu)
-nu = moduli.poissons(vp, vs)  # nu = (Vp^2 - 2*Vs^2) / (2*(Vp^2 - Vs^2))
+vp, vs, rho = 3000.0, 1700.0, 2300.0
+bulk_pa = moduli.bulk(vp=vp, vs=vs, rho=rho)
+shear_pa = moduli.mu(vs=vs, rho=rho)
+youngs_pa = moduli.youngs(vp=vp, vs=vs, rho=rho)
+poisson = moduli.pr(vp=vp, vs=vs)
+bulk_gpa = bulk_pa / 1e9
+vp_roundtrip = moduli.vp(bulk=bulk_pa, mu=shear_pa, rho=rho)
+vs_roundtrip = moduli.vs(mu=shear_pa, rho=rho)
 ```
 
-### Equations
+For an isotropic elastic solid, require finite positive density, shear modulus
+and bulk modulus. The stability range is `-1 < poisson < 0.5`; the narrower
+positive range is common for rocks but is not the full mathematical range.
+The functions do not automatically convert units or validate log quality.
 
-| Modulus | Symbol | Formula | Unit |
-|---------|--------|---------|------|
-| Bulk | K | rho * (Vp^2 - 4/3 * Vs^2) | GPa |
-| Shear | mu | rho * Vs^2 | GPa |
-| Young's | E | 9*K*mu / (3*K + mu) | GPa |
-| Poisson's | nu | (Vp^2 - 2*Vs^2) / (2*(Vp^2 - Vs^2)) | - |
-| Lambda | lam | rho * (Vp^2 - 2*Vs^2) | GPa |
+## Empirical estimates
 
-## Velocity-Moduli Relations
+Gardner belongs to `bruges.petrophysics`, and its default output is kg/m³.
+Castagna's mudrock relation is written explicitly because Bruges 0.5.4 has no
+`rockphysics.castagna` function. These empirical relations require local
+calibration; label derived curves and retain the measured input.
 
-### Velocities from Moduli
 ```python
-from bruges.rockphysics import moduli
+import numpy as np
+from bruges.petrophysics import gardner
 
-vp = moduli.vp_from_moduli(K, mu, rho)  # Vp = sqrt((K + 4/3*mu) / rho)
-vs = moduli.vs_from_moduli(mu, rho)     # Vs = sqrt(mu / rho)
+vp_m_s = np.array([2000.0, 3000.0, 4000.0])
+rho_kg_m3 = gardner(vp_m_s)
+rho_g_cm3 = rho_kg_m3 / 1000.0
+vs_m_s = (vp_m_s - 1360.0) / 1.16  # Castagna mudrock line, m/s.
 ```
 
-### Vp/Vs Ratio
+Reject nonpositive predicted Vs instead of treating it as a fluid layer.
+The fit should not be extrapolated indiscriminately to unconsolidated soil,
+carbonates, gas-bearing formations or laboratory pressure conditions.
+
+## Gassmann fluid substitution
+
+The example substitutes brine with a gas using illustrative fluid properties.
+`kmin` is the **mineral** bulk modulus, not the dry-frame modulus; this API
+needs neither mineral density nor an argument named `rho_min`.
+
 ```python
-# For Poisson's ratio nu:
-vp_vs = np.sqrt((2 - 2*nu) / (1 - 2*nu))
+import numpy as np
+from bruges.rockphysics import avseth_fluidsub, moduli
 
-# Typical values:
-# Sandstone (dry): 1.5 - 1.7
-# Sandstone (brine): 1.7 - 2.0
-# Shale: 1.7 - 2.5
-# Carbonate: 1.8 - 2.0
-```
-
-## Empirical Relations
-
-### Gardner (Density from Vp)
-```python
-from bruges.rockphysics import gardner
-
-rho = gardner(vp)  # rho = a * Vp^b (default: a=0.31, b=0.25)
-# Input: Vp in m/s
-# Output: rho in g/cc
-```
-
-### Castagna Mudrock Line (Vs from Vp)
-```python
-from bruges.rockphysics import castagna
-
-vs = castagna(vp)  # Vs = 0.8621*Vp - 1172 (mudrocks)
-# Input: Vp in m/s
-# Output: Vs in m/s
-```
-
-### Han (Vp from Porosity and Clay)
-```python
-# Vp = 5.59 - 6.93*phi - 2.18*C  (km/s)
-# Where phi = porosity, C = clay fraction
-```
-
-### Raymer-Hunt-Gardner (Sonic-Porosity)
-```python
-# Vp = (1-phi)^2 * Vp_matrix + phi * Vp_fluid
-```
-
-## Fluid Substitution
-
-### Gassmann Equation
-```python
-from bruges.rockphysics import gassmann
-
-vp_new, vs_new, rho_new = gassmann(
-    vp_sat, vs_sat, rho_sat,  # Saturated rock properties
-    k_min, rho_min,            # Mineral bulk modulus and density
-    k_fl1, rho_fl1,            # Original fluid
-    k_fl2, rho_fl2,            # New fluid
-    phi                        # Porosity
+vp_sat, vs_sat, rho_sat = 3000.0, 1700.0, 2300.0
+phi = 0.20
+rho_brine, rho_gas = 1050.0, 100.0  # kg/m³
+kmin, k_brine, k_gas = 37e9, 2.5e9, 0.05e9  # Pa
+substituted = avseth_fluidsub(
+    vp=vp_sat, vs=vs_sat, rho=rho_sat, phi=phi,
+    rhof1=rho_brine, rhof2=rho_gas,
+    kmin=kmin, kf1=k_brine, kf2=k_gas,
 )
+vp_new, vs_new, rho_new = substituted
+mu_before = moduli.mu(vs=vs_sat, rho=rho_sat)
+mu_after = moduli.mu(vs=vs_new, rho=rho_new)
 ```
 
-### Gassmann Assumptions
-1. Porous rock is isotropic and homogeneous
-2. Pore space is well connected (high permeability)
-3. Fluid does not interact with solid (inert)
-4. Low frequency (seismic, not ultrasonic)
-5. Shear modulus independent of fluid
+For these inputs density decreases by 190 kg/m³. The shear modulus is
+unchanged, while Vs changes with density. Also check identity substitution
+and the saturated/dry/mineral modulus ordering. Require `0 < phi < 1`,
+positive fluid/mineral moduli and plausible saturated properties before
+applying this simple model; do not replace invalid outputs with zero.
 
-### Step-by-Step Gassmann
-```python
-# 1. Calculate dry rock modulus from saturated
-K_sat = moduli.bulk(vp_sat, vs_sat, rho_sat)
-mu = moduli.shear(vs_sat, rho_sat)
+Gassmann assumes a connected equilibrated pore system at low frequency, an
+isotropic solid frame, and no fluid-induced frame alteration. Calibrate fluid
+properties to pressure, temperature and composition. Fluid substitution alone
+is not a saturation inversion or a unique hydrocarbon indicator.
 
-# 2. Calculate dry frame modulus
-K_dry = (K_sat * (phi*K_min/K_fl1 + 1 - phi) - K_min) / \
-        (phi*K_min/K_fl1 + K_sat/K_min - 1 - phi)
+## Mineral mixing and conditional models
 
-# 3. Substitute new fluid
-K_sat_new = K_dry + (1 - K_dry/K_min)^2 / \
-            (phi/K_fl2 + (1-phi)/K_min - K_dry/K_min^2)
+For mineral mixing, `voigt_bound`, `reuss_bound`, `hill_average` and
+`hashin_shtrikman` are available in `bruges.rockphysics`. Keep volume fractions
+normalized and moduli in the same units. A mineral mixture's modulus is not
+a dry porous frame modulus. Select contact/effective-medium models only when
+their pore geometry and stress assumptions are justified; consult the
+specific upstream API before using a model not exercised here.
 
-# 4. New density
-rho_new = rho_sat - phi*rho_fl1 + phi*rho_fl2
+## Sources
 
-# 5. New velocities
-vp_new = moduli.vp_from_moduli(K_sat_new, mu, rho_new)
-vs_new = moduli.vs_from_moduli(mu, rho_new)
-```
+API and units checked **2026-09-14**:
 
-## Effective Medium Models
-
-### Voigt-Reuss-Hill Average
-```python
-# Voigt (upper bound): K_v = sum(f_i * K_i)
-# Reuss (lower bound): 1/K_r = sum(f_i / K_i)
-# Hill (average): K_h = (K_v + K_r) / 2
-```
-
-### Hashin-Shtrikman Bounds
-```python
-# Tighter bounds than Voigt-Reuss for two-phase mixtures
-# Used for mineral-pore or mineral-mineral mixtures
-```
-
-## Common Mineral Properties
-
-| Mineral | K (GPa) | mu (GPa) | rho (g/cc) |
-|---------|---------|----------|------------|
-| Quartz | 37 | 44 | 2.65 |
-| Calcite | 77 | 32 | 2.71 |
-| Dolomite | 95 | 45 | 2.87 |
-| Clay | 21 | 7 | 2.60 |
-| Feldspar | 38 | 15 | 2.63 |
-
-## Common Fluid Properties
-
-| Fluid | K (GPa) | rho (g/cc) |
-|-------|---------|------------|
-| Brine (typical) | 2.5 | 1.05 |
-| Oil (light) | 0.9 | 0.80 |
-| Oil (heavy) | 1.5 | 0.95 |
-| Gas (shallow) | 0.02 | 0.10 |
-| Gas (deep) | 0.10 | 0.25 |
-
-Note: Fluid properties vary significantly with pressure, temperature, and composition. Use Batzle-Wang equations for accurate values.
-
-## Batzle-Wang Fluid Properties
-
-```python
-# For accurate fluid properties at reservoir conditions:
-# K_brine = f(T, P, salinity)
-# K_oil = f(T, P, API gravity, GOR)
-# K_gas = f(T, P, gas gravity)
-```
+- [Bruges moduli API](https://code.agilescientific.com/bruges/api/bruges.rockphysics.html#module-bruges.rockphysics.moduli)
+- [Bruges 0.5.4 fluid substitution source](https://github.com/agilescientific/bruges/blob/v0.5.4/bruges/rockphysics/fluidsub.py)
+- [Bruges 0.5.4 Gardner source](https://github.com/agilescientific/bruges/blob/v0.5.4/bruges/petrophysics/petrophysics.py)
+- [Castagna, Batzle and Eastwood (1985)](https://doi.org/10.1190/1.1441933): empirical velocity relationships.
+- [SEG mudrock-line definition](https://wiki.seg.org/wiki/Dictionary:Mudrock_line/en): `Vp = 1.16*Vs + 1.36`, with velocities in km/s.

@@ -2,17 +2,19 @@
 name: geostatspy
 description: |
   GSLIB-inspired geostatistics library for variogram analysis, kriging, and
-  simulation. Use when Claude needs to: (1) Calculate experimental variograms,
+  simulation. Use when the agent needs to: (1) Calculate experimental variograms,
   (2) Fit variogram models, (3) Perform simple/ordinary kriging, (4) Run
   sequential Gaussian simulation (SGSIM), (5) Apply normal score transforms,
   (6) Decluster spatial data, (7) Generate multiple realizations for uncertainty.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [Geostatistics, Variogram, Kriging, SGSIM, GSLIB, Spatial Estimation]
-dependencies: [geostatspy>=0.0.40, numpy, pandas, matplotlib]
-complements: [verde, scikit-gstat]
-workflow_role: analysis
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["Geostatistics", "Variogram", "Kriging", "SGSIM", "GSLIB", "Spatial Estimation"]'
+  dependencies: '["geostatspy>=0.0.40", "numpy", "pandas", "matplotlib"]'
+  complements: '["verde", "scikit-gstat"]'
+  workflow_role: analysis
+  skill_type: domain
 ---
 
 # GeostatsPy - Geostatistical Analysis

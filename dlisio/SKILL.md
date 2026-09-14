@@ -2,18 +2,20 @@
 name: dlisio
 description: |
   Read and parse DLIS (Digital Log Interchange Standard) and LIS (Log Information
-  Standard) well log files. Use when Claude needs to: (1) Read/parse DLIS or LIS
+  Standard) well log files. Use when the agent needs to: (1) Read/parse DLIS or LIS
   files, (2) Extract well log curves as numpy arrays, (3) Access file metadata and
   origin information, (4) Handle multi-frame or multi-file DLIS, (5) Convert DLIS
   to LAS or DataFrame, (6) Work with RP66 format well logs, (7) Process array or
   image log data.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [Well Logs, DLIS, RP66, Data I/O, Dlisio, Petrophysics, LIS, Wireline]
-dependencies: [dlisio>=0.3.0]
-complements: [welly, petropy, striplog]
-workflow_role: data-loading
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["Well Logs", "DLIS", "RP66", "Data I/O", "Dlisio", "Petrophysics", "LIS", "Wireline"]'
+  dependencies: '["dlisio>=0.3.0"]'
+  complements: '["welly", "petropy", "striplog"]'
+  workflow_role: data-loading
+  skill_type: domain
 ---
 
 # dlisio - DLIS/LIS File Reader
@@ -159,7 +161,7 @@ processing, formation tops, and multi-well projects after initial file loading.
 ## Common Workflows
 
 ### Read and convert DLIS to DataFrame
-```
+```text
 - [ ] Load file with `dlisio.dlis.load()`, handle encoding if needed
 - [ ] List logical files and frames to understand file structure
 - [ ] Inspect channels: names, units, dimensions per frame

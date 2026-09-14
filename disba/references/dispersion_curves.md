@@ -1,198 +1,115 @@
-# Dispersion Curves Reference
+# Reading dispersion curves
 
-## Table of Contents
-- [Phase vs Group Velocity](#phase-vs-group-velocity)
-- [Mode Numbering](#mode-numbering)
-- [Wave Types](#wave-types)
-- [Dispersion Characteristics](#dispersion-characteristics)
-- [Measurement Techniques](#measurement-techniques)
+The examples below continue from the model, periods and solvers in
+[the skill entrypoint](../SKILL.md). `DispersionCurve` contains `period`,
+`velocity`, `mode`, `wave`, and `type`; use its fields explicitly.
 
-## Phase vs Group Velocity
+## Phase and group velocity
 
-### Phase Velocity (c)
-The velocity at which a single frequency component propagates.
+Phase velocity c tracks a constant phase. Group velocity U tracks a wave
+packet in the corresponding mode. From `k = omega / c` and `U = d omega / dk`,
+when c is a function of period T:
+
+```text
+U = c / (1 + (T/c) * dc/dT)
+```
+
+This is not `c + T*dc/dT`. Differentiation amplifies noise; prefer disba's
+`GroupDispersion` for forward modelling. The helper below is useful for
+checking a smooth, densely sampled phase curve, away from its endpoints or
+mode discontinuities:
 
 ```python
-from disba import PhaseDispersion
+import numpy as np
 
-pd = PhaseDispersion(*zip(thickness, vp, vs, rho))
-phase_vel = pd(periods, mode=0, wave='rayleigh')
+def group_from_phase(period_s, phase_km_s):
+    period_s = np.asarray(period_s, dtype=float)
+    phase_km_s = np.asarray(phase_km_s, dtype=float)
+    if (period_s.ndim != 1 or period_s.size < 3 or
+            phase_km_s.shape != period_s.shape or
+            not np.all(np.isfinite(period_s)) or
+            not np.all(np.isfinite(phase_km_s)) or
+            np.any(period_s <= 0) or np.any(phase_km_s <= 0) or
+            np.any(np.diff(period_s) <= 0)):
+        raise ValueError('Provide matching positive finite curves on increasing periods')
+    dc_dt = np.gradient(phase_km_s, period_s, edge_order=2)
+    denominator = 1.0 + period_s * dc_dt / phase_km_s
+    if np.any(denominator <= 0):
+        raise ValueError('This curve does not give a positive finite group velocity')
+    return phase_km_s / denominator
 ```
 
-### Group Velocity (U)
-The velocity at which energy (wave packet) propagates. Related to phase velocity by:
+In normal dispersion c increases with period and U is lower than c. Neither
+ordering is universal for every model and mode. A curve alone does not give
+a unique geological interpretation.
 
-```
-U = c + T * (dc/dT)
-```
+## Higher modes
 
-where T is period.
+Fundamental mode is `mode=0`; positive integers select overtones. Higher
+modes can have missing roots over part or all of the requested period range.
+A returned partial or empty curve is not necessarily an exception.
 
 ```python
-from disba import GroupDispersion
+from disba import DispersionError
 
-gd = GroupDispersion(*zip(thickness, vp, vs, rho))
-group_vel = gd(periods, mode=0, wave='rayleigh')
-```
-
-### Key Differences
-
-| Property | Phase Velocity | Group Velocity |
-|----------|---------------|----------------|
-| Physical meaning | Wavefront propagation | Energy propagation |
-| Measurement | Cross-correlation | Envelope tracking |
-| Typical value | Usually higher | Usually lower |
-| Relation to structure | Direct from c(T) | Derivative of c(T) |
-
-## Mode Numbering
-
-### Fundamental Mode (mode=0)
-- Lowest velocity at each period
-- Most commonly measured
-- Penetrates deepest for a given period
-- Most stable in computation
-
-### Higher Modes (mode=1, 2, ...)
-- Higher velocities than fundamental
-- Shallower sensitivity
-- May not exist at all periods
-- Require specific velocity structures
-
-```python
-# Check which modes exist
-for mode in range(5):
+modes = {}
+mode_errors = {}
+for mode in range(3):
     try:
-        c = pd(periods, mode=mode, wave='rayleigh')
-        print(f"Mode {mode}: computed for {len(c)} periods")
-    except Exception as e:
-        print(f"Mode {mode}: not available - {e}")
+        curve = phase_solver(periods, mode=mode, wave='rayleigh')
+    except DispersionError as error:
+        mode_errors[mode] = str(error)
+    else:
+        modes[mode] = curve
+        print(f'Mode {mode}: {curve.period.size} of {periods.size} periods')
 ```
 
-### Mode Characteristics
+Record root-search failures; they can reflect the model or numerical search,
+not only physical absence of a mode. Input errors must propagate. For plots
+or misfits, preserve `curve.period` and never align a partial curve by index
+to the full requested period axis. Modal sensitivity and penetration depend
+on the model and frequency; higher modes are not universally shallower.
 
-| Mode | Velocity | Depth Sensitivity | Stability |
-|------|----------|-------------------|-----------|
-| 0 (Fundamental) | Lowest | Deepest | Most stable |
-| 1 (First overtone) | Higher | Shallower | Less stable |
-| 2+ (Higher overtones) | Highest | Shallowest | Least stable |
+## Plot returned axes
 
-## Wave Types
-
-### Rayleigh Waves
-- Particle motion: Retrograde ellipse (vertical + radial)
-- Sensitive to: Vs (primary), Vp (secondary), density
-- Existence: Always present in layered media
-- Typical use: Primary wave for ambient noise tomography
-
-```python
-cpr = pd(periods, mode=0, wave='rayleigh')
-```
-
-### Love Waves
-- Particle motion: Horizontal (SH), transverse to propagation
-- Sensitive to: Vs only (not Vp or density in isotropic media)
-- Existence: Requires low-velocity layer over half-space
-- Typical use: Constrain Vs independently of Vp
-
-```python
-cpl = pd(periods, mode=0, wave='love')
-```
-
-### Comparing Wave Types
+Continue from `rayleigh` and `love` in the entrypoint:
 
 ```python
 import matplotlib.pyplot as plt
 
-periods = np.linspace(0.1, 5.0, 50)
-pd = PhaseDispersion(*zip(thickness, vp, vs, rho))
-
-cpr = pd(periods, mode=0, wave='rayleigh')
-cpl = pd(periods, mode=0, wave='love')
-
-plt.plot(periods, cpr, 'b-', label='Rayleigh')
-plt.plot(periods, cpl, 'g-', label='Love')
-plt.xlabel('Period (s)')
-plt.ylabel('Phase velocity (km/s)')
-plt.legend()
+fig, ax = plt.subplots()
+ax.plot(rayleigh.period, rayleigh.velocity, label='Rayleigh')
+ax.plot(love.period, love.velocity, label='Love')
+ax.set(xlabel='Period (s)', ylabel='Phase velocity (km/s)')
+ax.legend()
 ```
 
-## Dispersion Characteristics
+Rayleigh motion is coupled P-SV; Love motion is transverse SH. In isotropic
+layers, the Love problem depends on shear modulus (density times Vs squared),
+density and thickness, not Vp. Do not interpret it as sensitive only to Vs.
 
-### Normal Dispersion
-Phase velocity increases with period (deeper sampling = faster velocity).
-Typical of Earth models with velocity increasing with depth.
-
-### Anomalous Dispersion
-Phase velocity decreases with period at some frequencies.
-Indicates low-velocity zone at depth.
-
-### Dispersion Curve Shape Indicators
-
-| Shape | Geological Interpretation |
-|-------|---------------------------|
-| Smooth increase | Gradual velocity increase with depth |
-| Sharp kink | Velocity discontinuity (e.g., Moho) |
-| Flat section | Thick layer with uniform velocity |
-| Velocity decrease | Low velocity zone present |
-
-## Measurement Techniques
-
-### FTAN (Frequency-Time Analysis)
-- Measures group velocity
-- Uses narrow bandpass filtering
-- Envelope of filtered signal
-- Common for earthquake data
-
-### Phase Cross-Correlation
-- Measures phase velocity
-- Cross-correlate two stations
-- Phase of cross-spectrum
-- Common for ambient noise
-
-### Array Methods (SPAC, MASW)
-- Simultaneous phase velocity
-- Spatial autocorrelation
-- Multi-channel analysis
-- Common for engineering applications
-
-## Period-Depth Relationship
-
-Approximate rule of thumb for Rayleigh waves:
-- Sensitivity depth ~ 1/3 wavelength
-- wavelength = velocity * period
+## Frequency input
 
 ```python
-# Approximate depth of maximum sensitivity
-def approx_sensitivity_depth(period, avg_velocity=3.0):
-    """
-    Estimate depth of maximum sensitivity.
+import numpy as np
 
-    Args:
-        period: Period in seconds
-        avg_velocity: Average velocity in km/s
-
-    Returns:
-        Approximate depth in km
-    """
-    wavelength = avg_velocity * period
-    return wavelength / 3.0
-
-# Example: 10s period, 3 km/s average
-depth = approx_sensitivity_depth(10.0, 3.0)  # ~10 km
+frequencies_hz = np.linspace(0.2, 10.0, 50)
+period_order = np.argsort(1.0 / frequencies_hz)
+periods_from_frequency = (1.0 / frequencies_hz)[period_order]
+curve_from_frequency = phase_solver(periods_from_frequency, wave='rayleigh')
+returned_frequency_hz = 1.0 / curve_from_frequency.period
 ```
 
-## Frequency vs Period Convention
+Require finite positive input frequencies. Sort observation values and
+uncertainties with the same `period_order`, then match them to returned
+periods. Ascending frequency becomes descending period before sorting.
+A wavelength (`c*T`) gives a scale, but sensitivity kernels provide a more
+useful model-specific depth assessment than assigning a fixed fraction of
+wavelength as a resolved depth.
 
-disba uses **period** (seconds). To use frequency:
+## Sources
 
-```python
-# Convert frequency (Hz) to period (s)
-frequencies = np.linspace(0.2, 10.0, 50)  # Hz
-periods = 1.0 / frequencies  # seconds
-
-# Sort by increasing period for plotting
-sort_idx = np.argsort(periods)
-periods = periods[sort_idx]
-
-cpr = pd(periods, mode=0, wave='rayleigh')
-```
+Checked **2026-09-14** against the official
+[disba 0.7.0 result handling](https://github.com/keurfonluu/disba/blob/v0.7.0/disba/_dispersion.py)
+and [CPS-derived phase/group solver](https://github.com/keurfonluu/disba/blob/v0.7.0/disba/_cps/_surf96.py).
+The phase/group identity follows by differentiating `k = omega/c` above.

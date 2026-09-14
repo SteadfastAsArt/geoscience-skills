@@ -2,17 +2,19 @@
 name: segyio
 description: |
   Read, write, and manipulate SEG-Y seismic data files. Fast C library with Python
-  bindings for trace, header, inline, and crossline access. Use when Claude needs to:
+  bindings for trace, header, inline, and crossline access. Use when the agent needs to:
   (1) Read/inspect SEG-Y files, (2) Extract trace data or headers, (3) Access 3D survey
   data by inline/crossline, (4) Create new SEG-Y files from arrays, (5) Modify existing
   SEG-Y files, (6) Extract subsets of seismic data, (7) Read/write Seismic Unix format.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [Seismic, SEG-Y, Data I/O, Traces, Headers, Segyio, Inlines, Crosslines]
-dependencies: [segyio>=1.9.0, numpy]
-complements: [obspy, bruges, pyvista]
-workflow_role: data-loading
+metadata:
+  version: 1.0.2
+  author: Geoscience Skills
+  tags: '["Seismic", "SEG-Y", "Data I/O", "Traces", "Headers", "Segyio", "Inlines", "Crosslines"]'
+  dependencies: '["segyio>=1.9.0", "numpy"]'
+  complements: '["obspy", "bruges", "pyvista"]'
+  workflow_role: data-loading
+  skill_type: domain
 ---
 
 # segyio - SEG-Y Seismic Data
@@ -147,7 +149,7 @@ dimensions (inline, crossline, time) and easy conversion to NetCDF/Zarr.
 ## Common Workflows
 
 ### Read, inspect, and extract 3D seismic data
-```
+```text
 - [ ] Open file with `segyio.open()`, specify `iline=` and `xline=` byte positions
 - [ ] Inspect geometry: trace count, sample count, inline/crossline ranges
 - [ ] Read headers to verify coordinate and survey metadata

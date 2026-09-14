@@ -1,0 +1,52 @@
+name: Scientific Examples
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  MPLBACKEND: Agg
+  PYVISTA_OFF_SCREEN: "true"
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: tests/science/requirements-core.txt
+      - name: Install tested core scientific dependencies
+        run: python -m pip install -r tests/science/requirements-core.txt
+      - name: Check real LAS and SEG-Y processing
+        run: python tests/science/test_io_scripts.py -v
+      - name: Execute rock physics and seismic examples
+        run: python tests/science/test_seismic_examples.py -v
+      - name: Execute well log QC and formation evaluation examples
+        run: python tests/science/test_well_log_examples.py -v
+      - name: Execute Bruges and disba domain examples
+        run: python tests/science/test_domain_examples.py -v
+      - name: Read evaluation fixtures with lasio and segyio
+        run: python evals/tests/test_fixture_readback.py -v
+
+  models:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: tests/science/requirements-models.txt
+      - name: Install tested modelling dependencies
+        run: python -m pip install -r tests/science/requirements-models.txt
+      - name: Execute model input, inversion result, and grid export examples
+        run: python tests/science/test_model_examples.py -v
+      - name: Check observed GNSS data and uncertainty diagnostics
+        run: python tests/science/test_field_data.py -v

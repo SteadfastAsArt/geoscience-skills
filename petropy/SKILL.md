@@ -2,19 +2,21 @@
 name: petropy
 description: |
   Petrophysical analysis and formation evaluation from well logs. Calculate
-  porosity, water saturation, permeability, and lithology. Use when Claude needs
+  porosity, water saturation, permeability, and lithology. Use when the agent needs
   to: (1) Calculate shale volume from gamma ray, (2) Compute porosity from
   density/neutron/sonic logs, (3) Estimate water saturation using Archie or
   Simandoux, (4) Calculate permeability from porosity and saturation, (5) Perform
   pay zone identification, (6) Conduct multi-mineral analysis, (7) Generate
   petrophysical summation plots.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [Petrophysics, Formation Evaluation, Water Saturation, Porosity, PetroPy, Well Logs, Permeability, Archie]
-dependencies: [petropy>=0.1.6, lasio, numpy]
-complements: [lasio, welly, striplog]
-workflow_role: analysis
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["Petrophysics", "Formation Evaluation", "Water Saturation", "Porosity", "PetroPy", "Well Logs", "Permeability", "Archie"]'
+  dependencies: '["petropy>=0.1.6", "lasio", "numpy"]'
+  complements: '["lasio", "welly", "striplog"]'
+  workflow_role: analysis
+  skill_type: domain
 ---
 
 # PetroPy - Petrophysical Analysis
@@ -149,7 +151,7 @@ than petropy's built-in methods provide.
 ## Common Workflows
 
 ### Complete formation evaluation from raw logs
-```
+```text
 - [ ] Load well with `pp.Log('well.las')`, verify required curves exist
 - [ ] Pick clean sand and shale GR values from histogram or crossplot
 - [ ] Compute shale volume: `log.shale_volume()`

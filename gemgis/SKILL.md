@@ -1,19 +1,21 @@
 ---
 name: gemgis
 description: |
-  Spatial data processing for geological modelling with GemPy. Use when Claude
+  Spatial data processing for geological modelling with GemPy. Use when the agent
   needs to: (1) Prepare spatial data for GemPy models, (2) Extract interface
   points from geological maps, (3) Process orientations/dip measurements,
   (4) Sample DEMs along profiles or cross-sections, (5) Convert between GIS
   formats and GemPy inputs, (6) Clip/transform vector/raster data for modeling,
   (7) Create model extents from geospatial bounds.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [GIS, Geospatial, Data Preparation, DEM, Geological Modelling]
-dependencies: [gemgis>=1.0.0, geopandas, rasterio]
-complements: [gempy, loopstructural, pyvista]
-workflow_role: processing
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["GIS", "Geospatial", "Data Preparation", "DEM", "Geological Modelling"]'
+  dependencies: '["gemgis>=1.0.0", "geopandas", "rasterio"]'
+  complements: '["gempy", "loopstructural", "pyvista"]'
+  workflow_role: processing
+  skill_type: domain
 ---
 
 # GemGIS - Geospatial Data for Geological Modelling

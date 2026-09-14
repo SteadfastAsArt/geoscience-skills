@@ -1,0 +1,4 @@
+# Keep immutable upstream bytes across checkouts with core.autocrlf enabled.
+ALPS2017_* -text
+FATIANDO-LICENSE.txt -text
+*.xz -text

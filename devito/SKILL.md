@@ -2,19 +2,21 @@
 name: devito
 description: |
   Symbolic PDE solver with automatic code generation for finite-difference
-  computations. Use when Claude needs to: (1) Perform seismic wave propagation
+  computations. Use when the agent needs to: (1) Perform seismic wave propagation
   modeling, (2) Implement acoustic or elastic wave equations, (3) Run forward
   modeling for shot gathers, (4) Set up Full Waveform Inversion (FWI) workflows,
   (5) Implement Reverse Time Migration (RTM), (6) Create absorbing boundary
   conditions, (7) Generate optimized stencil code for CPUs/GPUs, (8) Solve
   custom PDEs with finite differences.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [PDE Solver, Wave Propagation, Seismic Modelling, FWI, RTM, Finite Difference]
-dependencies: [devito>=4.8.0, numpy]
-complements: [pylops, simpeg, segyio]
-workflow_role: modelling
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["PDE Solver", "Wave Propagation", "Seismic Modelling", "FWI", "RTM", "Finite Difference"]'
+  dependencies: '["devito>=4.8.0", "numpy"]'
+  complements: '["pylops", "simpeg", "segyio"]'
+  workflow_role: modelling
+  skill_type: domain
 ---
 
 # Devito - Symbolic PDE Solver

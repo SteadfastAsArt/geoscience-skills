@@ -1,19 +1,21 @@
 ---
 name: pygimli
 description: |
-  Multi-method geophysical modelling and inversion framework. Use when Claude needs to:
+  Multi-method geophysical modelling and inversion framework. Use when the agent needs to:
   (1) Perform electrical resistivity tomography (ERT) inversion, (2) Run seismic refraction
   tomography (SRT), (3) Model induced polarization (IP) data, (4) Simulate ground penetrating
   radar (GPR), (5) Create finite element meshes for geophysical problems, (6) Perform joint
   inversions of multiple datasets, (7) Forward model geophysical responses, (8) Analyze
   time-lapse monitoring data.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [Geophysical Inversion, ERT, Seismic Refraction, IP, Near-Surface, FEM]
-dependencies: [pygimli>=1.4.0, numpy, matplotlib]
-complements: [simpeg, verde, pyvista]
-workflow_role: modelling
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["Geophysical Inversion", "ERT", "Seismic Refraction", "IP", "Near-Surface", "FEM"]'
+  dependencies: '["pygimli>=1.4.0", "numpy", "matplotlib"]'
+  complements: '["simpeg", "verde", "pyvista"]'
+  workflow_role: modelling
+  skill_type: domain
 ---
 
 # pyGIMLi - Geophysical Inversion

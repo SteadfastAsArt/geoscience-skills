@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "title": "Alps GPS velocities: published station estimates",
+  "station_count": 186,
+  "data_kind": "GNSS observation-derived station positions and velocities; not raw receiver observations, a simulated field, or interpolated grid",
+  "original": {
+    "authors": "Sánchez, Laura; Völksen, Christof; Sokolov, Alexandr; Arenz, Herbert; Seitz, Florian",
+    "year": 2018,
+    "title": "Present-day surface deformation of the Alpine Region inferred from geodetic techniques (data)",
+    "doi": "10.1594/PANGAEA.886889",
+    "url": "https://doi.pangaea.de/10.1594/PANGAEA.886889",
+    "license": "CC-BY-3.0",
+    "license_url": "https://creativecommons.org/licenses/by/3.0/",
+    "publication_url": "https://essd.copernicus.org/articles/10/1503/2018/"
+  },
+  "curation": {
+    "authors": "The Fatiando a Terra Developers",
+    "repository": "https://github.com/fatiando-data/alps-gps-velocity",
+    "tag": "v1",
+    "git_revision": "123af5d44f4e872300c6eda5455f1fed8f9d5acf",
+    "doi": "10.5281/zenodo.5879163",
+    "url": "https://zenodo.org/records/5879163",
+    "recipe_url": "https://github.com/fatiando-data/alps-gps-velocity/blob/123af5d44f4e872300c6eda5455f1fed8f9d5acf/prepare.ipynb",
+    "license": "CC-BY-4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "license_evidence_url": "https://github.com/fatiando-data/alps-gps-velocity/blob/123af5d44f4e872300c6eda5455f1fed8f9d5acf/README.md"
+  },
+  "coordinates": {
+    "reference_frame": "IGb08/ITRF2008",
+    "reference_epoch": "2010-01-01 00:00:00",
+    "ellipsoid": "GRS80",
+    "height_type": "ellipsoidal",
+    "horizontal_velocity_reference": "relative to the Eurasian Plate, as published in ALPS2017_REP.VEL",
+    "vertical_velocity_reference": "IGb08/ITRF2008, as published in ALPS2017_NEH.VEL",
+    "epsg_code": null,
+    "analysis_coordinates": "longitude - 10 degrees and latitude - 46 degrees as polynomial predictors; no distance, strain or CRS transformation is inferred"
+  },
+  "columns": {
+    "station_id": "identifier",
+    "longitude": "degree",
+    "latitude": "degree",
+    "height_m": "m, ellipsoidal",
+    "velocity_east_mmyr": "mm/year",
+    "velocity_north_mmyr": "mm/year",
+    "velocity_up_mmyr": "mm/year",
+    "longitude_error_m": "m",
+    "latitude_error_m": "m",
+    "height_error_m": "m",
+    "velocity_east_error_mmyr": "mm/year",
+    "velocity_north_error_mmyr": "mm/year",
+    "velocity_up_error_mmyr": "mm/year"
+  },
+  "missing_values": {
+    "selected_table": "No NULL/NaN/sentinel values occur in the 186 published rows; loader rejects absent/nonfinite values and nonpositive errors",
+    "original_tables": "Some station rows omit the DOMES identifier; this is a missing identifier field, not a missing numerical measurement",
+    "imputation": "None"
+  },
+  "processing": [
+    "Keep all 186 rows of the published v1 CSV; there is no further project-specific station or target-based selection.",
+    "For reconstruction, select stations from the original Eurasia-relative ALPS2017_REP.VEL table in source row order.",
+    "Apply upstream's documented CH1Z -> CHIZ and IE1G -> IENG ID corrections; check these two joins within half the REP table's 0.0001 degree reporting unit.",
+    "Join the first occurrence of each station in the original NEH coordinate and velocity tables; later solution segments are not averaged or treated as independent stations.",
+    "For source longitudes greater than 300 degrees, subtract 360, following the fixed upstream recipe.",
+    "Take horizontal velocity and its errors from REP, vertical velocity and its error from NEH.VEL; multiply all velocity values and errors by 1000 to convert m/year to mm/year.",
+    "Preserve coordinate errors in metres. Export coordinates to 7 decimal places, height and height error to 3, horizontal coordinate errors to 4, and velocities and their errors to 1, matching upstream.",
+    "The vendored upstream bytes are unchanged. Reconstruct and compare every table value offline rather than recompressing XZ and requiring compressor-dependent byte equality."
+  ],
+  "source_quality_findings": {
+    "coordinate_screen": "Report REP versus first-solution NEH coordinate differences exceeding one REP reporting unit (0.0001 degree), without changing either source. This is a discrepancy screen, not a coordinate error budget.",
+    "WTZR": "Maximum coordinate difference is 0.0024111 degree (longitude).",
+    "ZIMM": "Maximum coordinate difference is 0.0002781 degree (longitude).",
+    "analysis_impact": "The vertical diagnostic uses NEH coordinates and NEH height rates; it does not combine REP coordinates with vertical measurements. Horizontal station association needs source review before scientific use."
+  },
+  "uncertainty_scope": "Vertical sig_Vh is treated conditionally as a one-standard-deviation error. The example assumes independent station errors and fixed coordinates. It does not establish the complete observation covariance or include spatially correlated deformation, model discrepancy, reference-frame uncertainty, or systematic error.",
+  "files": {
+    "alps-gps-velocity.csv.xz": {
+      "url": "https://zenodo.org/records/5879163/files/alps-gps-velocity.csv.xz?download=1",
+      "bytes": 4544,
+      "sha256": "77f2907c2a019366e5f85de5aafcab2d0e90cc2c378171468a7705cab9938584",
+      "license": "CC-BY-4.0, with attribution to the original CC-BY-3.0 data"
+    },
+    "ALPS2017_NEH.CRD": {
+      "url": "https://store.pangaea.de/Publications/Sanchez-etal_2018/ALPS2017_NEH.CRD",
+      "bytes": 35970,
+      "sha256": "24b88a0e5ab6ea93c67424ef52542d8b8a8254a150284e1a54afddbfd93e4399",
+      "license": "CC-BY-3.0"
+    },
+    "ALPS2017_NEH.VEL": {
+      "url": "https://store.pangaea.de/Publications/Sanchez-etal_2018/ALPS2017_NEH.VEL",
+      "bytes": 36503,
+      "sha256": "0f2eff87a39260e2b3218897763dbfecdf0f464bf877bef460eff34a70e00aa7",
+      "license": "CC-BY-3.0"
+    },
+    "ALPS2017_REP.VEL": {
+      "url": "https://store.pangaea.de/Publications/Sanchez-etal_2018/ALPS2017_REP.VEL",
+      "bytes": 13604,
+      "sha256": "578677246230e893c828205391d262da4af39bb24a8ca66ff5a95a88c71fe509",
+      "license": "CC-BY-3.0"
+    },
+    "FATIANDO-LICENSE.txt": {
+      "url": "https://raw.githubusercontent.com/fatiando-data/alps-gps-velocity/123af5d44f4e872300c6eda5455f1fed8f9d5acf/LICENSE.txt",
+      "bytes": 20659,
+      "sha256": "c3fbb0f8471a637e5698c589f96c97f37e5a6c382b5b7db294bfaebe0cd721c4",
+      "purpose": "Unmodified upstream license notice: original-data exceptions, BSD-3-Clause source-code terms, and CC-BY-4.0 data terms"
+    }
+  }
+}

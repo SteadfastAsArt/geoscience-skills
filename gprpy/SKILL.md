@@ -2,18 +2,20 @@
 name: gprpy
 description: |
   Process and visualize ground-penetrating radar (GPR) data with signal processing,
-  velocity analysis, and depth conversion. Use when Claude needs to: (1) Load GPR
+  velocity analysis, and depth conversion. Use when the agent needs to: (1) Load GPR
   files (.DZT, .DT1, .GPR, .rd3), (2) Apply dewow, gain, and filters to radargrams,
   (3) Convert two-way travel time to depth, (4) Perform CMP/WARR velocity analysis,
   (5) Apply topographic corrections, (6) Export processed profiles as images or SEG-Y,
   (7) Batch process multiple GPR survey lines.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [GPR, Ground-Penetrating Radar, Near-Surface, Signal Processing, GPRPy, Geophysics, Depth Conversion, Radargram]
-dependencies: [gprpy>=1.0.0, numpy, matplotlib, scipy]
-complements: [pyvista]
-workflow_role: data-loading
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["GPR", "Ground-Penetrating Radar", "Near-Surface", "Signal Processing", "GPRPy", "Geophysics", "Depth Conversion", "Radargram"]'
+  dependencies: '["gprpy>=1.0.0", "numpy", "matplotlib", "scipy"]'
+  complements: '["pyvista"]'
+  workflow_role: data-loading
+  skill_type: domain
 ---
 
 # GPRPy - Ground Penetrating Radar Processing

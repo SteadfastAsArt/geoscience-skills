@@ -1,251 +1,372 @@
 {
   "name": "geoscience-skills",
-  "version": "2.3.0",
-  "description": "30 geoscience skills for AI coding assistants covering seismic, well logs, geological modelling, geophysical inversion, geostatistics, spatial regression, and more.",
-  "author": "Geoscience Skills",
-  "license": "MIT",
-  "repository": "https://github.com/SteadfastAsArt/geoscience-skills",
-  "categories": [
-    {
-      "name": "Seismic & Seismology",
-      "skills": ["obspy", "segyio", "disba"]
-    },
-    {
-      "name": "Well Log Analysis",
-      "skills": ["lasio", "welly", "dlisio", "striplog", "petropy"]
-    },
-    {
-      "name": "Geological Modelling",
-      "skills": ["gempy", "loopstructural", "gemgis"]
-    },
-    {
-      "name": "Geophysical Simulation & Inversion",
-      "skills": ["simpeg", "devito", "pylops", "pygimli"]
-    },
-    {
-      "name": "Potential Fields",
-      "skills": ["harmonica"]
-    },
-    {
-      "name": "Rock Physics",
-      "skills": ["bruges"]
-    },
-    {
-      "name": "Spatial Analysis & Geostatistics",
-      "skills": ["verde", "geostatspy", "scikit-gstat", "gnnwr"]
-    },
-    {
-      "name": "Hydrology",
-      "skills": ["pastas"]
-    },
-    {
-      "name": "Surface Processes",
-      "skills": ["landlab"]
-    },
-    {
-      "name": "Structural Geology",
-      "skills": ["mplstereonet"]
-    },
-    {
-      "name": "Geochemistry",
-      "skills": ["pyrolite"]
-    },
-    {
-      "name": "Ground-Penetrating Radar",
-      "skills": ["gprpy"]
-    },
-    {
-      "name": "Magnetotellurics",
-      "skills": ["mtpy"]
-    },
-    {
-      "name": "Scientific Data Formats",
-      "skills": ["xarray"]
-    },
-    {
-      "name": "Visualization",
-      "skills": ["pyvista"]
-    },
-    {
-      "name": "Workflows",
-      "skills": ["seismic-interpretation", "well-log-evaluation", "geological-modelling", "geophysical-inversion", "rock-physics-avo"]
-    }
-  ],
+  "owner": {
+    "name": "Geoscience Skills"
+  },
+  "metadata": {
+    "description": "36 geoscience skills for AI coding assistants covering seismic, well logs, geological modelling, geophysical inversion, geostatistics, spatial regression, and related workflows.",
+    "version": "2.4.0"
+  },
   "plugins": [
     {
-      "name": "obspy",
-      "source": "./obspy",
-      "description": "Seismology data processing with ObsPy. Read waveforms, fetch FDSN data, filter signals, remove instrument response, search earthquakes. Use when working with seismic waveforms or earthquake data."
-    },
-    {
-      "name": "segyio",
-      "source": "./segyio",
-      "description": "Read, write, and manipulate SEG-Y seismic data files. Fast trace/header/inline/crossline access. Use when working with SEG-Y format seismic data."
-    },
-    {
-      "name": "disba",
-      "source": "./disba",
-      "description": "Compute surface wave dispersion curves for layered Earth models. Rayleigh/Love wave phase and group velocities, sensitivity kernels. Use for surface wave analysis or tomography."
-    },
-    {
-      "name": "lasio",
-      "source": "./lasio",
-      "description": "Read, write, and manipulate LAS well log files. Parse headers, extract curves, handle problematic files. Use when working with LAS format well data."
-    },
-    {
-      "name": "welly",
-      "source": "./welly",
-      "description": "Well data analysis toolkit. Load wells from LAS, process curves, manage formation tops, multi-well projects. Use for well log analysis workflows."
-    },
-    {
-      "name": "dlisio",
-      "source": "./dlisio",
-      "description": "Read and parse DLIS/LIS well log files. Extract curves, metadata, handle multi-frame files. Use when working with DLIS/RP66 format well logs."
-    },
-    {
-      "name": "striplog",
-      "source": "./striplog",
-      "description": "Create, visualize, and analyze lithological and stratigraphic logs. Well correlation, net-to-gross ratios. Use for lithology columns and stratigraphic visualization."
-    },
-    {
-      "name": "petropy",
-      "source": "./petropy",
-      "description": "Petrophysical analysis and formation evaluation. Calculate porosity, water saturation, permeability from well logs. Use for petrophysical interpretation."
-    },
-    {
-      "name": "gempy",
-      "source": "./gempy",
-      "description": "3D structural geological modeling using implicit methods. Faults, folds, unconformities from surface points and orientations. Use for 3D geological model construction."
-    },
-    {
-      "name": "loopstructural",
-      "source": "./loopstructural",
-      "description": "3D geological modelling with implicit surfaces, faults, and folds. Use for structural geological modelling from field data."
-    },
-    {
-      "name": "gemgis",
-      "source": "./gemgis",
-      "description": "Spatial data processing for GemPy geological modelling. Extract interfaces from maps, sample DEMs, convert GIS formats. Use for preparing geospatial data for 3D modelling."
-    },
-    {
-      "name": "simpeg",
-      "source": "./simpeg",
-      "description": "Geophysical forward modelling and inversion framework. DC resistivity, magnetics, gravity, EM methods. Use for geophysical data inversion."
+      "name": "bruges",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./bruges"
+      ],
+      "description": "Geophysical equations and rock physics calculations for seismic analysis. Use when the agent needs to: (1) Calculate AVO responses (Zoeppritz, Shuey, Aki-Richards), (2) Perform Gassmann fluid substitution, (3) Generate seismic wavelets (Ricker, Ormsby), (4) Compute reflectivity and synthetic seismograms, (5) Calculate elastic moduli from velocities, (6) Apply Gardner/Castagna empirical relations, (7) Model rock physics effects.",
+      "version": "1.0.2"
     },
     {
       "name": "devito",
-      "source": "./devito",
-      "description": "Symbolic PDE solver with automatic code generation. Seismic wave propagation, FWI, RTM. Use for finite-difference wave simulation."
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./devito"
+      ],
+      "description": "Symbolic PDE solver with automatic code generation for finite-difference computations. Use when the agent needs to: (1) Perform seismic wave propagation modeling, (2) Implement acoustic or elastic wave equations, (3) Run forward modeling for shot gathers, (4) Set up Full Waveform Inversion (FWI) workflows, (5) Implement Reverse Time Migration (RTM), (6) Create absorbing boundary conditions, (7) Generate optimized stencil code for CPUs/GPUs, (8) Solve custom PDEs with finite differences.",
+      "version": "1.0.1"
     },
     {
-      "name": "pylops",
-      "source": "./pylops",
-      "description": "Linear operators for inverse problems. Deconvolution, imaging, signal processing. Use for matrix-free inverse problems at scale."
+      "name": "disba",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./disba"
+      ],
+      "description": "Compute Rayleigh and Love wave phase/group dispersion and sensitivity kernels for one-dimensional isotropic layered Earth models. Use when forward modelling velocity profiles, comparing layered models, or preparing numerical derivatives for a separately defined inversion. Does not extract observed dispersion from waveforms or perform tomography.",
+      "version": "1.0.2"
     },
     {
-      "name": "pygimli",
-      "source": "./pygimli",
-      "description": "Multi-method geophysical inversion framework. ERT, seismic refraction, IP. Use for near-surface geophysical data inversion."
+      "name": "dlisio",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./dlisio"
+      ],
+      "description": "Read and parse DLIS (Digital Log Interchange Standard) and LIS (Log Information Standard) well log files. Use when the agent needs to: (1) Read/parse DLIS or LIS files, (2) Extract well log curves as numpy arrays, (3) Access file metadata and origin information, (4) Handle multi-frame or multi-file DLIS, (5) Convert DLIS to LAS or DataFrame, (6) Work with RP66 format well logs, (7) Process array or image log data.",
+      "version": "1.0.1"
     },
     {
-      "name": "harmonica",
-      "source": "./harmonica",
-      "description": "Gravity and magnetic data processing and forward modelling. Terrain corrections, equivalent sources, derivative filters. Use for potential field analysis."
+      "name": "gemgis",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./gemgis"
+      ],
+      "description": "Spatial data processing for geological modelling with GemPy. Use when the agent needs to: (1) Prepare spatial data for GemPy models, (2) Extract interface points from geological maps, (3) Process orientations/dip measurements, (4) Sample DEMs along profiles or cross-sections, (5) Convert between GIS formats and GemPy inputs, (6) Clip/transform vector/raster data for modeling, (7) Create model extents from geospatial bounds.",
+      "version": "1.0.1"
     },
     {
-      "name": "bruges",
-      "source": "./bruges",
-      "description": "Geophysical equations and rock physics. AVO, Gassmann fluid substitution, wavelets, elastic moduli. Use for rock physics calculations and seismic modeling."
-    },
-    {
-      "name": "verde",
-      "source": "./verde",
-      "description": "Spatial data gridding and interpolation with ML-style API. Spline, linear, block reduction, cross-validation. Use for gridding scattered spatial data."
-    },
-    {
-      "name": "geostatspy",
-      "source": "./geostatspy",
-      "description": "GSLIB-inspired geostatistics. Variograms, kriging, sequential Gaussian simulation. Use for geostatistical analysis and spatial estimation."
-    },
-    {
-      "name": "scikit-gstat",
-      "source": "./scikit-gstat",
-      "description": "Geostatistics with scikit-learn API. Variogram fitting, ordinary kriging, directional analysis. Use for geostatistical interpolation with modern API."
-    },
-    {
-      "name": "pastas",
-      "source": "./pastas",
-      "description": "Groundwater time series analysis and modelling. Transfer function models for well response to recharge/pumping. Use for hydrogeological time series analysis."
-    },
-    {
-      "name": "landlab",
-      "source": "./landlab",
-      "description": "Landscape evolution and surface process modelling. Erosion, flow routing, hillslope diffusion. Use for geomorphological modelling."
-    },
-    {
-      "name": "mplstereonet",
-      "source": "./mplstereonet",
-      "description": "Stereonet plots for structural geology. Great circles, poles, density contours, fold axis analysis. Use for structural orientation data visualization."
-    },
-    {
-      "name": "pyrolite",
-      "source": "./pyrolite",
-      "description": "Geochemistry data analysis and visualization. REE spider diagrams, TAS classification, compositional transforms. Use for geochemical data analysis."
-    },
-    {
-      "name": "gprpy",
-      "source": "./gprpy",
-      "description": "Ground-penetrating radar data processing. Dewow, gain, filters, velocity analysis, depth conversion. Use for GPR profile processing."
-    },
-    {
-      "name": "mtpy",
-      "source": "./mtpy",
-      "description": "Magnetotelluric data processing and modelling. EDI files, impedance tensors, phase tensors, pseudosections. Use for MT data analysis."
-    },
-    {
-      "name": "xarray",
-      "source": "./xarray",
-      "description": "N-dimensional labeled arrays for geoscience. NetCDF, climate/ocean data, temporal aggregation, Dask integration. Use for multi-dimensional scientific data."
-    },
-    {
-      "name": "pyvista",
-      "source": "./pyvista",
-      "description": "3D visualization and mesh analysis. Geological models, seismic volumes, point clouds, surfaces. Use for 3D geoscience visualization."
-    },
-    {
-      "name": "pooch",
-      "source": "./pooch",
-      "description": "Data file fetching and caching. Download with checksum verification, archive extraction, data registries. Use for reproducible data downloads."
-    },
-    {
-      "name": "gnnwr",
-      "source": "./gnnwr",
-      "description": "Geographically Neural Network Weighted Regression. Spatially varying coefficient regression, GTNNWR for spatiotemporal data, KNN mode for large datasets. Use for spatial non-stationarity analysis and coefficient mapping."
-    },
-    {
-      "name": "seismic-interpretation",
-      "source": "./workflows/seismic-interpretation",
-      "description": "End-to-end seismic interpretation workflow from SEG-Y loading through signal processing, rock physics, and visualization."
-    },
-    {
-      "name": "well-log-evaluation",
-      "source": "./workflows/well-log-evaluation",
-      "description": "Complete well log evaluation workflow from LAS/DLIS loading through QC, petrophysical analysis, lithology, and visualization."
+      "name": "gempy",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./gempy"
+      ],
+      "description": "3D structural geological modeling using implicit methods. Create geological models with faults, folds, and unconformities from surface points and orientations. Use when the agent needs to: (1) Build 3D geological models from surface contacts and orientations, (2) Model faults, unconformities, or intrusions, (3) Compute and visualize subsurface geology, (4) Export models to VTK or numpy arrays, (5) Generate gravity forward models, (6) Create cross-sections or 3D visualizations.",
+      "version": "1.0.1"
     },
     {
       "name": "geological-modelling",
-      "source": "./workflows/geological-modelling",
-      "description": "3D geological modelling workflow from spatial data preparation through implicit surface modelling and 3D visualization."
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./workflows/geological-modelling"
+      ],
+      "description": "3D geological modelling workflow from spatial data preparation through implicit surface modelling and 3D visualization. Use when building geological models from surface data, boreholes, or GIS inputs.",
+      "version": "1.0.2"
     },
     {
       "name": "geophysical-inversion",
-      "source": "./workflows/geophysical-inversion",
-      "description": "Geophysical data inversion workflow from data loading through mesh creation, inversion, and result visualization."
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./workflows/geophysical-inversion"
+      ],
+      "description": "Geophysical data inversion workflow from data loading through mesh creation, forward modelling, inversion, and result visualization. Use when inverting ERT, magnetics, gravity, or EM survey data.",
+      "version": "1.0.2"
+    },
+    {
+      "name": "geostatspy",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./geostatspy"
+      ],
+      "description": "GSLIB-inspired geostatistics library for variogram analysis, kriging, and simulation. Use when the agent needs to: (1) Calculate experimental variograms, (2) Fit variogram models, (3) Perform simple/ordinary kriging, (4) Run sequential Gaussian simulation (SGSIM), (5) Apply normal score transforms, (6) Decluster spatial data, (7) Generate multiple realizations for uncertainty.",
+      "version": "1.0.1"
+    },
+    {
+      "name": "gnnwr",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./gnnwr"
+      ],
+      "description": "Spatial and spatiotemporal regression with GNNWR (Geographically Neural Network Weighted Regression). Use when the agent needs to: (1) Build spatially varying coefficient regression models, (2) Analyze geographic non-stationarity in spatial data, (3) Generate spatial coefficient maps for publication, (4) Run spatiotemporal regression with GTNNWR, (5) Scale geographically weighted regression to large datasets (N > 10k) with KNN mode, (6) Diagnose spatial model performance with F-tests, AIC, and residual maps.",
+      "version": "1.0.1"
+    },
+    {
+      "name": "gprpy",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./gprpy"
+      ],
+      "description": "Process and visualize ground-penetrating radar (GPR) data with signal processing, velocity analysis, and depth conversion. Use when the agent needs to: (1) Load GPR files (.DZT, .DT1, .GPR, .rd3), (2) Apply dewow, gain, and filters to radargrams, (3) Convert two-way travel time to depth, (4) Perform CMP/WARR velocity analysis, (5) Apply topographic corrections, (6) Export processed profiles as images or SEG-Y, (7) Batch process multiple GPR survey lines.",
+      "version": "1.0.1"
+    },
+    {
+      "name": "harmonica",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./harmonica"
+      ],
+      "description": "Gravity and magnetic data processing and forward modelling using Fatiando a Terra. Use when the agent needs to: (1) Compute gravity forward models (point masses, prisms, tesseroids), (2) Apply terrain/Bouguer corrections, (3) Grid scattered potential field data with equivalent sources, (4) Perform upward/downward continuation, (5) Calculate magnetic anomalies from magnetized bodies, (6) Apply derivative filters (gradients, tilt angle), (7) Process regional or local gravity surveys.",
+      "version": "1.0.1"
+    },
+    {
+      "name": "landlab",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./landlab"
+      ],
+      "description": "Landscape evolution and surface process modelling in Python. Build 2D numerical models for erosion, hydrology, soil transport, and geomorphology. Use when the agent needs to: (1) Model landscape evolution over time, (2) Simulate river/stream erosion, (3) Route water flow across terrain, (4) Model hillslope diffusion processes, (5) Simulate weathering and soil production, (6) Analyze drainage networks, (7) Combine multiple geomorphic processes, (8) Load/save DEM data for modeling.",
+      "version": "1.0.1"
+    },
+    {
+      "name": "lasio",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./lasio"
+      ],
+      "description": "Read, write, and manipulate LAS (Log ASCII Standard) well log files for borehole geophysical and petrophysical data. Use when the agent needs to: (1) Read/parse LAS 1.2 or 2.0 files, (2) Extract well headers or curve data, (3) Convert LAS to DataFrame/CSV/Excel, (4) Create new LAS files from arrays, (5) Modify existing LAS files, (6) Handle problematic or malformed LAS files, (7) Batch process multiple well files.",
+      "version": "1.0.2"
+    },
+    {
+      "name": "loopstructural",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./loopstructural"
+      ],
+      "description": "Build 3D geological models with implicit surfaces, faults, folds, and stratigraphic constraints from structural geology data. Use when the agent needs to: (1) Build 3D geological models from structural data, (2) Model fault networks and displacements, (3) Create folded geology representations, (4) Interpolate geological surfaces, (5) Export models to VTK for visualization, (6) Perform uncertainty analysis on geological models, (7) Evaluate model values on grids.",
+      "version": "1.0.1"
+    },
+    {
+      "name": "mplstereonet",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./mplstereonet"
+      ],
+      "description": "Stereonet plots for structural geology using matplotlib. Create lower-hemisphere stereographic projections for orientation data. Use when the agent needs to: (1) Create stereonet plots for structural data, (2) Plot planes as great circles or poles, (3) Plot lineations with trend/plunge, (4) Generate density contours for orientations, (5) Calculate mean orientations and statistics, (6) Analyze fold axes with pi-diagrams, (7) Convert between strike/dip and trend/plunge formats.",
+      "version": "1.0.1"
+    },
+    {
+      "name": "mtpy",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./mtpy"
+      ],
+      "description": "Magnetotelluric data processing and modelling. Read EDI files, analyze MT responses, perform inversions, and visualize resistivity models. Use when the agent needs to: (1) Read/write EDI files, (2) Process MT impedance tensors, (3) Analyze phase tensors and dimensionality, (4) Plot apparent resistivity and phase curves, (5) Create pseudosections, (6) Perform strike analysis, (7) Run 1D inversions, (8) Prepare data for 2D/3D modelling.",
+      "version": "1.0.1"
+    },
+    {
+      "name": "obspy",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./obspy"
+      ],
+      "description": "Seismology data processing with ObsPy. Helps with reading seismic waveforms, filtering/processing time series, fetching data from FDSN services, and earthquake analysis. Use when the agent needs to: (1) Read seismic data formats (MiniSEED, SAC, GSE2, SEGY), (2) Filter or process waveforms, (3) Fetch data from IRIS/USGS/FDSN services, (4) Search for earthquakes by magnitude/location, (5) Plot seismograms or spectrograms, (6) Remove instrument response, (7) Analyze station metadata.",
+      "version": "1.0.1"
+    },
+    {
+      "name": "pastas",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./pastas"
+      ],
+      "description": "Groundwater time series analysis and modelling using transfer function noise models. Use when the agent needs to: (1) Analyze groundwater level time series, (2) Model well responses to precipitation/pumping, (3) Calibrate aquifer parameters from head data, (4) Forecast or hindcast groundwater levels, (5) Decompose hydrological signals into components, (6) Compare response functions, (7) Perform model diagnostics and uncertainty analysis.",
+      "version": "1.0.1"
+    },
+    {
+      "name": "petropy",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./petropy"
+      ],
+      "description": "Petrophysical analysis and formation evaluation from well logs. Calculate porosity, water saturation, permeability, and lithology. Use when the agent needs to: (1) Calculate shale volume from gamma ray, (2) Compute porosity from density/neutron/sonic logs, (3) Estimate water saturation using Archie or Simandoux, (4) Calculate permeability from porosity and saturation, (5) Perform pay zone identification, (6) Conduct multi-mineral analysis, (7) Generate petrophysical summation plots.",
+      "version": "1.0.1"
+    },
+    {
+      "name": "pooch",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./pooch"
+      ],
+      "description": "Data file fetching and caching for geoscience applications. Download sample datasets with automatic caching, checksum verification, and multiple download sources. Use when the agent needs to: (1) Download datasets from URLs or DOIs, (2) Cache files locally with automatic verification, (3) Verify file integrity with SHA256/MD5 hashes, (4) Extract compressed archives (ZIP, TAR, GZIP), (5) Create data registries for reproducible workflows, (6) Fetch from Zenodo or other repositories.",
+      "version": "1.0.1"
+    },
+    {
+      "name": "pygimli",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./pygimli"
+      ],
+      "description": "Multi-method geophysical modelling and inversion framework. Use when the agent needs to: (1) Perform electrical resistivity tomography (ERT) inversion, (2) Run seismic refraction tomography (SRT), (3) Model induced polarization (IP) data, (4) Simulate ground penetrating radar (GPR), (5) Create finite element meshes for geophysical problems, (6) Perform joint inversions of multiple datasets, (7) Forward model geophysical responses, (8) Analyze time-lapse monitoring data.",
+      "version": "1.0.1"
+    },
+    {
+      "name": "pylops",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./pylops"
+      ],
+      "description": "Linear operators for large-scale inverse problems with matrix-free representations. Use when the agent needs to: (1) Define linear operators for forward/adjoint operations, (2) Solve inverse problems (deconvolution, imaging, tomography), (3) Apply signal processing transforms (FFT, convolution, derivatives), (4) Compose operators for complex workflows, (5) Perform regularized inversion with smoothness or sparsity constraints, (6) Process seismic or image data at scale.",
+      "version": "1.0.1"
+    },
+    {
+      "name": "pyrolite",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./pyrolite"
+      ],
+      "description": "Geochemistry data analysis and visualization for igneous, metamorphic, and sedimentary rocks. Use when the agent needs to: (1) Create ternary diagrams for compositional data, (2) Plot REE spider diagrams with normalization, (3) Build TAS or other classification diagrams, (4) Apply log-ratio transforms to compositional data, (5) Calculate CIPW norms, (6) Generate Harker variation diagrams, (7) Compute element ratios and anomalies.",
+      "version": "1.0.1"
+    },
+    {
+      "name": "pyvista",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./pyvista"
+      ],
+      "description": "3D visualization and mesh analysis for geoscience data using PyVista/VTK. Use when the agent needs to: (1) Create 3D visualizations of geological models, (2) Render seismic volumes or voxel data, (3) Visualize point clouds or well paths, (4) Plot surfaces and meshes in 3D, (5) Read/write VTK, STL, OBJ files, (6) Create cross-sections through 3D models, (7) Export publication-quality figures or interactive HTML.",
+      "version": "1.0.1"
     },
     {
       "name": "rock-physics-avo",
-      "source": "./workflows/rock-physics-avo",
-      "description": "Rock physics and AVO analysis workflow from well log preparation through elastic properties, fluid substitution, and synthetics."
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./workflows/rock-physics-avo"
+      ],
+      "description": "Rock physics and AVO analysis workflow from well log preparation through elastic property calculation, fluid substitution, AVO modelling, and synthetic seismogram generation. Use when performing rock physics studies or AVO feasibility analysis.",
+      "version": "1.0.2"
+    },
+    {
+      "name": "scikit-gstat",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./scikit-gstat"
+      ],
+      "description": "Geostatistical analysis with scikit-learn style API. Compute variograms, kriging interpolation, and spatial correlation analysis. Use when the agent needs to: (1) Compute experimental variograms from spatial data, (2) Fit variogram models (spherical, exponential, gaussian, matern), (3) Perform Ordinary or Universal Kriging interpolation, (4) Assess spatial anisotropy with directional variograms, (5) Cross-validate spatial models, (6) Analyze spatio-temporal data, (7) Export variogram parameters for other geostatistical software.",
+      "version": "1.0.1"
+    },
+    {
+      "name": "segyio",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./segyio"
+      ],
+      "description": "Read, write, and manipulate SEG-Y seismic data files. Fast C library with Python bindings for trace, header, inline, and crossline access. Use when the agent needs to: (1) Read/inspect SEG-Y files, (2) Extract trace data or headers, (3) Access 3D survey data by inline/crossline, (4) Create new SEG-Y files from arrays, (5) Modify existing SEG-Y files, (6) Extract subsets of seismic data, (7) Read/write Seismic Unix format.",
+      "version": "1.0.2"
+    },
+    {
+      "name": "seismic-interpretation",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./workflows/seismic-interpretation"
+      ],
+      "description": "End-to-end seismic interpretation workflow from SEG-Y loading through signal processing, rock physics, and visualization. Use when working with seismic data analysis pipelines.",
+      "version": "1.0.2"
+    },
+    {
+      "name": "simpeg",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./simpeg"
+      ],
+      "description": "Simulation and Parameter Estimation in Geophysics. Framework for geophysical forward modeling and inversion. Use when the agent needs to: (1) Run geophysical inversions (DC resistivity, magnetics, gravity, EM), (2) Create forward models for potential fields or electromagnetic methods, (3) Build survey geometries and receiver configurations, (4) Design mesh discretizations for simulations, (5) Apply regularization and optimization to inverse problems, (6) Model subsurface physical properties from geophysical data.",
+      "version": "1.0.1"
+    },
+    {
+      "name": "striplog",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./striplog"
+      ],
+      "description": "Create, visualize, and analyze lithological and stratigraphic logs for well data. Use when the agent needs to: (1) Create lithology columns from depth intervals, (2) Parse geological descriptions into structured logs, (3) Visualize stratigraphic columns with patterns and colors, (4) Perform well-to-well correlations, (5) Extract statistics like net-to-gross ratios, (6) Define rock type lexicons and legends, (7) Export lithology data to CSV/LAS/JSON.",
+      "version": "1.0.1"
+    },
+    {
+      "name": "using-geoscience-skills",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./using-geoscience-skills"
+      ],
+      "description": "Discover and compose geoscience skills for Python coding tasks. Use when choosing a geoscience library, finding a skill for a data format or method, or planning work across seismic, well logs, geological modelling, inversion, and other geoscience domains.",
+      "version": "1.0.1"
+    },
+    {
+      "name": "verde",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./verde"
+      ],
+      "description": "Spatial data gridding and interpolation with a machine-learning style API. Process geographic and Cartesian point data onto regular grids. Use when the agent needs to: (1) Grid scattered spatial data onto regular grids, (2) Interpolate point data using splines, linear, or cubic methods, (3) Process geographic coordinates with projections, (4) Reduce large datasets using block averaging, (5) Remove polynomial trends from spatial data, (6) Cross-validate gridding parameters, (7) Create processing pipelines with Chain, (8) Grid vector data like GPS velocities.",
+      "version": "1.0.1"
+    },
+    {
+      "name": "well-log-evaluation",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./workflows/well-log-evaluation"
+      ],
+      "description": "Complete well log evaluation workflow from LAS/DLIS loading through QC, petrophysical analysis, lithology classification, and visualization. Use when performing formation evaluation from well log data.",
+      "version": "1.0.2"
+    },
+    {
+      "name": "welly",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./welly"
+      ],
+      "description": "Subsurface well data analysis toolkit for loading, processing, and analyzing well logs, projects, and formation tops. Built on lasio with enhanced curve processing. Use when the agent needs to: (1) Load wells from LAS files with metadata, (2) Work with multi-well Projects, (3) Process curves (despike, smooth, resample, normalize), (4) Manage formation tops, (5) Export well data to DataFrame/LAS/CSV, (6) Perform cross-well analysis and QC.",
+      "version": "1.0.2"
+    },
+    {
+      "name": "xarray",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./xarray"
+      ],
+      "description": "N-dimensional labeled arrays for geoscience data. Read/write NetCDF, work with climate and oceanographic datasets, perform multi-dimensional analysis with labeled coordinates. Use when the agent needs to: (1) Read/write NetCDF or Zarr files, (2) Work with multidimensional arrays with labeled dimensions, (3) Analyze climate, ocean, or atmosphere data, (4) Compute temporal aggregations (daily/monthly/annual means), (5) Perform area-weighted statistics, (6) Process large datasets with Dask, (7) Apply CF conventions to scientific data.",
+      "version": "1.0.1"
     }
   ]
 }

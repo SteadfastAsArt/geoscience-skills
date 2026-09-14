@@ -3,17 +3,19 @@ name: mtpy
 description: |
   Magnetotelluric data processing and modelling. Read EDI files, analyze MT
   responses, perform inversions, and visualize resistivity models. Use when
-  Claude needs to: (1) Read/write EDI files, (2) Process MT impedance tensors,
+  the agent needs to: (1) Read/write EDI files, (2) Process MT impedance tensors,
   (3) Analyze phase tensors and dimensionality, (4) Plot apparent resistivity
   and phase curves, (5) Create pseudosections, (6) Perform strike analysis,
   (7) Run 1D inversions, (8) Prepare data for 2D/3D modelling.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [Magnetotellurics, MT, EDI, Impedance Tensor, EM, Geophysics]
-dependencies: [mtpy>=2.0.0, numpy, matplotlib]
-complements: [simpeg, pyvista]
-workflow_role: analysis
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["Magnetotellurics", "MT", "EDI", "Impedance Tensor", "EM", "Geophysics"]'
+  dependencies: '["mtpy>=2.0.0", "numpy", "matplotlib"]'
+  complements: '["simpeg", "pyvista"]'
+  workflow_role: analysis
+  skill_type: domain
 ---
 
 # mtpy - Magnetotelluric Analysis

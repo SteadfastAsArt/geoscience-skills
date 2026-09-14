@@ -2,19 +2,21 @@
 name: verde
 description: |
   Spatial data gridding and interpolation with a machine-learning style API. Process
-  geographic and Cartesian point data onto regular grids. Use when Claude needs to:
+  geographic and Cartesian point data onto regular grids. Use when the agent needs to:
   (1) Grid scattered spatial data onto regular grids, (2) Interpolate point data using
   splines, linear, or cubic methods, (3) Process geographic coordinates with projections,
   (4) Reduce large datasets using block averaging, (5) Remove polynomial trends from
   spatial data, (6) Cross-validate gridding parameters, (7) Create processing pipelines
   with Chain, (8) Grid vector data like GPS velocities.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [Gridding, Interpolation, Spatial Analysis, Fatiando, Cross-Validation, Verde, Spline, Block Reduction]
-dependencies: [verde>=1.8.0, numpy, scipy]
-complements: [harmonica, geostatspy, scikit-gstat, pyvista]
-workflow_role: analysis
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["Gridding", "Interpolation", "Spatial Analysis", "Fatiando", "Cross-Validation", "Verde", "Spline", "Block Reduction"]'
+  dependencies: '["verde>=1.8.0", "numpy", "scipy"]'
+  complements: '["harmonica", "geostatspy", "scikit-gstat", "pyvista"]'
+  workflow_role: analysis
+  skill_type: domain
 ---
 
 # Verde - Spatial Data Gridding

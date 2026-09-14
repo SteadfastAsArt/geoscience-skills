@@ -3,18 +3,20 @@ name: gempy
 description: |
   3D structural geological modeling using implicit methods. Create geological
   models with faults, folds, and unconformities from surface points and
-  orientations. Use when Claude needs to: (1) Build 3D geological models from
+  orientations. Use when the agent needs to: (1) Build 3D geological models from
   surface contacts and orientations, (2) Model faults, unconformities, or
   intrusions, (3) Compute and visualize subsurface geology, (4) Export models
   to VTK or numpy arrays, (5) Generate gravity forward models, (6) Create
   cross-sections or 3D visualizations.
-version: 1.0.0
-author: Geoscience Skills
 license: MIT
-tags: [Geological Modelling, 3D, Implicit Surfaces, Faults, Structural Geology]
-dependencies: [gempy>=2.3.0, numpy, pyvista]
-complements: [gemgis, loopstructural, pyvista]
-workflow_role: modelling
+metadata:
+  version: 1.0.1
+  author: Geoscience Skills
+  tags: '["Geological Modelling", "3D", "Implicit Surfaces", "Faults", "Structural Geology"]'
+  dependencies: '["gempy>=2.3.0", "numpy", "pyvista"]'
+  complements: '["gemgis", "loopstructural", "pyvista"]'
+  workflow_role: modelling
+  skill_type: domain
 ---
 
 # GemPy - 3D Geological Modelling

@@ -1,6 +1,10 @@
 # Complete Skills Reference
 
-Detailed list of all 30 geoscience skills with GitHub stars and descriptions.
+Catalogue of 30 domain skills, 5 workflows, and 1 discovery skill.
+
+Install using `npx skills add SteadfastAsArt/geoscience-skills --full-depth`.
+See [coding agent compatibility](docs/COMPATIBILITY.md). Star counts below are
+historical snapshots, not live rankings.
 
 ## Skills by Category
 
@@ -9,7 +13,7 @@ Detailed list of all 30 geoscience skills with GitHub stars and descriptions.
 |-------|-------|-------------|
 | [obspy](obspy/) | 1.3k | Seismological data processing, waveforms, events, FDSN services |
 | [segyio](segyio/) | 557 | SEG-Y file reading and writing for seismic data |
-| [disba](disba/) | 178 | Surface wave dispersion computation (Rayleigh, Love waves) |
+| [disba](disba/) | 178 | 1D Rayleigh/Love phase and group dispersion, sensitivity kernels |
 
 ### Well Log Analysis
 | Skill | Stars | Description |
@@ -98,6 +102,12 @@ Detailed list of all 30 geoscience skills with GitHub stars and descriptions.
 |-------|-------|-------------|
 | [pooch](pooch/) | 714 | Data file fetching and caching |
 
+### Discovery
+
+| Skill | Description |
+|---|---|
+| [using-geoscience-skills](using-geoscience-skills/SKILL.md) | Select domain skills and workflows for a task |
+
 ### Workflow Skills
 | Skill | Description |
 |-------|-------------|
@@ -126,10 +136,13 @@ Detailed list of all 30 geoscience skills with GitHub stars and descriptions.
 
 ---
 
-## Installation by Domain
+## Python Packages by Domain
+
+These commands install Python libraries, not agent skills. Use a task-specific
+environment; the complete list is not a tested combined dependency lockfile.
 
 ```bash
-# Full installation (all skills)
+# Complete package list (install only the packages required for your task)
 pip install obspy segyio disba lasio welly dlisio striplog petropy \
     gempy LoopStructural gemgis simpeg devito pylops pygimli \
     harmonica bruges verde geostatspy scikit-gstat gnnwr pastas landlab \
