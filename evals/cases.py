@@ -14,7 +14,8 @@ import random
 import struct
 
 
-TASKS = {"las-qc": "lasio", "segy-subset": "segyio"}
+TASKS = {"las-qc": "lasio", "segy-subset": "segyio",
+         "formation-evaluation": "well-log-evaluation"}
 TRACE_FIELDS = {
     "CDP": (20, "i"), "SourceGroupScalar": (70, "h"),
     "SourceX": (72, "i"), "SourceY": (76, "i"),
@@ -71,6 +72,55 @@ def make_fixture(task: str, inputs: Path, seed: int = 20260914) -> dict:
             unit="M", minimum=min(depths), maximum=max(depths),
             strictly_increasing=all(b > a for a, b in zip(depths, depths[1:])),
             duplicate_count=len(depths) - len(set(depths))), curves=curves)
+    elif task == "formation-evaluation":
+        path = inputs / "formation.las"
+        parameters = dict(gr_sand_api=20.0, gr_shale_api=120.0,
+                          matrix_density_g_cc=2.65, fluid_density_g_cc=1.0,
+                          rw_ohm_m=0.05, archie_a=1.0, archie_m=2.0, archie_n=2.0)
+        depths = [1500.0 + i * 0.5 for i in range(13)]
+        gr = [25, 35, 40, -999.25, 50, 60, 70, 90, 110, 100, 35, 30, 25]
+        rho = [round(rng.uniform(2.25, 2.55), 4) for _ in depths]
+        rt = [round(rng.uniform(5.0, 25.0), 3) for _ in depths]
+        rho[5], rho[8], rt[10], rt[1] = -999.25, 2.8, 0.0, 0.05
+        header = """~Version Information
+ VERS. 2.0 : CWLS LOG ASCII STANDARD
+ WRAP. NO
+~Well Information
+ STRT.M 1500
+ STOP.M 1506
+ STEP.M 0.5
+ NULL. -999.25
+ WELL. SYNTHETIC-FORMATION
+~Curve Information
+ DEPT.M : Measured depth
+ GR.API : Gamma ray
+ RHOB.G/CC : Bulk density
+ RT.OHM-M : Deep resistivity
+~ASCII
+"""
+        path.write_text(header + "".join(f"{d:.2f} {g:.4f} {r:.4f} {t:.4f}\n"
+                        for d, g, r, t in zip(depths, gr, rho, rt)), encoding="ascii")
+        (inputs / "formation-parameters.json").write_text(json.dumps(parameters, indent=2) + "\n")
+        rows = []
+        for d, g, r, t in zip(depths, gr, rho, rt):
+            valid = all(x != -999.25 for x in (g, r, t)) and r > 0 and t > 0
+            vsh = max(0.0, min(1.0, (g - 20.0) / 100.0)) if valid else None
+            phi = (2.65 - r) / 1.65 if valid else None
+            phi = phi if phi is not None and 0 <= phi <= 1 else None
+            raw_sw = (0.05 / (phi * phi * t)) ** 0.5 if phi is not None and phi > 0 else None
+            rows.append(dict(depth_m=d, qc_valid=valid, vsh=vsh, phi_d=phi,
+                             sw=min(1.0, raw_sw) if raw_sw is not None else None,
+                             sw_clipped=raw_sw is not None and raw_sw > 1))
+        intervals = []
+        for upper, lower in zip(rows, rows[1:]):
+            if upper["vsh"] is None or lower["vsh"] is None:
+                continue
+            lith = "sandstone" if upper["vsh"] < 0.3 else "siltstone" if upper["vsh"] < 0.6 else "shale"
+            if intervals and intervals[-1]["base_m"] == upper["depth_m"] and intervals[-1]["lithology"] == lith:
+                intervals[-1]["base_m"] = lower["depth_m"]
+            else:
+                intervals.append(dict(top_m=upper["depth_m"], base_m=lower["depth_m"], lithology=lith))
+        expected = {"evaluated.json": {"rows": rows}, "lithology.json": {"intervals": intervals}}
     elif task == "segy-subset":
         path = inputs / "survey.sgy"
         text_header = "".join(
@@ -103,7 +153,8 @@ def make_fixture(task: str, inputs: Path, seed: int = 20260914) -> dict:
                     if 310 <= t["headers"]["INLINE_3D"] <= 315]}
     else:
         raise ValueError(f"unknown task: {task}")
-    return {"expected": expected, "input_name": path.name, "input_sha256": digest(path)}
+    return {"expected": expected, "input_name": path.name, "input_sha256": digest(path),
+            "input_files_sha256": {item.name: digest(item) for item in sorted(inputs.iterdir()) if item.is_file()}}
 
 
 def read_segy(path: Path) -> dict:
@@ -142,6 +193,8 @@ def compare(expected, actual, path="result", tolerance=1e-7) -> list[str]:
             return [f"{path}: incorrect item count"]
         return [issue for i, (a, b) in enumerate(zip(expected, actual))
                 for issue in compare(a, b, f"{path}[{i}]", tolerance)]
+    if expected is None:
+        return [] if actual is None else [f"{path}: expected null"]
     if isinstance(expected, bool) or isinstance(expected, str):
         return [] if type(expected) is type(actual) and expected == actual else [f"{path}: mismatch"]
     if isinstance(expected, int):
@@ -158,8 +211,24 @@ def grade(task: str, workspace: Path, oracle: dict) -> dict:
     input_path = workspace / "inputs" / oracle["input_name"]
     if not input_path.is_file() or digest(input_path) != oracle["input_sha256"]:
         checks.append("input: changed or missing")
+    for name, sha in oracle.get("input_files_sha256", {}).items():
+        candidate = workspace / "inputs" / name
+        if not candidate.is_file() or candidate.is_symlink() or digest(candidate) != sha:
+            checks.append(f"input {name}: changed or missing")
     if not (workspace / "solution.py").is_file() or (workspace / "solution.py").is_symlink():
         checks.append("solution.py: missing reproducible source")
+    if task == "formation-evaluation":
+        outputs = {}
+        for name, expected in oracle["expected"].items():
+            candidate = workspace / name
+            try:
+                if candidate.is_symlink():
+                    raise ValueError("output must be a regular task artifact")
+                checks.extend(compare(expected, json.loads(candidate.read_text()), path=name))
+                outputs[name] = digest(candidate)
+            except (OSError, ValueError, TypeError) as exc:
+                checks.append(f"{name}: unreadable or invalid ({type(exc).__name__})")
+        return {"passed": not checks, "failures": checks, "output_sha256": outputs}
     output = workspace / ("result.json" if task == "las-qc" else "subset.sgy")
     try:
         if output.is_symlink():

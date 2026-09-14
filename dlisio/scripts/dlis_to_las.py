@@ -1,252 +1,185 @@
 #!/usr/bin/env python3
-"""
-Convert DLIS files to LAS format.
-
-Usage:
-    python dlis_to_las.py input.dlis output.las
-    python dlis_to_las.py input.dlis  # outputs to input.las
-    python dlis_to_las.py input.dlis --frame 0 --curves GR NPHI RHOB
-    python dlis_to_las.py directory/ --output-dir las_output/
-"""
+"""Export one explicitly selected DLIS frame's scalar numeric curves to LAS."""
 
 import argparse
+from collections import Counter
 from pathlib import Path
+import sys
 
-import dlisio
+from dlisio import dlis
 import lasio
 import numpy as np
 
 
-def dlis_to_las(
-    dlis_path: str,
-    las_path: str = None,
-    frame_index: int = 0,
-    curves: list = None,
-    logical_file_index: int = 0,
-) -> str:
+def _select_channel(channels, key):
+    matches = [ch for ch in channels if key in (ch.name, ch.fingerprint)]
+    if len(matches) != 1:
+        raise ValueError(f"Channel {key!r} matches {len(matches)} objects; use an exact fingerprint")
+    return matches[0]
+
+
+def dlis_to_las(dlis_path, las_path=None, frame_index=0, curves=None,
+                logical_file_index=0, depth_channel=None, null_value=None):
+    """Preserve depth order/units; exclude arrays unless requested (then fail).
+
+    Channel selections accept a unique mnemonic or a complete DLIS fingerprint.
+    ``null_value`` is an optional documented vendor sentinel, not an RP66 default.
     """
-    Convert DLIS file to LAS format.
-
-    Args:
-        dlis_path: Path to input DLIS file
-        las_path: Path to output LAS file (default: same name with .las)
-        frame_index: Which frame to convert (default: 0)
-        curves: List of curve names to include (default: all scalar)
-        logical_file_index: Which logical file to use (default: 0)
-
-    Returns:
-        Path to created LAS file
-    """
-    with dlisio.dlis.load(dlis_path) as files:
-        logical_files = list(files)
-
-        if logical_file_index >= len(logical_files):
-            raise ValueError(
-                f"Logical file index {logical_file_index} out of range. "
-                f"File has {len(logical_files)} logical files."
-            )
-
-        f = logical_files[logical_file_index]
-
-        if frame_index >= len(f.frames):
-            raise ValueError(
-                f"Frame index {frame_index} out of range. "
-                f"File has {len(f.frames)} frames."
-            )
-
-        frame = f.frames[frame_index]
-        dlis_curves = frame.curves()
-
-        # Create LAS file
-        las = lasio.LASFile()
-
-        # Set well header from origin
-        if f.origins:
-            origin = f.origins[0]
-            if origin.well_name:
-                las.well["WELL"] = lasio.HeaderItem("WELL", value=origin.well_name)
-            if origin.field_name:
-                las.well["FLD"] = lasio.HeaderItem("FLD", value=origin.field_name)
-            if origin.company:
-                las.well["COMP"] = lasio.HeaderItem("COMP", value=origin.company)
-            if origin.run_nr:
-                las.well["RUN"] = lasio.HeaderItem("RUN", value=str(origin.run_nr))
-
-        # Determine which curves to export
-        if curves:
-            # Filter to requested curves that exist
-            available = set(dlis_curves.dtype.names)
-            export_names = [c for c in curves if c in available]
-            missing = [c for c in curves if c not in available]
-            if missing:
-                print(f"Warning: Curves not found: {missing}")
+    source = Path(dlis_path)
+    target = Path(las_path) if las_path is not None else source.with_suffix('.las')
+    if source.resolve() == target.resolve() or (source.exists() and target.exists() and source.samefile(target)):
+        raise ValueError('Output must not overwrite the input DLIS file')
+    if null_value is not None and not np.isfinite(null_value):
+        raise ValueError('Vendor null value must be finite')
+    with dlis.load(str(source)) as files:
+        if not isinstance(logical_file_index, int) or not 0 <= logical_file_index < len(files):
+            raise ValueError('Logical file index is outside the available files')
+        logical = files[logical_file_index]
+        if not isinstance(frame_index, int) or not 0 <= frame_index < len(logical.frames):
+            raise ValueError('Frame index is outside the available frames')
+        frame = logical.frames[frame_index]
+        channels = list(frame.channels)
+        records = frame.curves()
+        if not records.size:
+            raise ValueError('Selected frame contains no samples')
+        if depth_channel is not None:
+            depth = _select_channel(channels, depth_channel)
+        elif frame.index_type in ('BOREHOLE-DEPTH', 'VERTICAL-DEPTH') and channels:
+            depth = channels[0]
         else:
-            # Export all scalar curves
-            export_names = []
-            for ch in frame.channels:
-                data = dlis_curves[ch.name]
-                if data.ndim == 1:  # Only scalar curves
-                    export_names.append(ch.name)
+            raise ValueError('Frame has no depth index; choose --depth-channel explicitly')
+        depth_units = {'m': 'M', 'meter': 'M', 'metre': 'M', 'ft': 'FT', 'foot': 'FT', 'feet': 'FT'}
+        depth_unit = depth_units.get(str(depth.units).strip().lower())
+        if depth_unit is None:
+            raise ValueError(f'Unsupported depth unit {depth.units!r}; convert and document it before LAS export')
+        depths = records[depth.fingerprint]
+        if depths.ndim != 1 or depths.dtype.kind not in 'biuf':
+            raise ValueError('Depth must be a scalar numeric channel')
+        depths = depths.astype(float)
+        if not np.all(np.isfinite(depths)) or (null_value is not None and np.any(depths == null_value)):
+            raise ValueError('Depth contains missing or invalid samples')
+        steps = np.diff(depths)
+        if steps.size and not (np.all(steps > 0) or np.all(steps < 0)):
+            raise ValueError('Depth must be strictly monotonic with no repeated samples')
 
-        # Add curves to LAS
-        for channel in frame.channels:
-            if channel.name not in export_names:
+        selected = [_select_channel(channels, key) for key in curves] if curves else channels
+        selected = [depth] + [ch for ch in selected if ch.fingerprint != depth.fingerprint]
+        seen = set()
+        counts = Counter(ch.name for ch in channels)
+        las = lasio.LASFile()
+        if logical.origins:
+            origin = logical.origins[0]
+            for key, attribute in [('WELL', 'well_name'), ('FLD', 'field_name'), ('COMP', 'company'), ('RUN', 'run_nr')]:
+                value = getattr(origin, attribute, None)
+                if value is not None:
+                    las.well[key] = lasio.HeaderItem(key, value=str(value))
+        for channel in selected:
+            if channel.fingerprint in seen:
                 continue
-
-            data = dlis_curves[channel.name]
-
-            # Skip multi-dimensional data
-            if data.ndim > 1:
-                print(f"Skipping array channel: {channel.name} (shape: {data.shape})")
+            seen.add(channel.fingerprint)
+            data = records[channel.fingerprint]
+            if data.ndim != 1 or data.dtype.kind not in 'biuf':
+                message = f'Cannot represent channel {channel.fingerprint} with shape {data.shape} and dtype {data.dtype} in scalar LAS'
+                if curves:
+                    raise ValueError(message)
+                print(message, file=sys.stderr)
                 continue
-
-            # Handle data type conversion
-            if np.issubdtype(data.dtype, np.floating):
-                data = data.astype(np.float64)
-            elif np.issubdtype(data.dtype, np.integer):
-                data = data.astype(np.float64)
-
-            las.append_curve(
-                channel.name,
-                data,
-                unit=channel.units or "",
-                descr=channel.long_name or "",
-            )
-
-        # Set depth range
-        if las.curves:
-            first_curve = las.curves[0]
-            las.well["STRT"] = lasio.HeaderItem(
-                "STRT", unit=first_curve.unit, value=first_curve.data[0]
-            )
-            las.well["STOP"] = lasio.HeaderItem(
-                "STOP", unit=first_curve.unit, value=first_curve.data[-1]
-            )
-
-            # Calculate step
-            if len(first_curve.data) > 1:
-                step = np.median(np.diff(first_curve.data))
-                las.well["STEP"] = lasio.HeaderItem(
-                    "STEP", unit=first_curve.unit, value=step
-                )
-            else:
-                las.well["STEP"] = lasio.HeaderItem("STEP", value=0)
-
-        # Set null value
-        las.well["NULL"] = lasio.HeaderItem("NULL", value=-999.25)
-
-        # Determine output path
-        if las_path is None:
-            las_path = str(Path(dlis_path).with_suffix(".las"))
-
-        las.write(las_path)
-        return las_path
+            values = data.astype(float)
+            if null_value is not None:
+                values[values == null_value] = np.nan
+            values[~np.isfinite(values)] = np.nan
+            name = channel.name
+            if counts[name] > 1:
+                name = f'{name}__O{channel.origin}_C{channel.copynumber}'
+            # LAS uses a dot between mnemonic and unit; avoid an ambiguous file.
+            name = name.replace('.', '_').replace(' ', '_')
+            if name in las.keys():
+                raise ValueError(f'LAS mnemonic collision after normalization: {name}')
+            unit = depth_unit if channel.fingerprint == depth.fingerprint else str(channel.units or '')
+            description = f'DLIS {channel.fingerprint}'
+            las.append_curve(name, values, unit=unit, descr=description)
+        if len(las.curves) < 1:
+            raise ValueError('No numeric curves to export')
+        las.well.STRT = lasio.HeaderItem('STRT', unit=depth_unit, value=depths[0])
+        las.well.STOP = lasio.HeaderItem('STOP', unit=depth_unit, value=depths[-1])
+        step = steps[0] if steps.size and np.allclose(steps, steps[0], rtol=1e-7, atol=1e-9) else 0.0
+        las.well.STEP = lasio.HeaderItem('STEP', unit=depth_unit, value=step)
+        for sentinel in (-999.25, -9999.25, -1e30):
+            if not any(np.any(np.isclose(curve.data, sentinel, rtol=1e-9, atol=1e-10))
+                       for curve in las.curves):
+                break
+        else:
+            raise ValueError('No collision-free LAS null sentinel found')
+        las.well.NULL = lasio.HeaderItem('NULL', value=sentinel)
+        las.other = (f'Selected logical file {logical_file_index}; frame {frame.fingerprint}; '
+                     f'depth {depth.fingerprint}; vendor null marker {null_value!r}. '
+                     'Array channels require a separate lossless export.')
+        las.write(str(target), version=2.0, fmt='%.17g',
+                  STRT=depths[0], STOP=depths[-1], STEP=step)
+    return str(target)
 
 
-def list_frames(dlis_path: str) -> None:
-    """List all frames and their channels in a DLIS file."""
-    with dlisio.dlis.load(dlis_path) as files:
-        for lf_idx, f in enumerate(files):
-            print(f"\nLogical File {lf_idx}:")
-
-            if f.origins:
-                origin = f.origins[0]
-                print(f"  Well: {origin.well_name}")
-                print(f"  Field: {origin.field_name}")
-
-            for fr_idx, frame in enumerate(f.frames):
-                print(f"\n  Frame {fr_idx}: {frame.name}")
-                print(f"    Index: {frame.index_type}")
-                print(f"    Range: {frame.index_min} - {frame.index_max}")
-                print(f"    Channels ({len(frame.channels)}):")
-
-                for ch in frame.channels:
-                    dim = ch.dimension
-                    dim_str = f"[{dim[0]}]" if len(dim) == 1 and dim[0] > 1 else ""
-                    print(f"      {ch.name}{dim_str}: {ch.units}")
+def list_frames(dlis_path):
+    with dlis.load(str(dlis_path)) as files:
+        for lf_index, logical in enumerate(files):
+            print(f'Logical file {lf_index}:')
+            for frame_index, frame in enumerate(logical.frames):
+                print(f'  Frame {frame_index}: {frame.fingerprint}, index={frame.index!r}, type={frame.index_type!r}')
+                for channel in frame.channels:
+                    print(f'    {channel.fingerprint}: units={channel.units!r}, dimension={channel.dimension}')
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Convert DLIS to LAS")
-    parser.add_argument("input", help="DLIS file or directory")
-    parser.add_argument("output", nargs="?", help="Output LAS file")
-    parser.add_argument(
-        "--frame", "-f", type=int, default=0, help="Frame index to convert (default: 0)"
-    )
-    parser.add_argument(
-        "--logical-file",
-        "-l",
-        type=int,
-        default=0,
-        help="Logical file index (default: 0)",
-    )
-    parser.add_argument(
-        "--curves", "-c", nargs="+", help="Specific curves to include"
-    )
-    parser.add_argument(
-        "--output-dir", "-o", help="Output directory for batch conversion"
-    )
-    parser.add_argument(
-        "--list", action="store_true", help="List frames and channels, don't convert"
-    )
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('input', help='DLIS file or directory')
+    parser.add_argument('output', nargs='?', help='Output LAS path for a single input')
+    parser.add_argument('--frame', '-f', type=int, default=0)
+    parser.add_argument('--logical-file', '-l', type=int, default=0)
+    parser.add_argument('--curves', '-c', nargs='+', help='Unique mnemonics or complete fingerprints; depth is always included')
+    parser.add_argument('--depth-channel', help='Explicit depth channel for a non-depth-indexed frame')
+    parser.add_argument('--null-value', type=float, help='Documented vendor sentinel to convert to NaN')
+    parser.add_argument('--output-dir', '-o')
+    parser.add_argument('--list', action='store_true')
     args = parser.parse_args()
-
-    input_path = Path(args.input)
-
-    # List mode
-    if args.list:
-        if input_path.is_file():
-            list_frames(str(input_path))
+    source = Path(args.input)
+    try:
+        if args.list:
+            if not source.is_file():
+                raise ValueError('--list requires a DLIS file')
+            list_frames(source)
+            return 0
+        if source.is_file():
+            if args.output_dir:
+                raise ValueError('--output-dir applies only to directory inputs')
+            sources = [source]
+            targets = [Path(args.output) if args.output else source.with_suffix('.las')]
+        elif source.is_dir():
+            if args.output:
+                raise ValueError('A positional output applies only to a single input file')
+            sources = sorted(p for p in source.iterdir() if p.is_file() and p.suffix.lower() == '.dlis')
+            if not sources:
+                raise ValueError('No DLIS files found in directory')
+            output_dir = Path(args.output_dir) if args.output_dir else source
+            output_dir.mkdir(parents=True, exist_ok=True)
+            targets = [output_dir / p.with_suffix('.las').name for p in sources]
+            if len({p.resolve() for p in targets}) != len(targets):
+                raise ValueError('Input names map to duplicate LAS output paths')
         else:
-            print(f"Error: {input_path} not found")
-            exit(1)
-        return
-
-    # Conversion mode
-    if input_path.is_file():
-        output = args.output or str(input_path.with_suffix(".las"))
-        try:
-            result = dlis_to_las(
-                str(input_path),
-                output,
-                frame_index=args.frame,
-                curves=args.curves,
-                logical_file_index=args.logical_file,
-            )
-            print(f"Created: {result}")
-        except Exception as e:
-            print(f"Error converting {input_path}: {e}")
-            exit(1)
-
-    elif input_path.is_dir():
-        output_dir = Path(args.output_dir) if args.output_dir else input_path
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-        success = 0
+            raise ValueError(f'Input does not exist: {source}')
         failed = 0
-
-        for dlis_file in input_path.glob("*.dlis"):
-            las_path = output_dir / dlis_file.with_suffix(".las").name
+        for input_path, output_path in zip(sources, targets):
             try:
-                result = dlis_to_las(
-                    str(dlis_file),
-                    str(las_path),
-                    frame_index=args.frame,
-                    curves=args.curves,
-                    logical_file_index=args.logical_file,
-                )
-                print(f"Created: {result}")
-                success += 1
-            except Exception as e:
-                print(f"Error converting {dlis_file}: {e}")
+                result = dlis_to_las(input_path, output_path, args.frame, args.curves,
+                                     args.logical_file, args.depth_channel, args.null_value)
+                print(f'Created: {result}')
+            except (ValueError, RuntimeError, OSError) as error:
+                print(f'Error converting {input_path}: {error}', file=sys.stderr)
                 failed += 1
-
-        print(f"\nSummary: {success} converted, {failed} failed")
-
-    else:
-        print(f"Error: {input_path} not found")
-        exit(1)
+        return 1 if failed else 0
+    except (ValueError, RuntimeError, OSError) as error:
+        print(f'Error: {error}', file=sys.stderr)
+        return 1
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    sys.exit(main())

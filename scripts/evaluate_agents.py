@@ -14,6 +14,7 @@ import json
 import os
 from pathlib import Path
 import re
+import selectors
 import shutil
 import shlex
 import signal
@@ -33,6 +34,7 @@ CLI_NAMES = {"codex": "codex", "claude": "claude",
              "gemini": "gemini", "github-copilot": "copilot"}
 SUPPORTED = {"codex", "claude"}
 PROTOCOL_VERSION = "2"
+NATIVE_PROTOCOL_VERSION = "native-1"
 
 
 def read_json(path: Path) -> dict:
@@ -46,6 +48,15 @@ def read_json(path: Path) -> dict:
 def write_json(path: Path, value) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, indent=2, ensure_ascii=False) + "\n")
+
+
+def bundle_digest(directory: Path) -> str:
+    checksum = hashlib.sha256()
+    for path in sorted(directory.rglob("*")):
+        if path.is_file() and not path.is_symlink():
+            checksum.update(path.relative_to(directory).as_posix().encode() + b"\0")
+            checksum.update(bytes.fromhex(digest(path)))
+    return checksum.hexdigest()
 
 
 def toml_value(value) -> str:
@@ -103,13 +114,15 @@ def stage_credentials(agent: str, home: Path, state: Path) -> tuple[str | None, 
     return model, copied
 
 
-def stage_workspace(task: str, destination: Path, seed: int, root: Path = ROOT) -> dict:
+def stage_workspace(task: str, destination: Path, seed: int, root: Path = ROOT,
+                    mode: str = "explicit-file", skill_root: Path | None = None) -> dict:
     destination.mkdir(parents=True)
     oracle = make_fixture(task, destination / "inputs", seed)
     catalog = []
-    for directory in find_skill_dirs(root):
+    for directory in find_skill_dirs(skill_root or root):
         frontmatter = parse_frontmatter((directory / "SKILL.md").read_text())
-        target = destination / "skills" / frontmatter["name"]
+        skill_base = Path(".agents/skills") if mode == "native" else Path("skills")
+        target = destination / skill_base / frontmatter["name"]
         # No symlinks: a repository link must never expose external host paths.
         for path in directory.rglob("*"):
             if path.is_file() and not path.is_symlink() and not any(
@@ -120,21 +133,35 @@ def stage_workspace(task: str, destination: Path, seed: int, root: Path = ROOT) 
                 output.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(path, output)
         catalog.append({"name": frontmatter["name"], "description": frontmatter["description"],
-                        "path": f"skills/{frontmatter['name']}/SKILL.md"})
-    write_json(destination / "skill-catalog.json", catalog)
+                        "path": (skill_base / frontmatter["name"] / "SKILL.md").as_posix(),
+                        "sha256": digest(target / "SKILL.md"), "bundle_sha256": bundle_digest(target)})
+    if mode == "explicit-file":
+        write_json(destination / "skill-catalog.json", catalog)
+    else:
+        # Git marks the discovery root; it does not expose the main checkout.
+        subprocess.run(["git", "init", "--quiet", str(destination)], check=True, capture_output=True)
     task_text = (root / "evals" / "tasks" / f"{task}.md").read_text()
-    protocol = (root / "evals" / "protocols" / f"v{PROTOCOL_VERSION}.md").read_text().rstrip()
+    protocol_file = "native-v1.md" if mode == "native" else f"v{PROTOCOL_VERSION}.md"
+    protocol = (root / "evals" / "protocols" / protocol_file).read_text().rstrip()
     prompt = protocol + "\n\n" + task_text
     (destination / "TASK.md").write_text(prompt)
     oracle["prompt_sha256"] = hashlib.sha256(prompt.encode()).hexdigest()
-    oracle["catalog_sha256"] = digest(destination / "skill-catalog.json")
+    oracle["catalog"] = catalog
+    oracle["catalog_sha256"] = (digest(destination / "skill-catalog.json") if mode == "explicit-file"
+                                else hashlib.sha256(json.dumps(catalog, sort_keys=True).encode()).hexdigest())
+    oracle["protocol_version"] = NATIVE_PROTOCOL_VERSION if mode == "native" else PROTOCOL_VERSION
     return oracle
 
 
 def python_runtime(python: Path) -> dict:
-    code = ("import sys,json,importlib.metadata as m; print(json.dumps({"
-            "'prefix':sys.prefix,'base_prefix':sys.base_prefix,'python':sys.version.split()[0],"
-            "'libraries':{p:m.version(p) for p in ('lasio','segyio','numpy')}}))")
+    code = """import sys,json,importlib.metadata as m
+versions={p:m.version(p) for p in ('lasio','segyio','numpy')}
+for package in ('pandas','welly','striplog'):
+    try: versions[package]=m.version(package)
+    except m.PackageNotFoundError: pass
+print(json.dumps({'prefix':sys.prefix,'base_prefix':sys.base_prefix,
+                  'python':sys.version.split()[0],'libraries':versions}))
+"""
     result = subprocess.run([str(python), "-c", code], capture_output=True, text=True, timeout=20)
     if result.returncode:
         raise ValueError("evaluation Python must provide lasio, segyio and numpy")
@@ -142,7 +169,7 @@ def python_runtime(python: Path) -> dict:
 
 
 def sandbox_command(agent: str, cli: Path, python: Path, runtime: dict,
-                    run_dir: Path, budget: float) -> tuple[list[str], dict, list[str]]:
+                    run_dir: Path, budget: float, mode: str = "explicit-file") -> tuple[list[str], dict, list[str]]:
     """Mount an allowlist, never the host root, main repository, or global skills."""
     home = Path(os.environ["HOME"])
     state, workspace = run_dir / "state", run_dir / "workspace"
@@ -184,7 +211,9 @@ def sandbox_command(agent: str, cli: Path, python: Path, runtime: dict,
             raise ValueError("refusing a runtime mount that exposes unrelated host files")
         command += ["--ro-bind", mount, mount]
     command += ["--bind", str(workspace), "/workspace"]
-    for name in ("inputs", "skills", "skill-catalog.json", "TASK.md"):
+    protected = ("inputs", ".agents/skills", "TASK.md") if mode == "native" else (
+        "inputs", "skills", "skill-catalog.json", "TASK.md")
+    for name in protected:
         command += ["--ro-bind", str(workspace / name), f"/workspace/{name}"]
     command += ["--chdir", "/workspace", "--"] + invocation
     # Keep HOME/CODEX_HOME values unchanged: their filesystem targets are private mounts.
@@ -198,6 +227,110 @@ def sandbox_command(agent: str, cli: Path, python: Path, runtime: dict,
                CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC="1",
                CLAUDE_CODE_DISABLE_AUTO_MEMORY="1")
     return command, env, invocation
+
+
+def native_discovery(command: list[str], env: dict, run_dir: Path, catalog: list[dict]) -> dict:
+    """Ask the installed Codex scanner for skills, without starting a model turn."""
+    separator = command.index("--")
+    discovery_command = command[:separator + 2] + ["app-server", "--stdio"]
+    events, buffered = [], b""
+    stderr_path = run_dir / "discovery-stderr.log"
+    with stderr_path.open("w") as stderr:
+        process = subprocess.Popen(discovery_command, env=env, stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE, stderr=stderr, start_new_session=True)
+        selector = selectors.DefaultSelector()
+        selector.register(process.stdout, selectors.EVENT_READ)
+        deadline = time.monotonic() + 25
+
+        def request(message, response_id):
+            nonlocal buffered
+            process.stdin.write((json.dumps(message) + "\n").encode())
+            process.stdin.flush()
+            while time.monotonic() < deadline:
+                while b"\n" in buffered:
+                    line, buffered = buffered.split(b"\n", 1)
+                    try:
+                        event = json.loads(line)
+                    except ValueError:
+                        continue
+                    if not isinstance(event, dict):
+                        continue
+                    events.append(event)
+                    if event.get("id") == response_id:
+                        return event
+                if selector.select(max(0, deadline - time.monotonic())):
+                    chunk = os.read(process.stdout.fileno(), 65536)
+                    if not chunk:
+                        raise ValueError("native discovery process ended without response")
+                    buffered += chunk
+            raise TimeoutError("native discovery exceeded 25 seconds")
+
+        try:
+            initialized = request({"id": 1, "method": "initialize", "params": {
+                "clientInfo": {"name": "geoscience-evaluation", "version": "1"}}}, 1)
+            if "error" in initialized:
+                raise ValueError("native discovery initialization failed")
+            process.stdin.write(b'{"method":"initialized"}\n')
+            process.stdin.flush()
+            response = request({"id": 2, "method": "skills/list", "params": {
+                "cwds": ["/workspace"], "forceReload": True}}, 2)
+        finally:
+            selector.close()
+            if process.poll() is None:
+                os.killpg(process.pid, signal.SIGTERM)
+            try:
+                process.communicate(timeout=5)
+            except subprocess.TimeoutExpired:
+                os.killpg(process.pid, signal.SIGKILL)
+                process.communicate()
+            (run_dir / "discovery.jsonl").write_text("".join(json.dumps(e) + "\n" for e in events))
+    return summarize_discovery(response, catalog)
+
+
+def summarize_discovery(response: dict, catalog: list[dict]) -> dict:
+    expected = {entry["name"]: "/workspace/" + entry["path"] for entry in catalog}
+    discovered, errors = {}, 0
+    data = response.get("result", {})
+    data = data.get("data", []) if isinstance(data, dict) else []
+    for entry in data:
+        if entry.get("cwd") != "/workspace":
+            continue
+        errors += len(entry.get("errors", []))
+        for skill in entry.get("skills", []):
+            name = skill.get("name")
+            if (name in expected and skill.get("path") == expected[name]
+                    and skill.get("scope") == "repo" and skill.get("enabled") is True):
+                discovered[name] = {"name": name, "path": expected[name], "scope": "repo", "enabled": True}
+    missing = sorted(set(expected) - set(discovered))
+    return {"method": "codex app-server skills/list", "passed": bool(expected) and not missing and errors == 0 and "error" not in response,
+            "expected_count": len(expected), "discovered_count": len(discovered),
+            "missing": missing, "parse_error_count": errors,
+            "skills": [discovered[name] for name in sorted(discovered)]}
+
+
+def shell_read_paths(command: str) -> list[tuple[str, str]]:
+    """Recognize direct readers after shell unwrapping; quoted echo text is not a command."""
+    try:
+        wrapped = shlex.split(command)
+        if (len(wrapped) == 3 and Path(wrapped[0]).name in {"bash", "sh", "dash", "zsh"}
+                and wrapped[1] in {"-c", "-lc"}):
+            command = wrapped[2]
+        lexer = shlex.shlex(command, posix=True, punctuation_chars=";&|")
+        lexer.whitespace_split = True
+        segments, current = [], []
+        for token in lexer:
+            if token and all(char in ";&|" for char in token):
+                segments.append(current)
+                current = []
+            else:
+                current.append(token)
+        segments.append(current)
+        return [match for segment in segments
+                if segment and Path(segment[0]).name in {"cat", "head", "tail", "sed"}
+                for argument in segment[1:]
+                for match in re.findall(r"(?<![\w.-])((?:/workspace/)?(?:\.agents/)?skills/([a-z0-9-]+)/SKILL\.md)\b", argument)]
+    except ValueError:
+        return []
 
 
 def extract_evidence(agent: str, transcript: str) -> dict:
@@ -223,14 +356,15 @@ def extract_evidence(agent: str, transcript: str) -> dict:
         except ValueError:
             pass
         commands.append(record)
-        if tool != "Read" and not re.search(r"(?:^|[\s;&|('])(?:cat|head|tail|sed)\s", value):
-            return
+        paths = (re.findall(r"(?<![\w.-])((?:/workspace/)?(?:\.agents/)?skills/([a-z0-9-]+)/SKILL\.md)\b", value)
+                 if tool == "Read" else shell_read_paths(value))
         rendered = output if isinstance(output, str) else json.dumps(output)
-        for skill in re.findall(r"(?:^|[\s\"'/])skills/([a-z0-9-]+)/SKILL\.md\b", value):
+        for skill_path, skill in paths:
             # A successful command merely mentioning the path is not a file read.
             if re.search(r"\bname:\s*[\"']?" + re.escape(skill) + r"\b", rendered):
                 reads.add(skill)
                 read_evidence.append({"skill": skill, "tool": tool,
+                                      "path": skill_path,
                                       "output_sha256": hashlib.sha256(rendered.encode()).hexdigest()})
 
     for line in transcript.splitlines():
@@ -291,17 +425,22 @@ def run_one(agent: str, task: str, cli: Path, args, runtime: dict) -> dict:
     state = run_dir / "state"
     state.mkdir()
     (state / "home").mkdir()
-    oracle = stage_workspace(task, run_dir / "workspace", args.seed)
+    oracle = stage_workspace(task, run_dir / "workspace", args.seed, mode=args.mode,
+                             skill_root=args.skill_source)
     try:
         model, credentials = stage_credentials(agent, Path(os.environ["HOME"]), state)
-        command, env, invocation = sandbox_command(agent, cli, args.python, runtime, run_dir, args.max_budget_usd)
+        command, env, invocation = sandbox_command(agent, cli, args.python, runtime, run_dir, args.max_budget_usd, args.mode)
     except BaseException:
         shutil.rmtree(state)
         raise
     result = dict(agent=agent, task=task, configured_model=model, seed=args.seed,
-                  protocol_version=PROTOCOL_VERSION,
+                  protocol_version=oracle["protocol_version"], evaluation_mode=args.mode,
                   prompt_sha256=oracle["prompt_sha256"], input_sha256=oracle["input_sha256"],
                   skill_catalog_sha256=oracle["catalog_sha256"],
+                  installed_skill_count=len(oracle["catalog"]),
+                  installed_skill_hashes={entry["name"]: entry["sha256"] for entry in oracle["catalog"]},
+                  installed_bundle_hashes={entry["name"]: entry["bundle_sha256"] for entry in oracle["catalog"]},
+                  input_files_sha256=oracle["input_files_sha256"],
                   command=[agent, *invocation[1:]], isolation="bubblewrap-allowlist",
                   limits={"timeout_seconds": args.timeout,
                           "budget_usd": args.max_budget_usd if agent == "claude" else None},
@@ -310,6 +449,15 @@ def run_one(agent: str, task: str, cli: Path, args, runtime: dict) -> dict:
     timed_out = False
     stdout_path, stderr_path = run_dir / "stdout.jsonl", run_dir / "stderr.log"
     try:
+        if args.mode == "native":
+            try:
+                result["native_discovery"] = native_discovery(command, env, run_dir, oracle["catalog"])
+            except (OSError, ValueError, TimeoutError) as exc:
+                result["native_discovery"] = {"passed": False, "error_type": type(exc).__name__}
+            if not result["native_discovery"]["passed"]:
+                result.update(status="blocked", reason="native_discovery_failed",
+                              duration_seconds=round(time.monotonic() - start, 3))
+                return result
         with stdout_path.open("w") as stdout, stderr_path.open("w") as stderr:
             process = subprocess.Popen(command, env=env, stdin=subprocess.PIPE,
                                        stdout=stdout, stderr=stderr, text=True, start_new_session=True)
@@ -326,13 +474,18 @@ def run_one(agent: str, task: str, cli: Path, args, runtime: dict) -> dict:
         result["numerical_checks"] = grade(task, run_dir / "workspace", oracle)
         evidence_path = run_dir / "workspace" / "evidence.json"
         claimed = [] if evidence_path.is_symlink() else read_json(evidence_path).get("selected_skills", [])
-        known_skills = {item["name"] for item in json.loads((run_dir / "workspace/skill-catalog.json").read_text())}
+        known_skills = {item["name"] for item in oracle["catalog"]}
         claimed = [s for s in claimed if isinstance(s, str) and s in known_skills] if isinstance(claimed, list) else []
         result["claimed_skills"] = claimed
-        result["skill_selection_verified"] = TASKS[task] in claimed and TASKS[task] in result["observed_skill_reads"]
-        result["skill_content_sha256"] = {name: digest(run_dir / "workspace" / "skills" / name / "SKILL.md")
-                                           for name in result["observed_skill_reads"]
-                                           if (run_dir / "workspace" / "skills" / name / "SKILL.md").is_file()}
+        observed = TASKS[task] in result["observed_skill_reads"]
+        native_reads = [entry["skill"] for entry in result["skill_read_evidence"]
+                        if entry["path"].startswith((".agents/skills/", "/workspace/.agents/skills/"))]
+        result["native_activation_verified"] = (args.mode == "native" and
+                                                  result["native_discovery"]["passed"] and TASKS[task] in native_reads)
+        result["skill_selection_verified"] = (result["native_activation_verified"] if args.mode == "native"
+                                               else TASKS[task] in claimed and observed)
+        result["skill_content_sha256"] = {entry["name"]: entry["sha256"] for entry in oracle["catalog"]
+                                           if entry["name"] in result["observed_skill_reads"]}
         if not timed_out and process.returncode == 0 and result["numerical_checks"]["passed"] and result["skill_selection_verified"]:
             result.update(status="passed", reason=None)
         else:
@@ -357,6 +510,9 @@ def run_one(agent: str, task: str, cli: Path, args, runtime: dict) -> dict:
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--agents", nargs="+", choices=AGENTS, default=["codex"])
+    parser.add_argument("--mode", choices=("explicit-file", "native"), default="explicit-file")
+    parser.add_argument("--skill-source", type=Path, default=ROOT,
+                        help="Public skill checkout/snapshot; task protocols still come from this evaluator")
     parser.add_argument("--tasks", nargs="+", choices=TASKS, default=list(TASKS))
     parser.add_argument("--python", type=Path, required=True, help="Existing isolated scientific Python")
     parser.add_argument("--cli", action="append", default=[], metavar="AGENT=PATH")
@@ -373,17 +529,20 @@ def main(argv=None) -> int:
         overrides = dict(value.split("=", 1) for value in args.cli)
     except (ValueError, OSError, subprocess.SubprocessError) as exc:
         parser.error(str(exc))
-    report = {"schema_version": 1, "protocol_version": PROTOCOL_VERSION,
+    report = {"schema_version": 2,
+              "protocol_version": NATIVE_PROTOCOL_VERSION if args.mode == "native" else PROTOCOL_VERSION,
               "recorded_at": datetime.now(timezone.utc).isoformat(),
-              "evaluation_mode": "explicit-file", "selection_tested": True,
-              "native_activation_tested": False,
-              "scope": "explicit skill-library selection on synthetic tasks; not native discovery",
+              "evaluation_mode": args.mode, "selection_tested": True,
+              "native_activation_tested": args.mode == "native",
+              "scope": ("native Codex discovery and implicit selection from task-only prompts"
+                        if args.mode == "native" else "explicit skill-library selection; not native discovery"),
               "runtime": {key: runtime[key] for key in ("python", "libraries")},
               "results": []}
     for agent in args.agents:
         cli = overrides.get(agent) or shutil.which(CLI_NAMES[agent])
         reason = ("cli_missing" if not cli or not Path(cli).is_file() else
                   "adapter_not_implemented" if agent not in SUPPORTED else
+                  "native_adapter_not_implemented" if args.mode == "native" and agent != "codex" else
                   "isolation_unavailable" if not shutil.which("bwrap") else None)
         version = None
         if not reason:

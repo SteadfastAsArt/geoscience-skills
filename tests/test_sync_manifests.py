@@ -57,7 +57,7 @@ class ManifestSyncTests(unittest.TestCase):
         openclaw = json.loads((self.root / sync_manifests.OPENCLAW_PATH).read_text())
         self.assertEqual(set(marketplace), {"name", "owner", "metadata", "plugins"})
         self.assertEqual(marketplace["owner"], {"name": "Geoscience Skills"})
-        self.assertEqual(marketplace["metadata"]["version"], "2.4.0")
+        self.assertEqual(marketplace["metadata"]["version"], "2.5.0")
         expected_paths = {"./" + path for path in self.skill_paths}
         actual_paths = set()
         for plugin in marketplace["plugins"]:
@@ -74,7 +74,7 @@ class ManifestSyncTests(unittest.TestCase):
             actual_paths.add(skill_path)
         self.assertEqual(actual_paths, expected_paths)
         self.assertEqual(openclaw["skills"], [p["skills"][0] for p in marketplace["plugins"]])
-        self.assertEqual(openclaw["version"], "2.4.0")
+        self.assertEqual(openclaw["version"], "2.5.0")
         self.assertEqual(openclaw["configSchema"], {})
 
     def test_generation_is_deterministic_and_check_is_read_only(self):

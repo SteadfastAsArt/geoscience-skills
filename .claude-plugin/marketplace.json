@@ -4,10 +4,20 @@
     "name": "Geoscience Skills"
   },
   "metadata": {
-    "description": "36 geoscience skills for AI coding assistants covering seismic, well logs, geological modelling, geophysical inversion, geostatistics, spatial regression, and related workflows.",
-    "version": "2.4.0"
+    "description": "48 geoscience skills for AI coding assistants covering seismic, well logs, geological modelling, geophysical inversion, geostatistics, spatial regression, and related workflows.",
+    "version": "2.5.0"
   },
   "plugins": [
+    {
+      "name": "boule",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./boule"
+      ],
+      "description": "Calculate reference-ellipsoid geometry, normal gravity and geodetic/geocentric coordinate conversions with Boule. Use for gravity reference corrections and planetary ellipsoids; this does not transform between geodetic datums or compute terrain corrections.",
+      "version": "1.0.0"
+    },
     {
       "name": "bruges",
       "source": "./",
@@ -17,6 +27,16 @@
       ],
       "description": "Geophysical equations and rock physics calculations for seismic analysis. Use when the agent needs to: (1) Calculate AVO responses (Zoeppritz, Shuey, Aki-Richards), (2) Perform Gassmann fluid substitution, (3) Generate seismic wavelets (Ricker, Ormsby), (4) Compute reflectivity and synthetic seismograms, (5) Calculate elastic moduli from velocities, (6) Apply Gardner/Castagna empirical relations, (7) Model rock physics effects.",
       "version": "1.0.2"
+    },
+    {
+      "name": "climate-analysis",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./workflows/climate-analysis"
+      ],
+      "description": "Analyse labelled climate time series and gridded or station observations with checked calendars, aggregation, climatological baselines and spatial validation. Use for climate anomalies, regional summaries or station-to-grid analysis; distinguish descriptive analysis from future-time prediction.",
+      "version": "1.0.0"
     },
     {
       "name": "devito",
@@ -39,6 +59,16 @@
       "version": "1.0.2"
     },
     {
+      "name": "discretize",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./discretize"
+      ],
+      "description": "Create finite-volume meshes and discrete differential operators with discretize. Use for TensorMesh or TreeMesh geometry, cell/face/edge ordering, divergence, interpolation and meshes supporting SimPEG; use a physics solver for inversion itself.",
+      "version": "1.0.0"
+    },
+    {
       "name": "dlisio",
       "source": "./",
       "strict": false,
@@ -46,7 +76,27 @@
         "./dlisio"
       ],
       "description": "Read and parse DLIS (Digital Log Interchange Standard) and LIS (Log Information Standard) well log files. Use when the agent needs to: (1) Read/parse DLIS or LIS files, (2) Extract well log curves as numpy arrays, (3) Access file metadata and origin information, (4) Handle multi-frame or multi-file DLIS, (5) Convert DLIS to LAS or DataFrame, (6) Work with RP66 format well logs, (7) Process array or image log data.",
-      "version": "1.0.1"
+      "version": "1.0.2"
+    },
+    {
+      "name": "ensaio",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./ensaio"
+      ],
+      "description": "Fetch versioned Fatiando geoscience datasets with Ensaio and preserve their hashes, citations and data conventions. Use for reproducible sample-data acquisition and replacing supported RockHound datasets; the fetchers return paths for format-specific readers.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "flopy",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./flopy"
+      ],
+      "description": "Build, run, inspect and diagnose MODFLOW groundwater flow models with FloPy. Use for aquifer discretization, recharge and boundary conditions, hydraulic heads, groundwater budgets and MODFLOW 6 output; use Pastas for statistical head time series.",
+      "version": "1.0.0"
     },
     {
       "name": "gemgis",
@@ -56,7 +106,7 @@
         "./gemgis"
       ],
       "description": "Spatial data processing for geological modelling with GemPy. Use when the agent needs to: (1) Prepare spatial data for GemPy models, (2) Extract interface points from geological maps, (3) Process orientations/dip measurements, (4) Sample DEMs along profiles or cross-sections, (5) Convert between GIS formats and GemPy inputs, (6) Clip/transform vector/raster data for modeling, (7) Create model extents from geospatial bounds.",
-      "version": "1.0.1"
+      "version": "1.0.2"
     },
     {
       "name": "gempy",
@@ -67,6 +117,16 @@
       ],
       "description": "3D structural geological modeling using implicit methods. Create geological models with faults, folds, and unconformities from surface points and orientations. Use when the agent needs to: (1) Build 3D geological models from surface contacts and orientations, (2) Model faults, unconformities, or intrusions, (3) Compute and visualize subsurface geology, (4) Export models to VTK or numpy arrays, (5) Generate gravity forward models, (6) Create cross-sections or 3D visualizations.",
       "version": "1.0.1"
+    },
+    {
+      "name": "geolime",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./geolime"
+      ],
+      "description": "Assess and maintain licensed GeoLime geological or mining-model workflows, checking the installed vendor API, drillhole conventions and model validation. Use when a project explicitly uses GeoLime; the public PyPI placeholder does not provide a working modelling API.",
+      "version": "1.0.0"
     },
     {
       "name": "geological-modelling",
@@ -129,6 +189,16 @@
       "version": "1.0.1"
     },
     {
+      "name": "hydrogeological-analysis",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./workflows/hydrogeological-analysis"
+      ],
+      "description": "Combine groundwater observations, well logs, and meteorological stresses into a checked hydrogeological interpretation or groundwater-level model. Use for aquifer monitoring and recharge/pumping response analysis, with spatial flow modelling only when its geometry and boundary data are available.",
+      "version": "1.0.0"
+    },
+    {
       "name": "landlab",
       "source": "./",
       "strict": false,
@@ -156,7 +226,7 @@
         "./loopstructural"
       ],
       "description": "Build 3D geological models with implicit surfaces, faults, folds, and stratigraphic constraints from structural geology data. Use when the agent needs to: (1) Build 3D geological models from structural data, (2) Model fault networks and displacements, (3) Create folded geology representations, (4) Interpolate geological surfaces, (5) Export models to VTK for visualization, (6) Perform uncertainty analysis on geological models, (7) Evaluate model values on grids.",
-      "version": "1.0.1"
+      "version": "1.0.2"
     },
     {
       "name": "mplstereonet",
@@ -177,6 +247,16 @@
       ],
       "description": "Magnetotelluric data processing and modelling. Read EDI files, analyze MT responses, perform inversions, and visualize resistivity models. Use when the agent needs to: (1) Read/write EDI files, (2) Process MT impedance tensors, (3) Analyze phase tensors and dimensionality, (4) Plot apparent resistivity and phase curves, (5) Create pseudosections, (6) Perform strike analysis, (7) Run 1D inversions, (8) Prepare data for 2D/3D modelling.",
       "version": "1.0.1"
+    },
+    {
+      "name": "near-surface-geophysics",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./workflows/near-surface-geophysics"
+      ],
+      "description": "Plan and validate near-surface interpretation from GPR, electrical resistivity tomography, or magnetotelluric data. Use when selecting acquisition-dependent processing and inversion branches, comparing survey results, or relating geophysical anomalies to independently supported geological hypotheses.",
+      "version": "1.0.0"
     },
     {
       "name": "obspy",
@@ -205,8 +285,8 @@
       "skills": [
         "./petropy"
       ],
-      "description": "Petrophysical analysis and formation evaluation from well logs. Calculate porosity, water saturation, permeability, and lithology. Use when the agent needs to: (1) Calculate shale volume from gamma ray, (2) Compute porosity from density/neutron/sonic logs, (3) Estimate water saturation using Archie or Simandoux, (4) Calculate permeability from porosity and saturation, (5) Perform pay zone identification, (6) Conduct multi-mineral analysis, (7) Generate petrophysical summation plots.",
-      "version": "1.0.1"
+      "description": "Configure PetroPy fluid-property and multimineral formation evaluation from normalized LAS well logs. Use for calibrated porosity, water saturation, mineral and pore-volume estimation, missing-sample handling, and explicitly defined pay intervals. Requires documented log units, fluid parameters and mineral endpoints; standalone permeability correlations need separate methods.",
+      "version": "1.0.2"
     },
     {
       "name": "pooch",
@@ -227,6 +307,26 @@
       ],
       "description": "Multi-method geophysical modelling and inversion framework. Use when the agent needs to: (1) Perform electrical resistivity tomography (ERT) inversion, (2) Run seismic refraction tomography (SRT), (3) Model induced polarization (IP) data, (4) Simulate ground penetrating radar (GPR), (5) Create finite element meshes for geophysical problems, (6) Perform joint inversions of multiple datasets, (7) Forward model geophysical responses, (8) Analyze time-lapse monitoring data.",
       "version": "1.0.1"
+    },
+    {
+      "name": "pygmt",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./pygmt"
+      ],
+      "description": "Make geographic maps and process geospatial grids with PyGMT and GMT, including projection, regions, grid registration and vector/raster export. Use for GMT cartography and map-ready scientific data; check the separate GMT shared library before plotting.",
+      "version": "1.0.0"
+    },
+    {
+      "name": "pyleoclim",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./pyleoclim"
+      ],
+      "description": "Analyse paleoclimate proxy time series with Pyleoclim, including irregular sampling, spectra and comparisons across uncertain chronologies. Use for proxy Series and EnsembleSeries analysis, spectral peaks and age-model sensitivity; use xarray for gridded climate fields.",
+      "version": "1.0.0"
     },
     {
       "name": "pylops",
@@ -269,6 +369,16 @@
       "version": "1.0.2"
     },
     {
+      "name": "rockhound",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./rockhound"
+      ],
+      "description": "Maintain or migrate legacy RockHound geoscience dataset downloads, caches and loaders such as PREM. Use when an existing project imports RockHound; prefer maintained Ensaio fetchers for supported new dataset workflows.",
+      "version": "1.0.0"
+    },
+    {
       "name": "scikit-gstat",
       "source": "./",
       "strict": false,
@@ -287,6 +397,16 @@
       ],
       "description": "Read, write, and manipulate SEG-Y seismic data files. Fast C library with Python bindings for trace, header, inline, and crossline access. Use when the agent needs to: (1) Read/inspect SEG-Y files, (2) Extract trace data or headers, (3) Access 3D survey data by inline/crossline, (4) Create new SEG-Y files from arrays, (5) Modify existing SEG-Y files, (6) Extract subsets of seismic data, (7) Read/write Seismic Unix format.",
       "version": "1.0.2"
+    },
+    {
+      "name": "segysak",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./segysak"
+      ],
+      "description": "Read SEG-Y as labelled xarray datasets with SEGY-SAK, inspect header-defined survey dimensions and process seismic volumes lazily. Use for SEG-Y/xarray/Dask workflows; use segyio for exact low-level trace and header editing.",
+      "version": "1.0.0"
     },
     {
       "name": "seismic-interpretation",
@@ -326,7 +446,7 @@
         "./using-geoscience-skills"
       ],
       "description": "Discover and compose geoscience skills for Python coding tasks. Use when choosing a geoscience library, finding a skill for a data format or method, or planning work across seismic, well logs, geological modelling, inversion, and other geoscience domains.",
-      "version": "1.0.1"
+      "version": "1.0.2"
     },
     {
       "name": "verde",

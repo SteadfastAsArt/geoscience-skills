@@ -9,206 +9,112 @@ description: |
   geological models, (7) Evaluate model values on grids.
 license: MIT
 metadata:
-  version: 1.0.1
+  version: "1.0.2"
   author: Geoscience Skills
   tags: '["Geological Modelling", "3D", "Faults", "Folds", "Structural Geology"]'
-  dependencies: '["LoopStructural>=1.5.0", "numpy", "pandas"]'
+  dependencies: '["LoopStructural>=1.8.0", "numpy", "pandas", "pyvista"]'
   complements: '["gemgis", "gempy", "pyvista"]'
   workflow_role: modelling
   skill_type: domain
 ---
 
-# LoopStructural - 3D Geological Modelling
+# Constrained implicit geological models
 
-## Quick Reference
+Use LoopStructural when observations constrain continuous geological scalar
+fields. A scalar value labels an interface; it is not automatically an age,
+measured depth or elevation. Record the coordinate CRS, shared XYZ units,
+positive-Z convention, feature order and meaning of each scalar level.
+
+## A constrained planar model
+
+This synthetic example uses metre coordinates with a nonzero origin and an
+asymmetric box. Its scalar field is
+`Z - 3030 + 0.1*(X - 1050) - 0.05*(Y - 2100)` in metres. Scalar observations
+and gradient constraints anchor both level and orientation; a single point
+alone cannot define a geological surface.
 
 ```python
+from itertools import product
 from LoopStructural import GeologicalModel
-from LoopStructural.visualisation import LavaVuModelViewer
-import pandas as pd
 import numpy as np
+import pandas as pd
 
-# Create model
-model = GeologicalModel(origin=[0, 0, -1000], maximum=[10000, 10000, 0])
-
-# Add data
-model.data = pd.DataFrame({
-    'X': [5000], 'Y': [5000], 'Z': [-500],
-    'feature_name': ['strat'], 'val': [0]
-})
-
-# Build and visualize
-model.create_and_add_foliation('strat', interpolatortype='PLI')
+origin = np.array([1000., 2000., 3000.])
+maximum = np.array([1100., 2200., 3060.])
+xyz = np.array(list(product([1010., 1050., 1090.], [2020., 2180.], [3010., 3050.])))
+data = pd.DataFrame(xyz, columns=['X', 'Y', 'Z'])
+data['feature_name'] = 'strat'
+data['val'] = xyz[:, 2] - 3030 + .1 * (xyz[:, 0] - 1050) - .05 * (xyz[:, 1] - 2100)
+data[['gx', 'gy', 'gz']] = [.1, -.05, 1.]
+model = GeologicalModel(origin, maximum)
+model.data = data
+model.create_and_add_foliation('strat', interpolatortype='FDI', nelements=1000)
 model.update()
-
-viewer = LavaVuModelViewer(model)
-viewer.add_isosurface(model['strat'], isovalue=0)
-viewer.interactive()
+query = np.array([[1020., 2040., 3020.], [1080., 2160., 3040.], [1050., 2100., 3030.]])
+values = model.evaluate_feature_value('strat', query)
 ```
 
-## Key Classes
+The expected values are approximately −10, +10 and 0. Pass world coordinates
+to `model.evaluate_feature_value(..., scale=True)` (the default). Direct feature
+evaluation has a different local-coordinate contract. `GeologicalModel` 1.8
+accepts the two bounds positionally; do not assume `origin=` and `maximum=`
+constructor keywords from older examples still work.
 
-| Class | Purpose |
-|-------|---------|
-| `GeologicalModel` | Main model container - holds features and data |
-| `ProcessInputData` | Data preparation and validation |
-| `StructuralFrame` | Coordinate system for fold modelling |
-| `FaultSegment` | Individual fault surface with displacement |
+## Evaluate a VTK grid
 
-## Essential Operations
-
-### Build Stratigraphic Model
-
-```python
-model = GeologicalModel([0, 0, -1000], [10000, 10000, 0])
-model.data = pd.DataFrame({
-    'X': [5000, 5000, 5000],
-    'Y': [5000, 5000, 5000],
-    'Z': [-200, -500, -800],
-    'feature_name': ['strat', 'strat', 'strat'],
-    'val': [0, 1, 2]  # Different unit values
-})
-model.create_and_add_foliation('strat', interpolatortype='PLI', nelements=1000)
-model.update()
-```
-
-### Add Orientation Data
-
-```python
-# Structural measurements (strike/dip)
-orientations = pd.DataFrame({
-    'X': [2000, 5000, 8000],
-    'Y': [5000, 5000, 5000],
-    'Z': [-100, -100, -100],
-    'feature_name': ['strat', 'strat', 'strat'],
-    'strike': [90, 90, 90],
-    'dip': [30, 30, 30],
-    'val': [np.nan, np.nan, np.nan]
-})
-model.data = pd.concat([interfaces, orientations])
-```
-
-### Model with Fault
-
-```python
-# Define fault data
-fault_data = pd.DataFrame({
-    'X': [5000, 5000], 'Y': [2000, 8000], 'Z': [-500, -500],
-    'feature_name': ['fault1', 'fault1'],
-    'val': [0, 0], 'coord': [0, 0]
-})
-fault_orient = pd.DataFrame({
-    'X': [5000], 'Y': [5000], 'Z': [-500],
-    'feature_name': ['fault1'],
-    'gx': [1], 'gy': [0], 'gz': [0]  # Fault normal
-})
-
-model.data = pd.concat([fault_data, fault_orient, strat_data])
-model.create_and_add_fault('fault1', displacement=200)  # Add fault first
-model.create_and_add_foliation('strat')  # Stratigraphy affected by fault
-model.update()
-```
-
-### Folded Geology
-
-```python
-# Generate fold interface data
-x = np.linspace(0, 10000, 20)
-z = -500 + 200 * np.sin(2 * np.pi * x / 5000)
-fold_data = pd.DataFrame({
-    'X': x, 'Y': np.ones(20) * 5000, 'Z': z,
-    'feature_name': 'strat', 'val': 0
-})
-
-model.data = fold_data
-model.create_and_add_fold_frame('fold_frame')
-model.create_and_add_folded_foliation('strat', fold_frame='fold_frame')
-model.update()
-```
-
-### Evaluate on Grid
-
-```python
-# Create evaluation grid
-x = np.linspace(0, 10000, 100)
-y = np.linspace(0, 10000, 100)
-z = np.linspace(-1000, 0, 50)
-xx, yy, zz = np.meshgrid(x, y, z)
-points = np.column_stack([xx.ravel(), yy.ravel(), zz.ravel()])
-
-# Evaluate stratigraphy
-values = model['strat'].evaluate_value(points)
-values_3d = values.reshape(xx.shape)
-```
-
-### Export to VTK
+Continue with the model above. `regular_grid` returns an N×3 array; disable
+shuffling and use Fortran ordering for VTK's x-fastest points. Write actual
+scalar values into point data before saving.
 
 ```python
 import pyvista as pv
 
-# Export isosurface
-isosurface = model['strat'].isosurface(isovalue=0)
-isosurface.save('horizon.vtk')
-
-# Export regular grid
-surfaces = model.regular_grid(nsteps=[50, 50, 50])
-grid = pv.StructuredGrid(*surfaces)
-grid.save('geological_model.vtk')
+shape = (9, 7, 5)
+points = model.regular_grid(nsteps=shape, shuffle=False, order='F')
+grid = pv.StructuredGrid()
+grid.points = points
+grid.dimensions = shape
+grid.point_data['strat'] = model.evaluate_feature_value('strat', points)
+surface = grid.contour([0.], scalars='strat')
+if not np.isfinite(grid['strat']).all() or surface.n_cells == 0:
+    raise ValueError('Model evaluation or requested isosurface is invalid')
 ```
 
-## Data Requirements
+Use `grid.save('model.vtk')` or `surface.save('strat.vtk')` when export is
+requested. A rendered surface is a discretized level set; check constraint
+residuals and mesh convergence before interpreting small structures.
 
-| Data Type | Required Columns | Description |
-|-----------|-----------------|-------------|
-| Interface | X, Y, Z, feature_name, val | Points on geological surfaces |
-| Orientation | X, Y, Z, feature_name, strike, dip | Structural measurements |
-| Gradient | X, Y, Z, feature_name, gx, gy, gz | Normal vectors to surfaces |
-| Fault | X, Y, Z, feature_name, val, coord | Fault surface points |
+## CSV helper and conditional models
 
-## When to Use vs Alternatives
+The [model builder](scripts/build_model.py) supports constrained FDI/PLI
+foliations and grid/isosurface export. It validates finite coordinates,
+complete constraints and positive 3D extents, and reports failed or empty
+exports with a nonzero exit status. Provide explicit bounds for planar or
+zero-span input geometry rather than inventing an extent.
 
-| Scenario | Recommendation |
-|----------|---------------|
-| Complex fold modelling with structural frames | **LoopStructural** - best-in-class fold support |
-| Simple layered geology with faults | **GemPy** - simpler API, faster setup |
-| Fault network with displacement fields | **LoopStructural** - explicit displacement control |
-| Commercial subsurface modelling | **SKUA-GOCAD** - industry standard, proprietary |
-| Uncertainty analysis on geological models | **LoopStructural** - built-in support |
+```bash
+python scripts/build_model.py constraints.csv --grid --output model.vtk \
+  --origin 1000 2000 3000 --maximum 1100 2200 3060 --nsteps 9 7 5
+```
 
-**Choose LoopStructural when**: Your geology involves folds, complex fault networks with
-known displacements, or you need structural frame-based modelling. It excels at
-reproducing realistic fold geometries using fold constraints.
+Resolve the command relative to this installed skill directory. The helper
+requires `X,Y,Z,feature_name`, plus `val` and/or complete `gx,gy,gz` or `nx,ny,nz`
+constraints; each feature needs a scalar level anchor. Missing vector rows are
+all NaN, not zero vectors.
 
-**Avoid LoopStructural when**: You have simple layered geology (GemPy is easier),
-or you need a GUI-driven workflow (use commercial tools).
+Read [interpolation and validation](references/interpolators.md) for numerical
+choices, and [fault/fold requirements](references/geological_features.md) only
+when those structures are needed. Faults, fold frames and uncertainty ensembles
+need explicit kinematics/data and a separate configured model; they are not
+created by a nominal CSV column or by this foliation helper.
 
-## Common Workflows
+## Verification scope
 
-### Build faulted geological model from structural data
+LoopStructural 1.8.0 with loop-interpolation 0.0.2 was exercised with FDI and
+PLI planar models, world-coordinate evaluation, asymmetric grid ordering,
+isosurface and VTK readback, plus malformed-input/CLI failures. This validates
+the entrypoint and export path, not fault-network inversion, folded geology,
+uncertainty estimates or the geological adequacy of sparse field constraints.
 
-- [ ] Prepare data as DataFrame with columns: X, Y, Z, feature_name, val (and strike/dip or gx/gy/gz)
-- [ ] Create `GeologicalModel` with origin and maximum bounds
-- [ ] Assign data to `model.data`
-- [ ] Add faults first with `model.create_and_add_fault()` and set displacement
-- [ ] Add stratigraphy with `model.create_and_add_foliation()`
-- [ ] Call `model.update()` to build the model
-- [ ] Evaluate on grid with `model['feature'].evaluate_value(points)`
-- [ ] Visualize with `LavaVuModelViewer` or export isosurfaces to VTK
-- [ ] Validate cross-sections against known geology
-
-## Modelling Tips
-
-1. **Add faults before stratigraphy** - Order matters for geological relationships
-2. **Use orientation data** - Significantly improves model quality
-3. **Check data consistency** - Conflicting data causes interpolation issues
-4. **Start simple** - Add complexity incrementally
-5. **Validate with sections** - Compare cross-sections to known geology
-
-## References
-
-- **[Geological Features](references/geological_features.md)** - Feature types and when to use them
-- **[Interpolators](references/interpolators.md)** - Interpolation methods and parameters
-
-## Scripts
-
-- **[scripts/build_model.py](scripts/build_model.py)** - Build a basic geological model from CSV data
+[Official model source](https://github.com/Loop3D/LoopStructural/blob/master/LoopStructural/modelling/core/geological_model.py),
+checked 2026-09-14 against the installed 1.8.0 API.

@@ -9,173 +9,118 @@ description: |
   image log data.
 license: MIT
 metadata:
-  version: 1.0.1
+  version: "1.0.2"
   author: Geoscience Skills
   tags: '["Well Logs", "DLIS", "RP66", "Data I/O", "Dlisio", "Petrophysics", "LIS", "Wireline"]'
-  dependencies: '["dlisio>=0.3.0"]'
+  dependencies: '["dlisio>=1.0.4", "numpy", "pandas", "lasio>=0.32"]'
   complements: '["welly", "petropy", "striplog"]'
   workflow_role: data-loading
   skill_type: domain
 ---
 
-# dlisio - DLIS/LIS File Reader
+# DLIS/LIS reading and controlled LAS export
 
-## Quick Reference
+Use dlisio for binary RP66 DLIS and LIS79 input. It returns structured NumPy
+arrays and metadata objects; it does not write DLIS. Use lasio for LAS.
+
+## Select a logical file and frame
+
+Inspect the physical file before selecting data. Logical files and frames may
+have different depths, sampling rates and channel identities. `dlis.load()`
+returns a `PhysicalFile` context manager, not a generator. Read array data
+inside the context, then retain copied arrays or DataFrames after closing it.
 
 ```python
-import dlisio
+from dlisio import dlis
 
-# Open DLIS file (returns generator of logical files)
-with dlisio.dlis.load('well.dlis') as (f, *rest):
-    frame = f.frames[0]
-    curves = frame.curves()
-
-    # Access by channel name
-    depth = curves['DEPTH']
-    gr = curves['GR']
-
-    # File metadata
-    for origin in f.origins:
-        print(origin.well_name, origin.field_name)
+def inventory(path):
+    items = []
+    with dlis.load(str(path)) as files:
+        for logical_index, logical in enumerate(files):
+            for frame_index, frame in enumerate(logical.frames):
+                items.append({
+                    'logical_file': logical_index, 'frame': frame_index,
+                    'fingerprint': frame.fingerprint,
+                    'index_type': frame.index_type, 'index': frame.index,
+                    'channels': [(ch.fingerprint, ch.units, ch.dimension)
+                                 for ch in frame.channels],
+                })
+    return items
 ```
 
-## Key Classes
+A channel's identity includes type, mnemonic, origin and copy number. Names
+alone need not be unique. Use `channel.fingerprint` to access its array field;
+`frame.curves()` uses fingerprints as dtype titles even when names are disambiguated.
+The `FRAMENO` field records frame sequence numbers, not measured depth.
 
-| Class | Purpose |
-|-------|---------|
-| `PhysicalFile` | Container returned by `dlis.load()` |
-| `LogicalFile` | Independent dataset within physical file |
-| `Frame` | Group of channels with common sampling |
-| `Channel` | Individual log curve with metadata |
-| `Origin` | Well and file metadata |
+## Read scalar and array channels
 
-## Essential Operations
-
-### Read Curves to DataFrame
 ```python
+from dlisio import dlis
 import pandas as pd
 
-with dlisio.dlis.load('well.dlis') as (f, *_):
-    frame = f.frames[0]
-    curves = frame.curves()
-    df = pd.DataFrame(curves)
-    df.set_index('DEPTH', inplace=True)
+def read_frame(path, logical_file_index=0, frame_index=0):
+    with dlis.load(str(path)) as files:
+        if not 0 <= logical_file_index < len(files):
+            raise ValueError('Logical file index out of range')
+        logical = files[logical_file_index]
+        if not 0 <= frame_index < len(logical.frames):
+            raise ValueError('Frame index out of range')
+        frame = logical.frames[frame_index]
+        records = frame.curves()
+        scalar = {name: records[name].copy() for name in records.dtype.names
+                  if records[name].ndim == 1}
+        arrays = {ch.fingerprint: records[ch.fingerprint].copy()
+                  for ch in frame.channels if records[ch.fingerprint].ndim > 1}
+        metadata = {'frame': frame.fingerprint, 'index_type': frame.index_type,
+                    'index': frame.index,
+                    'channels': {ch.fingerprint: {'name': ch.name, 'units': ch.units,
+                                 'dimension': ch.dimension} for ch in frame.channels}}
+        return pd.DataFrame(scalar), arrays, metadata
 ```
 
-### Access Channel and Origin Metadata
-```python
-with dlisio.dlis.load('well.dlis') as (f, *_):
-    # Origin metadata
-    for origin in f.origins:
-        print(f"Well: {origin.well_name}, Field: {origin.field_name}")
+Keep array/image channels as arrays, preserving all trailing dimensions.
+A structured array has `dtype.names`, not `.items()`. Direct DataFrame
+conversion fails when it contains multidimensional fields. Do not average
+image channels into scalars without a requested, documented reduction.
 
-    # Channel properties
-    for ch in f.frames[0].channels:
-        print(f"{ch.name}: {ch.units}, dim={ch.dimension}")
+## Depth, missing values and conversion
+
+- Check `frame.index_type` and the first channel's units before declaring an
+  index to be depth. A time channel or `FRAMENO` is not a depth surrogate.
+- Preserve increasing or decreasing depth order. Duplicate/nonmonotonic depths
+  need explicit handling; do not silently sort or resample different passes.
+- DLIS has no universal LAS-style null sentinel. Retain NaNs and apply a vendor
+  null marker only when its meaning is documented. Preserve masks through export.
+- Read [frame and channel handling](references/frame_channels.md) for identity,
+  searching and separate lossless array export. Read [file structure and LIS](references/dlis_structure.md)
+  for metadata, encodings and the separate LIS API.
+
+The bundled [DLIS-to-LAS helper](scripts/dlis_to_las.py) always includes a
+validated depth curve first, even when `--curves` requests only measurements.
+It accepts a unique mnemonic or full fingerprint, preserves m/ft and depth
+order, and writes `STEP=0` for irregular sampling. Arrays are excluded with a
+diagnostic by default; explicitly requesting one fails instead of discarding it.
+LAS is a lossy representation of DLIS metadata and multidimensional samples.
+
+```bash
+python scripts/dlis_to_las.py well.dlis --list
+python scripts/dlis_to_las.py well.dlis scalar.las --logical-file 0 --frame 0 --curves GR
 ```
 
-### Find Channels Across Frames
-```python
-with dlisio.dlis.load('well.dlis') as (f, *_):
-    # By exact name or regex
-    channels = f.find('CHANNEL', '.*GR.*', regex=True)
+Resolve the script path relative to this installed skill directory. For a
+non-depth-indexed frame, require an explicit `--depth-channel`. Supported
+export depth units are m and ft; other units need a documented conversion.
+`--null-value` records the operator's choice of a known vendor sentinel.
 
-    # Find frame containing specific channel
-    for frame in f.frames:
-        if 'GR' in [ch.name for ch in frame.channels]:
-            curves = frame.curves()
-            break
-```
+## Verification scope
 
-### Handle Array Channels
-```python
-with dlisio.dlis.load('well.dlis') as (f, *_):
-    curves = f.frames[0].curves()
-    for name, data in curves.items():
-        if data.ndim > 1:
-            print(f"{name}: shape = {data.shape}")  # Image/waveform
-```
+Checked with dlisio 1.0.4 using project-generated binary DLIS, including multiple
+logical files/frames, duplicate mnemonics, scalar/array channels, NaNs and LAS
+roundtrips. These synthetic files are project-owned, not redistributed field
+logs. LIS, damaged-file recovery and vendor-specific records need their own
+fixtures; do not claim those branches were exercised by the DLIS tests.
 
-## Common Object Types
-
-| Object Type | Description |
-|-------------|-------------|
-| ORIGIN | File/well metadata |
-| FRAME | Channel grouping with index |
-| CHANNEL | Log curve definition |
-| TOOL | Logging tool info |
-| PARAMETER | Constants and settings |
-
-## Common Curve Names
-
-| Curve | Description |
-|-------|-------------|
-| DEPT, DEPTH, TDEP | Depth curves |
-| GR | Gamma ray |
-| NPHI | Neutron porosity |
-| RHOB | Bulk density |
-| DT, DTC | Compressional slowness |
-| RT, ILD | Resistivity |
-
-## Error Handling
-
-```python
-dlisio.dlis.set_encodings(['utf-8', 'latin-1'])
-
-try:
-    with dlisio.dlis.load('file.dlis') as files:
-        for f in files:
-            curves = f.frames[0].curves()
-except Exception as e:
-    print(f"Error: {e}")
-```
-
-## DLIS vs LAS Comparison
-
-| Feature | DLIS | LAS |
-|---------|------|-----|
-| Format | Binary | ASCII |
-| Multi-frame | Yes | No |
-| Array data | Yes | Limited |
-| Metadata | Rich | Basic |
-
-## When to Use vs Alternatives
-
-| Tool | Best For |
-|------|----------|
-| **dlisio** | Reading DLIS/RP66 binary files, multi-frame data, image logs |
-| **lasio** | LAS (ASCII) well log files, simpler format, widely supported |
-| **welly** | Higher-level well data management, curve processing, projects |
-
-**Use dlisio when** your data is in DLIS (RP66) format. DLIS files are common
-from modern logging tools and contain multi-frame, array, and image data that
-LAS cannot represent.
-
-**Use lasio instead** when your data is in LAS format. LAS is ASCII-based,
-simpler, and more widely supported. Convert DLIS to LAS when downstream
-tools require it.
-
-**Use welly instead** when you need well-level data management with curve
-processing, formation tops, and multi-well projects after initial file loading.
-
-## Common Workflows
-
-### Read and convert DLIS to DataFrame
-```text
-- [ ] Load file with `dlisio.dlis.load()`, handle encoding if needed
-- [ ] List logical files and frames to understand file structure
-- [ ] Inspect channels: names, units, dimensions per frame
-- [ ] Extract curves from target frame with `frame.curves()`
-- [ ] Handle array/image channels separately (ndim > 1)
-- [ ] Convert scalar curves to DataFrame with `pd.DataFrame(curves)`
-- [ ] Export to CSV or convert to LAS format
-```
-
-## References
-
-- **[DLIS File Structure](references/dlis_structure.md)** - RP66 format specification
-- **[Frames and Channels](references/frame_channels.md)** - Working with frames and channels
-
-## Scripts
-
-- **[scripts/dlis_to_las.py](scripts/dlis_to_las.py)** - Convert DLIS to LAS format
+[Official DLIS API](https://dlisio.readthedocs.io/en/latest/dlis/api.html), checked
+2026-09-14. Use strict parsing unless an explicit, recorded recovery decision
+justifies relaxing it; errors must not be reported as successful empty exports.

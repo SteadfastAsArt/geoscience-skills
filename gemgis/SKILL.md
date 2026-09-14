@@ -9,170 +9,101 @@ description: |
   (7) Create model extents from geospatial bounds.
 license: MIT
 metadata:
-  version: 1.0.1
+  version: "1.0.2"
   author: Geoscience Skills
   tags: '["GIS", "Geospatial", "Data Preparation", "DEM", "Geological Modelling"]'
-  dependencies: '["gemgis>=1.0.0", "geopandas", "rasterio"]'
+  dependencies: '["gemgis>=1.1.9", "geopandas", "rasterio"]'
   complements: '["gempy", "loopstructural", "pyvista"]'
   workflow_role: processing
   skill_type: domain
 ---
 
-# GemGIS - Geospatial Data for Geological Modelling
+# GIS contacts and DEM elevations
 
-## Quick Reference
+Use GemGIS to extract geological observations from spatial data. Establish the
+horizontal CRS, vertical units/datum, geometry type and missing-data policy
+before sampling. Model coordinates must share a projected metre CRS; converting
+horizontal coordinates does not transform elevations or their datum.
+
+## Extract contact vertices
+
+The following function accepts a single-band DEM already in a metre projected
+CRS, with elevations in metres. `dem` is an open Rasterio dataset, not a path.
+GemGIS repeats attributes when a line becomes multiple points: do not overwrite
+those attributes using the original feature index.
 
 ```python
 import gemgis as gg
-import geopandas as gpd
+from rasterio.transform import rowcol
+import numpy as np
+from pyproj import CRS
 
-# Load vector data
-gdf = gpd.read_file('geology.shp')
-
-# Extract XYZ from geometry with elevation from DEM
-interfaces = gg.vector.extract_xyz(gdf=gdf, dem='dem.tif')
-
-# Define model extent
-extent = [x_min, x_max, y_min, y_max]
-
-# Clip to extent
-gdf_clipped = gg.vector.clip_by_extent(gdf=gdf, extent=extent)
+def contacts_at_dem(contacts, dem):
+    crs = CRS.from_user_input(dem.crs)
+    if (contacts.crs is None or not crs.is_projected or dem.count != 1
+            or any(not np.isclose(a.unit_conversion_factor, 1.) for a in crs.axis_info[:2])):
+        raise ValueError('Require a known vector CRS and a single-band metric DEM')
+    if contacts.empty or not contacts.is_valid.all() or contacts.geometry.has_z.any():
+        raise ValueError('Require valid nonempty 2D contact geometry')
+    if 'formation' not in contacts or contacts['formation'].isna().any():
+        raise ValueError('Formation labels are required')
+    points = gg.vector.extract_xy(contacts.to_crs(dem.crs))
+    xy = points[['X', 'Y']].to_numpy()
+    rows, cols = np.asarray(rowcol(dem.transform, xy[:, 0], xy[:, 1]))
+    if np.any((rows < 0) | (rows >= dem.height) | (cols < 0) | (cols >= dem.width)):
+        raise ValueError('Vertices outside DEM')
+    samples = np.ma.vstack(list(dem.sample(xy, indexes=1, masked=True)))[:, 0]
+    if np.ma.getmaskarray(samples).any() or not np.isfinite(samples.data).all():
+        raise ValueError('Missing DEM elevations')
+    return gg.vector.extract_xyz(gdf=points, dem=dem)[['X', 'Y', 'Z', 'formation']]
 ```
 
-## Key Modules
+Open with `with rasterio.open(dem_path) as dem:` and call this function while the
+dataset is open. Pixel sampling uses the containing cell; it is not bilinear
+interpolation. Do not fill NoData or outside-extent samples with zero.
 
-| Module | Purpose |
-|--------|---------|
-| `gemgis.vector` | Vector data processing, XYZ extraction |
-| `gemgis.raster` | Raster/DEM processing, sampling, interpolation |
-| `gemgis.utils` | Utility functions, extent management |
-| `gemgis.postprocessing` | Model postprocessing |
+## Orientations and helper
 
-## Essential Operations
+Dip is in degrees, 0–90. Output azimuth is dip direction clockwise from DEM grid north, wrapped
+to [0, 360). Convert strike with `(strike + 90) % 360` only when the source
+explicitly follows the right-hand rule. Preserve supplied polarity (+1/−1);
+the helper uses +1 only when the column is absent. Never clamp invalid dip.
+Declare `--azimuth-reference dem-grid` for bearings already relative to the DEM
+grid, or `true-north` for geographic bearings. The latter applies local
+meridian convergence only on locally conformal projections; other projections
+are rejected. Magnetic bearings need a documented declination correction first.
 
-### Extract Interface Points
-```python
-contacts = gpd.read_file('contacts.shp')
-interfaces = gg.vector.extract_xyz(gdf=contacts, dem='dem.tif')
-interfaces['formation'] = contacts['formation']
-# Returns DataFrame with X, Y, Z, formation columns
+The [preparation helper](scripts/prepare_gempy_data.py) validates these rules,
+reprojects vectors to the DEM CRS, converts declared ft elevations to metres,
+and writes CSVs plus `spatial_metadata.json` into a fresh output directory. Its `--target-crs` is an assertion
+that must match the DEM; resample/reproject a raster separately when needed.
+
+```bash
+python scripts/prepare_gempy_data.py --contacts contacts.gpkg \
+  --orientations orientations.gpkg --azimuth-reference true-north --dem dem.tif --dem-z-unit m \
+  --vertical-datum "documented source datum" --output-dir prepared
 ```
 
-### Extract Orientations
-```python
-measurements = gpd.read_file('structural_measurements.shp')
-orientations = gg.vector.extract_xyz(gdf=measurements, dem='dem.tif')
-orientations['dip'] = measurements['dip']
-orientations['azimuth'] = measurements['strike'] + 90  # strike to dip direction
-orientations['formation'] = measurements['formation']
-```
+Resolve this command relative to the installed skill directory. The output
+schema uses X/Y/Z and formation, plus dip/azimuth/polarity for orientations;
+pass these to the current modelling library's input API rather than assuming
+all GemPy versions accept identical keyword arguments.
 
-### Sample DEM Along Profile
-```python
-profile = gg.raster.sample_from_raster(
-    raster='dem.tif',
-    line=[(500000, 5600000), (510000, 5605000)],
-    n_samples=100
-)
-# Returns dict with 'distance' and 'Z' arrays
-```
+## Conditional operations
 
-### Define Model Extent
-```python
-# From coordinates
-extent = gg.utils.set_extent(
-    x_min=500000, x_max=510000,
-    y_min=5600000, y_max=5610000
-)
+Read [profiles and extraction](references/data_extraction.md) for sampled
+profiles and orientation conventions. Read [CRS, clipping and raster handling](references/vector_raster.md)
+for bounds order, masks, reprojection and provenance. Existing 3D geometry
+needs an explicit choice between measured Z and DEM Z before using this helper.
 
-# From GeoDataFrame bounds
-extent = gg.utils.set_extent_from_bounds(gdf)
-```
+## Verification scope
 
-### Clip Data to Extent
-```python
-from shapely.geometry import box
-extent_poly = box(500000, 5600000, 510000, 5610000)
-gdf_clipped = gdf.clip(extent_poly)
+GemGIS 1.1.9, GeoPandas 1.1.4 and Rasterio 1.4.4 were checked with a real
+GeoTIFF/GeoPackage fixture: unequal vertex counts and nonconsecutive indices,
+CRS conversion, feet elevations, NoData, outside points, orientations and CLI
+CSV readback. Synthetic elevations test data handling, not field DEM accuracy
+or vertical-datum transformation.
 
-# Or using gemgis
-gdf_clipped = gg.vector.clip_by_extent(
-    gdf=gdf,
-    extent=[500000, 510000, 5600000, 5610000]
-)
-```
-
-### CRS Conversion
-```python
-# Always work in projected CRS (meters) for modeling
-gdf_utm = gdf.to_crs('EPSG:32632')  # UTM zone 32N
-
-# Or use GemGIS utility
-gdf_utm = gg.vector.reproject(gdf, 'EPSG:32632')
-```
-
-## Supported Formats
-
-| Format | Extension | Read | Write |
-|--------|-----------|------|-------|
-| Shapefile | .shp | Yes | Yes |
-| GeoJSON | .geojson | Yes | Yes |
-| GeoPackage | .gpkg | Yes | Yes |
-| GeoTIFF | .tif | Yes | Yes |
-| ASCII Grid | .asc | Yes | Yes |
-
-## Common CRS
-
-| EPSG | Description |
-|------|-------------|
-| 4326 | WGS84 (lat/lon) |
-| 32632 | UTM Zone 32N |
-| 32633 | UTM Zone 33N |
-
-## When to Use vs Alternatives
-
-| Scenario | Recommendation |
-|----------|---------------|
-| Prepare GIS data for GemPy modelling | **GemGIS** - purpose-built bridge between GIS and GemPy |
-| General geospatial analysis in Python | **geopandas + rasterio** - more flexible, larger community |
-| GUI-based geological map processing | **QGIS** - visual, interactive, plugin ecosystem |
-| Extract XYZ + elevation from shapefiles and DEMs | **GemGIS** - one-liner with `extract_xyz()` |
-| Complex raster analysis pipelines | **rasterio + xarray** - more control and scalability |
-
-**Choose GemGIS when**: You are building a GemPy model and need to convert GIS data
-(shapefiles, DEMs, geological maps) into GemPy-compatible inputs. It eliminates
-boilerplate for common spatial data preparation tasks.
-
-**Avoid GemGIS when**: You need general-purpose GIS analysis (use geopandas directly),
-or your workflow does not involve GemPy (the tool is specifically designed for that pipeline).
-
-## Common Workflows
-
-### Prepare geospatial data for GemPy model
-
-- [ ] Load geological map (contacts, formations) with `gpd.read_file()`
-- [ ] Reproject all data to a projected CRS (UTM) with `gdf.to_crs()`
-- [ ] Define model extent with `gg.utils.set_extent()` or from GeoDataFrame bounds
-- [ ] Clip vector data to extent with `gg.vector.clip_by_extent()`
-- [ ] Extract interface XYZ from contacts using `gg.vector.extract_xyz(gdf, dem)`
-- [ ] Extract orientation XYZ from structural measurements
-- [ ] Convert strike to dip direction (azimuth = strike + 90)
-- [ ] Validate that all data shares the same CRS and falls within extent
-- [ ] Pass prepared DataFrames to GemPy model
-
-## Tips
-
-1. **Always check CRS** - All data must be in the same coordinate system
-2. **Use UTM for modelling** - Meters are easier than degrees
-3. **Assign Z from DEM** - Ensures consistent elevations across datasets
-4. **Validate geometry** - Fix invalid geometries before processing
-5. **Buffer extent slightly** - Avoid edge effects in interpolation
-
-## References
-
-- **[Data Extraction Methods](references/data_extraction.md)** - Extract interfaces, orientations, and profiles
-- **[Vector and Raster Operations](references/vector_raster.md)** - Detailed processing workflows
-
-## Scripts
-
-- **[scripts/prepare_gempy_data.py](scripts/prepare_gempy_data.py)** - Prepare spatial data for GemPy model input
+[Official GemGIS source](https://github.com/cgre-aachen/gemgis),
+[Rasterio sampling API](https://rasterio.readthedocs.io/en/stable/api/rasterio.sample.html),
+checked 2026-09-14.

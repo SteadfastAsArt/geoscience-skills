@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "case_id": "ert_survey",
+  "dataset": {
+    "title": "Database of a 4-km seismic and electric streamer survey: the embankment of the Po River near Crescentino, Piedmont, Italy",
+    "authors": [
+      "Vergnano, Andrea",
+      "Comina, Cesare",
+      "Socco, Laura Valentina",
+      "Chieppa, Dario",
+      "Arato, Alessandro"
+    ],
+    "doi": "10.5281/zenodo.18183049",
+    "version": "v1",
+    "license": "CC-BY-4.0",
+    "license_evidence_url": "https://zenodo.org/api/records/18183049",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/"
+  },
+  "archive": {
+    "url": "https://zenodo.org/records/18183049/files/Electrical_Tomography_Data.7z?download=1",
+    "bytes": 2331221,
+    "sha256": "d7257a1d24a3f52e0f807739f1b23e975bbb32561091abf9cb87b5b412051891",
+    "upstream_md5": "76a175bef875befc9f5294e713484ee0"
+  },
+  "files": {
+    "Resistivity_data.csv.gz": {
+      "url": "https://zenodo.org/records/18183049/files/Electrical_Tomography_Data.7z?download=1",
+      "archive_member": "Electrical_Tomography_Data/Resistivity_data.csv",
+      "role": "Complete original CSV bytes, losslessly recompressed as gzip for stdlib offline reading",
+      "bytes": 2906673,
+      "sha256": "8161ebae3e671f689d1805ff692880faf16a3d26aad2e68462209c4b98ffdf87",
+      "uncompressed_sha256": "f8e946266becbe811506f534082abe758c942bd54686970e550596adbcb4cdc6"
+    },
+    "Electrodes_Positions.csv.gz": {
+      "url": "https://zenodo.org/records/18183049/files/Electrical_Tomography_Data.7z?download=1",
+      "archive_member": "Electrical_Tomography_Data/Electrodes_Positions.csv",
+      "role": "Complete original CSV bytes, losslessly recompressed as gzip for stdlib offline reading",
+      "bytes": 73610,
+      "sha256": "fe875bb2cf9f64b57b6d8ea720bca00985c11504bb2d288a81315b4710ba3fd7",
+      "uncompressed_sha256": "fc79b4c04c66ff04458fbd995c151f48ebf37f6c269aab94c38d2745dcb6fee6"
+    }
+  },
+  "selection": "First acquisition station only: measurement numbers 1-318 and electrode global IDs 1-13. Selected by acquisition index before fitting or inspecting target quality.",
+  "units": {
+    "apparent_resistivity": "ohm m",
+    "voltage": "mV",
+    "current": "mA",
+    "repeatability": "percent standard deviation reported by the instrument, not complete measurement/model uncertainty",
+    "electrode_coordinates": "metres, EPSG:32632; no elevation in supplied electrode CSV",
+    "model_coordinates": "nominal instrument spacing on a flat local line, metres"
+  },
+  "nominal_electrode_x_m": [
+    0,
+    8,
+    14,
+    18,
+    20,
+    22,
+    24,
+    26,
+    28,
+    30,
+    34,
+    40,
+    48
+  ],
+  "processing": [
+    "Extract both CSV members from the fixed 7z archive without text/line-ending changes; gzip.compress(source_bytes,mtime=0).",
+    "Preserve all original observation and coordinate rows in compressed fixtures.",
+    "Compute signed geometric factors from nominal instrument positions and compare Rho to K * voltage/current within decimal-rounding bounds.",
+    "Reject two nonpositive apparent-resistivity rows for log-domain inversion only; do not drop negative voltages whose signs are consistent with electrode orientation.",
+    "Fit a flat, isotropic, horizontally layered two-layer model with pyGIMLi VESModelling and log-domain inversion.",
+    "Group equivalent/reciprocal quadrupoles in a fixed geometry-only holdout; fit training data only."
+  ],
+  "error_model": "Assign log-domain sigma = hypot(reported_repeatability_percent / 100, 0.03), combining the reported fractional repeatability with a separately assumed log-scale term. Treat log errors as independent Gaussian for a conditional nominal chi-square diagnostic. This is not a measured total field uncertainty; report rejection if residuals exceed it.",
+  "limitations": [
+    "No true subsurface resistivity or thickness is known. Field fit/holdout never establish geological recovery.",
+    "Nominal electrode positions used by instrument differ from the surveyed UTM positions; retain both and report the flat-geometry simplification.",
+    "Zero reported repeatability does not mean zero measurement error.",
+    "Independent two-layer image-series synthetic data test controlled recovery separately from field observations."
+  ]
+}

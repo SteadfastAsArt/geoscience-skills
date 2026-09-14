@@ -1,0 +1,12 @@
+# Python 3.11; isolated PetroPy 0.1.6 compatibility and physical-consistency tests.
+# lasio 0.32 removed add_curve. 0.23/0.29 break with modern NumPy; use 0.30.
+# pkg_resources is used by this lasio; cchardet 2.2.0a2 provides cp311 wheels.
+petropy==0.1.6
+lasio==0.30
+cchardet==2.2.0a2
+setuptools==80.9.0
+numpy==1.26.4
+pandas==2.3.3
+scipy==1.17.1
+matplotlib==3.11.2
+scikit-learn==1.9.1

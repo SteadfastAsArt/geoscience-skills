@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
           cache: pip
           cache-dependency-path: tests/science/requirements-core.txt
       - name: Install tested core scientific dependencies
@@ -34,6 +34,10 @@ jobs:
         run: python tests/science/test_domain_examples.py -v
       - name: Read evaluation fixtures with lasio and segyio
         run: python evals/tests/test_fixture_readback.py -v
+      - name: Check published field well logs and earthquake waveforms
+        run: |
+          python tests/science/test_field_well_logs.py -v
+          python tests/science/test_field_seismic_waveform.py -v
 
   models:
     runs-on: ubuntu-latest
@@ -41,7 +45,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
           cache: pip
           cache-dependency-path: tests/science/requirements-models.txt
       - name: Install tested modelling dependencies
@@ -50,3 +54,68 @@ jobs:
         run: python tests/science/test_model_examples.py -v
       - name: Check observed GNSS data and uncertainty diagnostics
         run: python tests/science/test_field_data.py -v
+      - name: Check field ERT holdout and independent synthetic recovery
+        run: python tests/science/test_field_ert_survey.py -v
+
+  collection:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tests/science/requirements-collection.txt
+      - name: Install tested collection dependencies
+        run: python -m pip install -r tests/science/requirements-collection.txt
+      - name: Install pinned MODFLOW executable in the runner's temporary directory
+        run: python scripts/install_modflow_test.py --directory "$RUNNER_TEMP/modflow-bin"
+      - name: Execute new library examples and MODFLOW analytic benchmark
+        env:
+          MODFLOW_EXE: ${{ runner.temp }}/modflow-bin/mf6
+        run: python tests/science/test_collection_examples.py -v
+
+  domain-audits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: tests/science/requirements-audits.txt
+      - name: Install DLIS, GIS and structural audit dependencies
+        run: python -m pip install -r tests/science/requirements-audits.txt
+      - name: Execute audited domain examples
+        run: |
+          python tests/science/test_dlis_examples.py -v
+          python tests/science/test_gis_examples.py -v
+          python tests/science/test_loopstructural_examples.py -v
+
+  petropy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: tests/science/requirements-audits-petropy.txt
+      - name: Install isolated PetroPy and compatible lasio
+        run: python -m pip install -r tests/science/requirements-audits-petropy.txt
+      - name: Execute configured fluid and multimineral examples
+        run: python tests/science/test_petropy_examples.py -v
+
+  pygmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: geoscience-pygmt
+          environment-file: tests/science/environment-pygmt.yml
+          miniforge-version: latest
+          auto-activate-base: false
+      - name: Execute real GMT rendering and grid sampling
+        shell: bash -el {0}
+        run: python tests/science/test_pygmt_examples.py -v

@@ -1,0 +1,40 @@
+{
+  "name": "Synthetic multi-logical-file RP66 audit",
+  "license": "MIT",
+  "copyright": "2026 Geoscience Skills contributors",
+  "data_origin": "Project-generated deterministic numeric arrays; no third-party or field observations",
+  "generator": "generate.py using dliswriter 1.2.0",
+  "file": "synthetic.dlis",
+  "sha256": "800570781d4bf5d384617b73ed8bf3c02e857e2f1fbd6e656c5b7af3cc75c470",
+  "bytes": 2696,
+  "expected": {
+    "logical_files": 2,
+    "frames": [
+      2,
+      1
+    ],
+    "main_depth_m": [
+      1000,
+      1000.5,
+      1001.5,
+      1002
+    ],
+    "main_image_shape": [
+      4,
+      4
+    ],
+    "duplicate_mnemonic": "GAMMA_X",
+    "duplicate_origins": [
+      1,
+      2
+    ],
+    "nan_main_gamma_row": 2,
+    "literal_valid_value": -999.25,
+    "other_depth_ft": [
+      20,
+      21,
+      22,
+      23
+    ]
+  }
+}

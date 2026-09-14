@@ -1,184 +1,91 @@
 # Complete Skills Reference
 
-Catalogue of 30 domain skills, 5 workflows, and 1 discovery skill.
+Catalogue of **39 domain skills, 8 workflows and 1 discovery skill** (48 total).
 
-Install using `npx skills add SteadfastAsArt/geoscience-skills --full-depth`.
-See [coding agent compatibility](docs/COMPATIBILITY.md). Star counts below are
-historical snapshots, not live rankings.
+Install selected skills with `npx skills add SteadfastAsArt/geoscience-skills --full-depth`.
+See [coding agent compatibility](docs/COMPATIBILITY.md) for target directories and
+verification scope. Installing guidance does not install Python libraries or
+establish that every scientific operation has been tested.
 
-## Skills by Category
+## Domain skills
 
-### Seismic & Seismology
-| Skill | Stars | Description |
-|-------|-------|-------------|
-| [obspy](obspy/) | 1.3k | Seismological data processing, waveforms, events, FDSN services |
-| [segyio](segyio/) | 557 | SEG-Y file reading and writing for seismic data |
-| [disba](disba/) | 178 | 1D Rayleigh/Love phase and group dispersion, sensitivity kernels |
+| Domain | Skill | Task |
+| --- | --- | --- |
+| Seismic / seismology | [obspy](obspy/SKILL.md) | Waveforms, event data, instrument responses and FDSN |
+| Seismic / seismology | [segyio](segyio/SKILL.md) | Exact SEG-Y trace and header I/O |
+| Seismic / seismology | [segysak](segysak/SKILL.md) | Labelled SEG-Y cubes with xarray and Dask |
+| Seismic / seismology | [disba](disba/SKILL.md) | Rayleigh/Love dispersion and layered velocity models |
+| Well logs | [lasio](lasio/SKILL.md) | LAS curves, headers and depth-aware file processing |
+| Well logs | [welly](welly/SKILL.md) | Well-log QC and curve analysis |
+| Well logs | [dlisio](dlisio/SKILL.md) | DLIS/LIS parsing, logical-file and channel identities |
+| Well logs | [striplog](striplog/SKILL.md) | Lithology and stratigraphic intervals |
+| Well logs | [petropy](petropy/SKILL.md) | Configured petrophysical fluid and mineral calculations |
+| Geological modelling | [gempy](gempy/SKILL.md) | Implicit geological surfaces and 3D models |
+| Geological modelling | [loopstructural](loopstructural/SKILL.md) | Structural interpolation, folds and faults |
+| Geological modelling | [gemgis](gemgis/SKILL.md) | GIS, DEM and borehole input preparation |
+| Geological modelling | [geolime](geolime/SKILL.md) | Licensed vendor workflow preparation and review; public PyPI is a placeholder |
+| Simulation / inversion | [simpeg](simpeg/SKILL.md) | DC, EM, gravity and magnetic forward/inverse problems |
+| Simulation / inversion | [pygimli](pygimli/SKILL.md) | ERT, refraction, IP and geophysical inversion |
+| Simulation / inversion | [discretize](discretize/SKILL.md) | Finite-volume meshes and location-aware operators |
+| Simulation / inversion | [devito](devito/SKILL.md) | Symbolic finite-difference PDE simulation |
+| Simulation / inversion | [pylops](pylops/SKILL.md) | Linear operators and inverse problems |
+| Gravity / rock physics | [harmonica](harmonica/SKILL.md) | Potential fields, corrections and equivalent sources |
+| Gravity / rock physics | [boule](boule/SKILL.md) | Reference ellipsoids, normal gravity and coordinate geometry |
+| Gravity / rock physics | [bruges](bruges/SKILL.md) | Elastic properties, AVO, wavelets and fluid substitution |
+| Spatial analysis | [verde](verde/SKILL.md) | Spatial interpolation, gridding and validation |
+| Spatial analysis | [geostatspy](geostatspy/SKILL.md) | Variograms, kriging and geostatistical simulation |
+| Spatial analysis | [scikit-gstat](scikit-gstat/SKILL.md) | Variogram estimation and fitting |
+| Spatial analysis | [gnnwr](gnnwr/SKILL.md) | Neural geographically weighted regression |
+| Hydrology / surface | [pastas](pastas/SKILL.md) | Groundwater head time series and response models |
+| Hydrology / surface | [flopy](flopy/SKILL.md) | MODFLOW flow models, heads and water budgets |
+| Hydrology / surface | [landlab](landlab/SKILL.md) | Landscape and surface-process models |
+| Geology / geochemistry | [mplstereonet](mplstereonet/SKILL.md) | Structural orientation and stereonets |
+| Geology / geochemistry | [pyrolite](pyrolite/SKILL.md) | Geochemical ratios, normalization and diagrams |
+| Near-surface | [gprpy](gprpy/SKILL.md) | Ground-penetrating radar processing |
+| Near-surface | [mtpy](mtpy/SKILL.md) | Magnetotelluric impedance and models |
+| Climate / data | [xarray](xarray/SKILL.md) | Labelled NetCDF/HDF5/Zarr arrays and climate fields |
+| Climate / data | [pyleoclim](pyleoclim/SKILL.md) | Paleoclimate proxy spectra and chronology sensitivity |
+| Visualization | [pyvista](pyvista/SKILL.md) | 3D meshes, volumes and VTK exports |
+| Visualization | [pygmt](pygmt/SKILL.md) | Geographic maps and GMT grid operations |
+| Data acquisition | [pooch](pooch/SKILL.md) | Hash-verified downloads and project caches |
+| Data acquisition | [ensaio](ensaio/SKILL.md) | Versioned Fatiando datasets and provenance |
+| Data acquisition | [rockhound](rockhound/SKILL.md) | Legacy dataset loader maintenance and migration; archived upstream |
 
-### Well Log Analysis
-| Skill | Stars | Description |
-|-------|-------|-------------|
-| [lasio](lasio/) | 381 | LAS file reading and writing |
-| [welly](welly/) | 356 | Well data analysis and visualization |
-| [dlisio](dlisio/) | 132 | DLIS/LIS file parsing for modern well logs |
-| [striplog](striplog/) | 220 | Lithological and stratigraphic log display |
-| [petropy](petropy/) | 197 | Petrophysical analysis and formation evaluation |
+## Workflows
 
-### Geological Modelling
-| Skill | Stars | Description |
-|-------|-------|-------------|
-| [gempy](gempy/) | 1.2k | 3D structural geological modelling (implicit surfaces) |
-| [loopstructural](loopstructural/) | 242 | 3D implicit modelling with faults and folds |
-| [gemgis](gemgis/) | 285 | Spatial data processing for GemPy |
+Each workflow can run in one session. Start from available inputs, choose the
+relevant branches and use available domain guidance; companion skills and optional
+role files are not prerequisites. The three new workflows provide process guidance;
+they do not claim all Pastas/GPR/MT/climate branches were executed end to end.
 
-### Geophysical Simulation & Inversion
-| Skill | Stars | Description |
-|-------|-------|-------------|
-| [simpeg](simpeg/) | 607 | Simulation and inversion (EM, DC, magnetics, gravity) |
-| [devito](devito/) | 658 | Symbolic PDE solver for wave propagation |
-| [pylops](pylops/) | 503 | Linear operators for inverse problems |
-| [pygimli](pygimli/) | 456 | Multi-method geophysical inversion (ERT, SRT, IP) |
+| Workflow | Task |
+| --- | --- |
+| [seismic-interpretation](workflows/seismic-interpretation/SKILL.md) | Seismic processing, rock physics and seismic-to-well ties |
+| [well-log-evaluation](workflows/well-log-evaluation/SKILL.md) | LAS/DLIS QC, formation properties and lithology |
+| [geological-modelling](workflows/geological-modelling/SKILL.md) | GIS/borehole preparation, implicit modelling and exports |
+| [geophysical-inversion](workflows/geophysical-inversion/SKILL.md) | Survey preparation, forward/inverse modelling and uncertainty |
+| [rock-physics-avo](workflows/rock-physics-avo/SKILL.md) | Elastic logs, fluid substitution, AVO and synthetics |
+| [hydrogeological-analysis](workflows/hydrogeological-analysis/SKILL.md) | Well logs, groundwater head time series and aquifer hypotheses |
+| [near-surface-geophysics](workflows/near-surface-geophysics/SKILL.md) | Coordinate- and resolution-aware comparison of GPR, ERT and MT |
+| [climate-analysis](workflows/climate-analysis/SKILL.md) | Climate time/space analysis, anomalies and spatial holdouts |
 
-### Potential Fields
-| Skill | Stars | Description |
-|-------|-------|-------------|
-| [harmonica](harmonica/) | 273 | Gravity and magnetic data processing and forward modelling |
+## Discovery and optional review roles
 
-### Rock Physics
-| Skill | Stars | Description |
-|-------|-------|-------------|
-| [bruges](bruges/) | 300 | Geophysical equations, AVO, Gassmann fluid substitution |
+The [router](using-geoscience-skills/SKILL.md) selects domain skills and workflows
+from the task. Optional repository role guides are [data QC](agents/data-qc-reviewer.md),
+[mentoring](agents/geoscience-mentor.md) and [cross-validation](agents/cross-validation-reviewer.md).
+These guides are separate from the 48 installable skills and are not a portable
+subagent registration format.
 
-### Spatial Analysis & Geostatistics
-| Skill | Stars | Description |
-|-------|-------|-------------|
-| [verde](verde/) | 648 | Spatial data gridding and interpolation (ML-style API) |
-| [geostatspy](geostatspy/) | 554 | Geostatistics, variograms, kriging (GSLIB-style) |
-| [scikit-gstat](scikit-gstat/) | 246 | Geostatistics with scikit-learn style API |
-| [gnnwr](gnnwr/) | 100+ | Geographically Neural Network Weighted Regression (spatially varying coefficients) |
+## Scientific environments
 
-### Hydrology
-| Skill | Stars | Description |
-|-------|-------|-------------|
-| [pastas](pastas/) | 416 | Groundwater time series analysis and modelling |
+Use a task-specific isolated environment. The [tested baselines](docs/SCIENTIFIC_TESTING.md)
+are separated because the complete package catalog is not one compatible environment.
+In particular, configured PetroPy uses older lasio; current Pyleoclim/PyGMT need
+Python 3.12; FloPy needs a MODFLOW executable; and PyGMT needs the GMT shared library.
+GeoLime needs a functional vendor distribution and license. RockHound has stopped
+development and its legacy PREM download URL failed in the recorded check.
 
-### Surface Processes
-| Skill | Stars | Description |
-|-------|-------|-------------|
-| [landlab](landlab/) | 414 | Landscape evolution and surface process modelling |
-
-### Structural Geology
-| Skill | Stars | Description |
-|-------|-------|-------------|
-| [mplstereonet](mplstereonet/) | 201 | Stereonet plots for orientation data |
-
-### Geochemistry
-| Skill | Stars | Description |
-|-------|-------|-------------|
-| [pyrolite](pyrolite/) | 152 | Geochemical data analysis, REE patterns, spider diagrams |
-
-### Ground-Penetrating Radar
-| Skill | Stars | Description |
-|-------|-------|-------------|
-| [gprpy](gprpy/) | 259 | GPR data processing and visualization |
-
-### Magnetotellurics
-| Skill | Stars | Description |
-|-------|-------|-------------|
-| [mtpy](mtpy/) | 155 | Magnetotelluric data processing and modelling |
-
-### Scientific Data Formats
-| Skill | Stars | Description |
-|-------|-------|-------------|
-| [xarray](xarray/) | 4.1k | NetCDF, multi-dimensional arrays, climate/ocean data |
-
-### Visualization
-| Skill | Stars | Description |
-|-------|-------|-------------|
-| [pyvista](pyvista/) | 3.5k | 3D visualization and mesh analysis |
-
-### Utilities
-| Skill | Stars | Description |
-|-------|-------|-------------|
-| [pooch](pooch/) | 714 | Data file fetching and caching |
-
-### Discovery
-
-| Skill | Description |
-|---|---|
-| [using-geoscience-skills](using-geoscience-skills/SKILL.md) | Select domain skills and workflows for a task |
-
-### Workflow Skills
-| Skill | Description |
-|-------|-------------|
-| [seismic-interpretation](workflows/seismic-interpretation/) | SEG-Y → signal processing → rock physics → visualization |
-| [well-log-evaluation](workflows/well-log-evaluation/) | LAS/DLIS → QC → petrophysics → lithology → visualization |
-| [geological-modelling](workflows/geological-modelling/) | GIS data → implicit modelling → 3D visualization |
-| [geophysical-inversion](workflows/geophysical-inversion/) | Survey data → mesh → inversion → gridding → visualization |
-| [rock-physics-avo](workflows/rock-physics-avo/) | Well logs → elastic properties → AVO → fluid substitution |
-
----
-
-## Skills by Star Count
-
-| Rank | Skill | Stars | Category |
-|------|-------|-------|----------|
-| 1 | xarray | 4,100 | Data Formats |
-| 2 | pyvista | 3,500 | Visualization |
-| 3 | obspy | 1,300 | Seismology |
-| 4 | gempy | 1,200 | 3D Modelling |
-| 5 | pooch | 714 | Utilities |
-| 6 | devito | 658 | Simulation |
-| 7 | verde | 648 | Geostatistics |
-| 8 | simpeg | 607 | Inversion |
-| 9 | segyio | 557 | Seismic |
-| 10 | geostatspy | 554 | Geostatistics |
-
----
-
-## Python Packages by Domain
-
-These commands install Python libraries, not agent skills. Use a task-specific
-environment; the complete list is not a tested combined dependency lockfile.
-
-```bash
-# Complete package list (install only the packages required for your task)
-pip install obspy segyio disba lasio welly dlisio striplog petropy \
-    gempy LoopStructural gemgis simpeg devito pylops pygimli \
-    harmonica bruges verde geostatspy scikit-gstat gnnwr pastas landlab \
-    mplstereonet pyrolite gprpy mtpy xarray netcdf4 pyvista pooch
-```
-
-### Domain-specific
-
-```bash
-# Seismic & Seismology
-pip install obspy segyio disba
-
-# Well Logs & Petrophysics
-pip install lasio welly dlisio striplog petropy
-
-# 3D Geological Modelling
-pip install gempy LoopStructural gemgis pyvista
-
-# Geophysical Inversion
-pip install simpeg devito pylops pygimli
-
-# Potential Fields & Rock Physics
-pip install harmonica bruges
-
-# Geostatistics & Spatial
-pip install verde geostatspy scikit-gstat gnnwr
-
-# Climate & Ocean Data
-pip install xarray netcdf4 h5netcdf dask
-
-# Hydrology & Surface
-pip install pastas landlab
-
-# Structural Geology & Geochemistry
-pip install mplstereonet pyrolite
-
-# Near-surface Geophysics
-pip install gprpy mtpy pygimli
-```
+See [new collection validation](docs/COLLECTION_VALIDATION.md),
+[domain audits](docs/DOMAIN_AUDITS.md), [field data](docs/FIELD_DATA_VALIDATION.md)
+and [dependency maintenance](docs/DEPENDENCY_MAINTENANCE.md) for actual tests and limitations.

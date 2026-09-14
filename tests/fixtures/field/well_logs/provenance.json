@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "case_id": "well_logs",
+  "dataset": {
+    "title": "Wireline logging data from Hole FDB-1 penetrated throughof the Futagawa fault, SW Japan",
+    "authors": [
+      "Shibutani, Susumu",
+      "Lin, Weiren"
+    ],
+    "year": 2021,
+    "doi": "10.1594/PANGAEA.933467",
+    "version": "DOI data release; published 2021-07-07; retrieved 2026-09-14",
+    "license": "CC-BY-4.0",
+    "license_evidence_url": "https://doi.pangaea.de/10.1594/PANGAEA.933467",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/"
+  },
+  "files": {
+    "FDB-1_wireline_original.tab": {
+      "url": "https://doi.pangaea.de/10.1594/PANGAEA.933467?format=textfile",
+      "role": "Unmodified complete published 3646-row table, including metadata, empty fields and lithological remarks",
+      "bytes": 298754,
+      "sha256": "1834fbb42939f03c54ec3869d02ef3bbcca84f7c142f7ff182436809366e89d7"
+    }
+  },
+  "units": {
+    "depth": "m, original borehole logging depth; no conversion to true vertical depth/elevation",
+    "sonic_velocity": "km/s in source; m/s in exported VP",
+    "derived_sonic_slowness": "us/ft, derived as 304800 / VP_m_s",
+    "caliper": "mm",
+    "temperature": "degrees Celsius",
+    "natural_gamma_ray": "API units"
+  },
+  "coordinates": {
+    "latitude": 32.8062,
+    "longitude": 130.8601,
+    "horizontal_crs": "Not explicitly named in source; do not assign an EPSG code",
+    "vertical_datum": "Not explicitly named; retain source depth axis",
+    "reported_borehole_deviation_degree": 0.8,
+    "reported_azimuth": "N90E"
+  },
+  "missing_values": "138 rows lack depth and are retained in the original table but excluded from LAS; no inferred depths. Empty numerical fields become LAS NULL=-999.25 / NaN, never zero.",
+  "processing": [
+    "Select every row with a provided depth; preserve order and all 3508 valid depth positions, including gaps.",
+    "Export temperature, calipers, gamma, sonic VP and derived DT; preserve sonic remark-present flag as a separate numeric curve and retain all remark text in original table.",
+    "LAS STEP=0 declares an irregular depth sequence; no resampling or gap filling.",
+    "Only adjacent original 0.1 m pairs with finite positive VP and no sonic remark contribute to the representative unflagged interval-time diagnostic; report covered depth rather than crossing missing/flagged intervals."
+  ],
+  "uncertainty": "No per-sample measurement errors are published. The 0.00001 km/s decimal reporting increment only bounds quantization; it is not total sonic accuracy or a geological confidence interval.",
+  "model_assumption": "Integrate local sonic slowness along the published borehole-depth coordinate only for accepted adjacent intervals. This is a one-dimensional interval diagnostic, not an observed seismic travel time, surface-to-depth well tie, or true-vertical-depth conversion.",
+  "limitations": [
+    "Source lithological remarks are retained, not automatically classified as faulty measurements.",
+    "This case does not estimate Archie water saturation, mineral fractions, depth below sea level or fault displacement.",
+    "The LAS is a clearly labelled format/unit conversion of actual measured logs, not an original instrument LAS delivery."
+  ]
+}

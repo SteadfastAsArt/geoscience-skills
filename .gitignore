@@ -39,6 +39,8 @@ Thumbs.db
 test_output.mseed
 *.mseed
 *.sac
+# Licensed, hash-verified field fixture; keep generated waveforms ignored.
+!tests/fixtures/field/seismic_waveform/GE.MATE.BHZ.20160824.mseed
 
 # Temporary files
 *.tmp

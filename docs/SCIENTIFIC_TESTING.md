@@ -1,102 +1,128 @@
 # Scientific checks
 
-Portable format and installation checks cannot establish correct numerical
-results. The suites in `tests/science/` execute the repository's scripts or the
-Python blocks in its skill documents using generated data. A separate field-data
-suite checks vendored, published GNSS station estimates and uncertainty
-diagnostics. The tests run offline after dependencies have been installed.
+The suites in `tests/science/` execute actual library APIs, repository scripts or
+Python blocks in skill documents. Generated fixtures have independent numerical
+answers; published field fixtures retain source bytes, licenses and conventions.
+Passing these tests does not establish skill activation inside an agent: see
+[agent evaluations](AGENT_EVALUATIONS.md) for that separate evidence.
 
-## Reproduce locally
+## Isolated environments
 
-Use Python 3.11 in isolated environments. Keep the core and modelling stacks
-separate: the tested core stack uses NumPy 1.26, while pgcore 1.6 requires NumPy 2.
-These requirement files are test baselines, not instructions to change an
-agent's global Python environment.
+Use a fresh path for each environment. Do not install this catalog into a user's
+global Python environment, or combine all requirements into one lockfile.
+
+| Environment | Python | Baseline | Suites |
+| --- | --- | --- | --- |
+| Core | 3.12 | [requirements-core.txt](../tests/science/requirements-core.txt) | I/O, seismic, well logs, Bruges/disba, field well/waveform, evaluation-fixture readback |
+| Models | 3.12 | [requirements-models.txt](../tests/science/requirements-models.txt) | GemPy/SimPEG/pyGIMLi examples, GNSS, field ERT |
+| Domain audits | 3.11 | [requirements-audits.txt](../tests/science/requirements-audits.txt) | DLIS, GIS/DEM, LoopStructural |
+| PetroPy | 3.11 | [requirements-audits-petropy.txt](../tests/science/requirements-audits-petropy.txt) | Configured fluid and multimineral examples with compatible lasio |
+| New collection | 3.12 | [requirements-collection.txt](../tests/science/requirements-collection.txt) | FloPy/MODFLOW, discretize, SEGY-SAK, Pyleoclim, Boule, Ensaio and legacy RockHound parser |
+| PyGMT | 3.12 | [environment-pygmt.yml](../tests/science/environment-pygmt.yml) | Real GMT rendering and grid sampling |
+
+Core retains pandas 2.3.3 because Welly calls an API removed in pandas 3, and
+setuptools 80.9.0 because Welly/Bruges still import `pkg_resources`. Modelling and
+new-collection environments passed with pandas 3.0.5. PetroPy requires its own
+older lasio/NumPy combination. See [dependency validation](DEPENDENCY_MAINTENANCE.md)
+and [domain audit constraints](DOMAIN_AUDITS.md) before changing a pin.
+
+## Reproduce core and modelling checks
+
+Run from the repository root. Use fresh paths if these already exist. Set
+`MPLCONFIGDIR` to a temporary directory to avoid loading user-specific styles.
 
 ```bash
-python3.11 -m venv /tmp/geoscience-core-tests
+export MPLBACKEND=Agg
+export MPLCONFIGDIR=/tmp/geoscience-mpl-tests
+export PYVISTA_OFF_SCREEN=true
+export OPENBLAS_NUM_THREADS=1
+export OMP_NUM_THREADS=1
+
+python3.12 -m venv /tmp/geoscience-core-tests
 /tmp/geoscience-core-tests/bin/python -m pip install -r tests/science/requirements-core.txt
-MPLBACKEND=Agg /tmp/geoscience-core-tests/bin/python tests/science/test_io_scripts.py -v
-MPLBACKEND=Agg /tmp/geoscience-core-tests/bin/python tests/science/test_seismic_examples.py -v
-MPLBACKEND=Agg /tmp/geoscience-core-tests/bin/python tests/science/test_well_log_examples.py -v
-MPLBACKEND=Agg /tmp/geoscience-core-tests/bin/python tests/science/test_domain_examples.py -v
+/tmp/geoscience-core-tests/bin/python tests/science/test_io_scripts.py -v
+/tmp/geoscience-core-tests/bin/python tests/science/test_seismic_examples.py -v
+/tmp/geoscience-core-tests/bin/python tests/science/test_well_log_examples.py -v
+/tmp/geoscience-core-tests/bin/python tests/science/test_domain_examples.py -v
+/tmp/geoscience-core-tests/bin/python tests/science/test_field_well_logs.py -v
+/tmp/geoscience-core-tests/bin/python tests/science/test_field_seismic_waveform.py -v
 /tmp/geoscience-core-tests/bin/python evals/tests/test_fixture_readback.py -v
 
-python3.11 -m venv /tmp/geoscience-model-tests
+python3.12 -m venv /tmp/geoscience-model-tests
 /tmp/geoscience-model-tests/bin/python -m pip install -r tests/science/requirements-models.txt
-MPLBACKEND=Agg /tmp/geoscience-model-tests/bin/python tests/science/test_model_examples.py -v
-MPLBACKEND=Agg /tmp/geoscience-model-tests/bin/python tests/science/test_field_data.py -v
+/tmp/geoscience-model-tests/bin/python tests/science/test_model_examples.py -v
+/tmp/geoscience-model-tests/bin/python tests/science/test_field_data.py -v
+/tmp/geoscience-model-tests/bin/python tests/science/test_field_ert_survey.py -v
 ```
 
-Use a fresh environment path if these names already exist. On Windows, use the
-venv's `Scripts/python.exe` and the shell's environment-variable syntax. The
-scientific CI currently targets Linux; Windows installation checks remain a
-separate job.
+For the domain audits, create separate Python 3.11 environments and run the
+commands in [DOMAIN_AUDITS.md](DOMAIN_AUDITS.md). Their PetroPy and main-audit
+requirements must not be installed over one another.
 
-Welly 0.5.2 and Bruges 0.5.4 import `pkg_resources`, which is absent from newer
-setuptools; the core baseline includes setuptools 80.9.0. This compatibility pin does not
-remove upstream deprecation warnings. When updating dependencies, rerun the
-scientific examples before changing the baseline.
+## New collection and external executables
 
-## What the suites check
+```bash
+python3.12 -m venv /tmp/geoscience-collection-tests
+/tmp/geoscience-collection-tests/bin/python -m pip install -r tests/science/requirements-collection.txt
+python3 scripts/install_modflow_test.py --directory /tmp/geoscience-modflow-tests/bin
+MODFLOW_EXE=/tmp/geoscience-modflow-tests/bin/mf6 /tmp/geoscience-collection-tests/bin/python tests/science/test_collection_examples.py -v
 
-| Suite | Evidence |
-| --- | --- |
-| `test_io_scripts.py` | Reopen generated LAS/SEG-Y outputs and verify curve values, missing-data handling, sample times, and trace geometry. |
-| `test_seismic_examples.py` | Execute rock physics and seismic code blocks with synthetic inputs, checking units, supported library APIs, and spatial/sample coordinates. |
-| `test_well_log_examples.py` | Execute the LAS → QC → formation evaluation → lithology → trajectory sequence; verify analytic porosity/saturation, retained missing intervals, and exported coordinates. |
-| `test_model_examples.py` | Compute a small GemPy model, run short synthetic SimPEG and pyGIMLi inversions independently, and verify model-result handling and exported grid coordinates. |
-| `test_domain_examples.py` | Execute Bruges and disba examples and helpers against real library APIs; check elastic relations, wavelets, dispersion, sensitivity, and exported results. |
-| `test_field_data.py` | Reconstruct all 186 published GNSS rows from original source tables; check units, weighted fitting, spatial holdout and conditional error propagation. |
-| `evals/tests/` | Read the independently generated agent-evaluation fixtures with real lasio and segyio. These checks do not invoke an agent model. |
+conda env create --prefix /tmp/geoscience-pygmt-tests --file tests/science/environment-pygmt.yml
+conda run --prefix /tmp/geoscience-pygmt-tests python tests/science/test_pygmt_examples.py -v
+```
 
-The tests intentionally do not import every scientific dependency in the
-structural test suite. Run `python3 -m unittest discover -s tests -v` for the
-lightweight structural checks and the commands above for the scientific checks.
-Missing scientific dependencies fail their suite rather than silently skipping it.
+MODFLOW is downloaded from a fixed official release with archive/executable
+hashes and written only to the explicit test directory. No user-level FloPy
+installation metadata is used. The pinned binary is Linux x86-64; the GMT
+shared library and Ghostscript are isolated by conda. Scientific CI currently
+runs on Linux; Windows installation tests are separate from scientific execution.
 
-## Recorded verification
+After dependency/executable setup, the suites use offline data. Ensaio exercises
+a genuine hash-verified cached dataset; RockHound exercises a synthetic cached
+CSV because its legacy PREM download URL failed. Missing Python dependencies,
+GMT or MODFLOW **fail** the relevant test; they are never reported as skipped
+examples that passed validation.
 
-On **2026-09-14**, local Linux runs with Python **3.11.14** and the two dependency
-baselines passed **85 scientific tests with no skips**: 18 I/O, 10 seismic/rock
-physics, 9 well-log, 8 modelling, 30 Bruges/disba domain, and 10 field-data tests.
-Two additional evaluation-fixture readback tests passed in the core environment.
-The separate lightweight suite passed 53 tests, and the skill validator reported
-36 skills with no errors or warnings. Together these are **140 automated tests**;
-the manual Codex task runs are reported separately in [agent evaluations](AGENT_EVALUATIONS.md).
+## Numerical and field evidence
 
-The modelling suite executed GemPy's synthetic inclined contact and both
-frameworks' short forward/inversion runs. Its checks include an analytic contact
-plane, reduced SimPEG data misfit, homogeneous-earth pyGIMLi recovery, and real
-VTK file readback. The scientific CI workflow uses the same core/modelling
-separation and also checks the field-data and agent-evaluation fixtures.
+| Suite | Tests | Main checks |
+| --- | ---: | --- |
+| `test_io_scripts.py` | 18 | LAS nulls/units/depths and SEG-Y geometry, absolute sample time and file readback |
+| `test_seismic_examples.py` | 10 | Sonic units, fluid substitution, synthetic timing and coordinate exports |
+| `test_well_log_examples.py` | 9 | QC-to-formation handoff, analytic porosity/saturation, missing intervals and trajectories |
+| `test_domain_examples.py` | 30 | Real Bruges/disba APIs, elastic identities, wavelets and analytic dispersion limits |
+| `test_model_examples.py` | 8 | GemPy contact plane, independent SimPEG/pyGIMLi branches and VTK grid readback |
+| `test_field_data.py` | 10 | Original-source reconstruction of 186 GNSS rows, weighted fit and spatial holdout |
+| `test_field_well_logs.py` | 7 | Published log preservation, lasio roundtrip, missing depths, units and held-out interpolation |
+| `test_field_seismic_waveform.py` | 7 | Real miniSEED, StationXML response, sampling phase and independent spectral checks |
+| `test_field_ert_survey.py` | 7 | Real signed measurements, uncertainty/holdout, rejected simple model and independent synthetic recovery |
+| `test_collection_examples.py` | 13 | New library examples, analytic MODFLOW flow and explicit dataset-cache contracts |
+| `test_pygmt_examples.py` | 2 | Actual GMT export and coordinate-aware grid sampling |
+| Domain-audit suites | 31 | Real DLIS (9), GIS/DEM (10), structural interpolation (6) and configured PetroPy (6); see [audit results](DOMAIN_AUDITS.md) |
+| `evals/tests/test_fixture_readback.py` | 3 | Independent agent fixtures read with actual LAS/SEG-Y libraries; no model invocation |
 
-Both jobs in the remote [Scientific Examples run](https://github.com/SteadfastAsArt/geoscience-skills/actions/runs/34810508438)
-passed on **2026-09-14** for implementation
-[`db5156c`](https://github.com/SteadfastAsArt/geoscience-skills/commit/db5156c211fe28b87a0085961f1f82bee86fcb31).
-They installed the pinned dependency baselines in fresh Linux environments and
-ran the scientific suites and fixture readback checks. The separate
-[validation and installation run](https://github.com/SteadfastAsArt/geoscience-skills/actions/runs/34810508410)
-passed all three jobs, including installation on Windows. Windows scientific
-execution has not been validated.
+The 2026-09-14 Python 3.12 runs passed **81 core, 25 modelling/field, 13 collection
+and 2 GMT scientific tests**, plus **3 evaluation-fixture readback tests**, without
+skips. The Python 3.11 domain audits passed **31 more scientific tests**. Together
+with **61 lightweight tests**, this is **216 automated tests**: 152 scientific,
+3 fixture readbacks and 61 lightweight checks. Manual agent tasks are separate.
+Historical Python 3.11 results from merged
+[PR #3](https://github.com/SteadfastAsArt/geoscience-skills/pull/3) remain valid for
+that revision: 85 scientific tests, 2 fixture tests and 53 lightweight tests.
+They are not substituted for tests of the new content or dependency versions.
 
-## Remaining validation
+## Scope of the evidence
 
-- Extend the first [GNSS field-data case](FIELD_DATA_VALIDATION.md) to well,
-  seismic and inversion datasets with documented licenses, units, coordinate
-  systems, uncertainty, and expected outputs. The GNSS diagnostic detects model
-  inadequacy; passing its regression suite does not validate a deformation model.
-- Exercise GIS/DEM preparation, DLIS loading, the LoopStructural alternative,
-  and configured PetroPy multimineral models. These branches require separate
-  fixtures and are not covered by the first synthetic suites.
-- Check full inversion recovery and interpretation quality; validating a tiny
-  example is not evidence that a field-scale inversion is well constrained.
-- Extend the recorded [Codex task evaluations](AGENT_EVALUATIONS.md) to native
-  skill activation, more tasks and other available agents. An ordinary Python
-  test is not an agent task evaluation; Claude runtime testing is outside this round.
-- Exercise additional Python and operating-system versions before claiming
-  those combinations are supported.
+Read [field-data validation](FIELD_DATA_VALIDATION.md) for source licenses,
+uncertainty assumptions and the distinction between fitting field observations
+and recovering synthetic truth. The real GNSS and ERT diagnostic models are
+explicitly inadequate; a regression test passes when it detects that limitation.
 
-See [compatibility](COMPATIBILITY.md) for the distinction between installation
-evidence and actual agent task execution, and [the roadmap](ROADMAP.md) for
-remaining priorities.
+The [new collection report](COLLECTION_VALIDATION.md) records the GeoLime license
+restriction, RockHound download failure and the process-only validation of the
+three new workflow guides. No full field-scale inversion, arbitrary geology,
+licensed GeoLime runtime, or complete hydrology/GPR/MT/climate pipeline is claimed.
+Additional operating systems, library versions and scientific tasks require their
+own evidence. The [CI workflow](../.github/workflows/test-science.yml) runs these
+isolated suites; use its [run history](https://github.com/SteadfastAsArt/geoscience-skills/actions/workflows/test-science.yml)
+to identify the tested revision.

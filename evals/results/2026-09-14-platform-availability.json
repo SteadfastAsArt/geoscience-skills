@@ -1,0 +1,74 @@
+{
+  "recorded_at": "2026-09-14T14:21:01.391338+00:00",
+  "method": "shutil.which on current PATH; installed Codex/Claude --version only; no installation or authentication attempts",
+  "agents": [
+    {
+      "agent": "codex",
+      "cli_on_path": true,
+      "cli_version": "0.154.0",
+      "authentication_tested": false,
+      "runtime_plan": "native_synthetic_tasks"
+    },
+    {
+      "agent": "claude",
+      "cli_on_path": true,
+      "cli_version": "2.1.270",
+      "authentication_tested": false,
+      "runtime_plan": "excluded_this_round"
+    },
+    {
+      "agent": "gemini",
+      "cli_on_path": false,
+      "cli_version": null,
+      "authentication_tested": false,
+      "runtime_plan": "not_run_cli_missing"
+    },
+    {
+      "agent": "github-copilot",
+      "cli_on_path": false,
+      "cli_version": null,
+      "authentication_tested": false,
+      "runtime_plan": "not_run_cli_missing"
+    },
+    {
+      "agent": "opencode",
+      "cli_on_path": false,
+      "cli_version": null,
+      "authentication_tested": false,
+      "runtime_plan": "not_run_cli_missing"
+    },
+    {
+      "agent": "cline",
+      "cli_on_path": false,
+      "cli_version": null,
+      "authentication_tested": false,
+      "runtime_plan": "not_run_cli_missing"
+    },
+    {
+      "agent": "roo",
+      "cli_on_path": false,
+      "cli_version": null,
+      "authentication_tested": false,
+      "runtime_plan": "not_run_cli_missing"
+    },
+    {
+      "agent": "windsurf",
+      "cli_on_path": false,
+      "cli_version": null,
+      "authentication_tested": false,
+      "runtime_plan": "not_run_cli_missing"
+    },
+    {
+      "agent": "openclaw",
+      "cli_on_path": true,
+      "cli_version": "2026.1.30",
+      "authentication_tested": false,
+      "runtime_plan": "not_run_unconfigured",
+      "configuration_found": false,
+      "agent_auth_profile_found": false,
+      "legacy_oauth_file_found": false,
+      "provider_auth_environment_present": false,
+      "inspection": "Version and agent --help in a network-isolated sandbox; configuration/auth presence checks only, no model or gateway started."
+    }
+  ]
+}

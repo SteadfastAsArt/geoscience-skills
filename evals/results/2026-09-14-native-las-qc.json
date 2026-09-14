@@ -1,0 +1,541 @@
+{
+  "schema_version": 2,
+  "protocol_version": "native-1",
+  "recorded_at": "2026-09-14T14:30:33.191603+00:00",
+  "evaluation_mode": "native",
+  "selection_tested": true,
+  "native_activation_tested": true,
+  "scope": "native Codex discovery and implicit selection from task-only prompts",
+  "runtime": {
+    "python": "3.11.14",
+    "libraries": {
+      "lasio": "0.32",
+      "segyio": "1.9.14",
+      "numpy": "1.26.4",
+      "pandas": "2.3.3",
+      "welly": "0.5.2",
+      "striplog": "0.9.2"
+    }
+  },
+  "results": [
+    {
+      "agent": "codex",
+      "task": "las-qc",
+      "configured_model": "gpt-5.5",
+      "seed": 20260914,
+      "protocol_version": "native-1",
+      "evaluation_mode": "native",
+      "prompt_sha256": "4c9a52af567a27f2a186f9f0dbe55b2eb1d339eb010269aa34dce37bdaea661f",
+      "input_sha256": "715053faac2efe4f6d220a7a066204e5575c492cf9705c669f5969252652e463",
+      "skill_catalog_sha256": "acab084e9e66d1d86aff3b74fb8efb28957a70eec8016cf32b7d686c7b566ae1",
+      "installed_skill_count": 48,
+      "installed_skill_hashes": {
+        "boule": "553fe1229ff2c1951547673f5ce59950ee549b19b213769417fcf55a4e68c81b",
+        "bruges": "c1228036ff20a0aeac6ee2a0cd0ef0eb50e303a2c182a6871f049d87dc8869dd",
+        "devito": "1cd642919d6f5a902a6c2bc9b30f3451c62e90bc270d36f39e0324c3ab388881",
+        "disba": "13f12b3d88c347fba5cade3c2699abf6703b7ba1ec718e47fce42effe763e39e",
+        "discretize": "770b225b3814b45d9d2644de9b26a17aed7b0bc99b2125160d36b9ad7353c41f",
+        "dlisio": "f2bd27cbdca68d7c7b8259b82063b273464030ecdf08b90d381390aaf7e7643c",
+        "ensaio": "b4952b1c8f768f99b4dd33685d8e98574323c43734129feae17f0caba07f93c2",
+        "flopy": "3662911c8fc2a04b74cc8beed82fb69b7b7161dbd6c2e498e5c892e0d1d42e11",
+        "gemgis": "99e1dc194a9516875b45e09662883b1a8fd02ad263ad269bf7428b0a4a323ae6",
+        "gempy": "22ccb76a33e46cbf158ff2cef7340f59d030a33bdd1369968f651ce08dc5ca49",
+        "geolime": "17592b409170482709c3f4acc89a99ec14e5e75bf8817e14f3a61b4e5c656292",
+        "geostatspy": "35ed786310a8178055b75e2c0d0542918642392305f87f94b1060193199a6c8c",
+        "gnnwr": "654970a253e8a8c26132743c0d1978bc588b594b87241be76f1bccd816d84670",
+        "gprpy": "2b120c4d6f1a8d0136edbb379ba1531a31ce0a7793c9ca98bf0273d31a3e33e7",
+        "harmonica": "ff6f17e4faa7c21ddc9425bfc79177f1fc2dd1de47f988a310e5f4f0d9907e9d",
+        "landlab": "106e8ba646f98ec7ae4e3a3c81e29641d9f65859feb8971b423020bc6dd1bb16",
+        "lasio": "e722b61473ff9df2416f88094c91352179d7e49986fd4a68d4f2720a13b57cbe",
+        "loopstructural": "4895f42de61e1b691545598e580649f6d7db078c253f7c2ede332a9800ff8837",
+        "mplstereonet": "92ede9b419e86334b38680c63d0803d97586268b8c391ca3fe73f9a4c3ccf1b8",
+        "mtpy": "62602300b48dd530c46f824269d9e4db78d81d5dd755f16756de21bbc0662aca",
+        "obspy": "86b5e688bc581e7644ac77272f20d5f4cfdbfc8d00a4985b46d2d0a58dd1d183",
+        "pastas": "d01f2f4d869d1037210c04b69ff01a4db435addf51ad9173ed67e839b534d25c",
+        "petropy": "a125bf706d5b620cc8a8db0b770e995951c32948aed13dfe8a2fde066b1579ee",
+        "pooch": "4592936ad4f4711b5d43957968e3d8aa34eaec799f0b34b919a749b632f1a8a3",
+        "pygimli": "bcb7423864c98dcacb8bd58048872e582aa4238abc66fe95496d945e7c25177c",
+        "pygmt": "7bc093aba475dd06e0574a410c2d463d6d72718e887abfbc86adc83361c40be6",
+        "pyleoclim": "0ba2a79c83cf7b9b17638bfc32312c6cfd22a83db2f51b37c538d7ee2ce986d9",
+        "pylops": "43beab2433f8b581503007daefe6d8f0663ca387418c44f06ddc92cb38b1126d",
+        "pyrolite": "a42e8661332bd33f1337924f0d111f2e37ef61c7b7514696d0b5ae2782817aa0",
+        "pyvista": "5ce3a6fa7385dc75a2d61c7dfb71038b5e9100fc9d5ef8e1e2c2c72a34b2afc3",
+        "rockhound": "794599183089a0400edd21059124d78b73ec351d05a39d03f86d0fdbad342b78",
+        "scikit-gstat": "b71bc23fe038858f740177aa802749dd16253207eeb782b0f9d20acb32327044",
+        "segyio": "7d46ac492f7e69f8f5f9ada98bd889701cbd2a37f3f871344c9f9efad6b5a2bb",
+        "segysak": "4f9b1006469b3ecedc98720d293ffc666a96c64ef0e580ca6714cc42ea0df487",
+        "simpeg": "53d3b2d0507b3fda6f72aa5b545169aaa99086ae14c4fd29f9477271561eae9b",
+        "striplog": "b75193c3e70fcef86c5eb7e4e1c75512165bb6e031f0cb3de89092e42af6c41a",
+        "using-geoscience-skills": "6d3e0e7b0ec5b2a23cf5357577e8a314448acf39a03f70c762a5c181ff766629",
+        "verde": "9cd782c3af01d05b160dc081b9b0a21b8f01843895ce144105c5569000358235",
+        "welly": "9f9af9dfb803dd09f8b6db7e114387641e2e60e969b2fdb8ad1f65affd11d3a0",
+        "climate-analysis": "ded237cb9abc5985808036007c0bfd98af01f3df2621b85874a95dcbd168c846",
+        "geological-modelling": "337b5afae33b1bfe7d2142f003c70a91f818bd0f13da7235ae3b0ea626276c35",
+        "geophysical-inversion": "0754eb136f3098a0fe566b0ce8bb98b76f584570c3f5b1ac161562abd313df8b",
+        "hydrogeological-analysis": "a90af73784e7115db0a3de3984f9f4ba404b36aa05e712a0f9b14d3d8c8595f2",
+        "near-surface-geophysics": "7b2ec5b13eb71c5581e60504b71cfc4e3f03df378dd35d26b07bdc179c1b8881",
+        "rock-physics-avo": "2b6b16ea4818a2c5c1440ba335f42056168033e45f4f22f8d64dce6d3b25096e",
+        "seismic-interpretation": "180b528488c7fe9c8cf3dd2e8921f1530eeabcaff517e8f0f1a4312333b55cd3",
+        "well-log-evaluation": "93c064c88fff560aa1819a0f858c623c279c2f9fe2324d7dfda22c093704e786",
+        "xarray": "1e22e65bbc9dd01eea027255e109d5aa15d1fdd12643e956564c6616e83b0bef"
+      },
+      "installed_bundle_hashes": {
+        "boule": "2ee85be24492e955e65f143de0576734ed9797b438758e11cc2091e0bb8983f4",
+        "bruges": "7015ed2b32f68d1e4daaa92f82bd4d10fc3634c1b1f38172e81e5eb299d27c75",
+        "devito": "0899eb5655e44e40059e38ecc798969f8180a7036b230d29eaeba931adb7fd21",
+        "disba": "3b847a8425454d26736cb418b1f0cad22e46461b0ce75f561b63619b95434a80",
+        "discretize": "401e2333a9b2a61e30e459094d295b5b3a03ea80cc800b7c5fa2b8b5a9d3f79a",
+        "dlisio": "1118d63d73b1a6c95c46ab46981bb874ae0fe6a234ea794c031e21be26afd7e0",
+        "ensaio": "e4fa4976afb5a7d858361ff620c044957b04292b80737c210e4db0df36d17c60",
+        "flopy": "70503ac599032f3b363c0e889f2103ac8391459d34f6ecdc44bceb9fc1c23ab3",
+        "gemgis": "22b3b5a2581a1cb5c5c036dc9f5426c34b7ad9b5ddfdac5bc2794d734d0ef70b",
+        "gempy": "3d1afc06cf5c05cf11501c5e5948264abe51e7eddf15ca0fbd1cc3b037c6c946",
+        "geolime": "a88732e546f37bac2a865cfa48f88ac7e6d9c67fd5dde0efdffa6a703883dca3",
+        "geostatspy": "c60c8e215dcf641a181ebca52ab4ca12c9c6d9dd1763dc84326904fa2ee44455",
+        "gnnwr": "849ae43f48a0a84e7944c85bbad4bc94354a21f38c611ec77c74315e86059972",
+        "gprpy": "7636e70e1155110135540741b87f2d45fdba72909c4216bcb7e2e4d2d800b8b5",
+        "harmonica": "5d25289fcd497f2786efd3462d297ce46b1e33df8705b82da857cb96c8723440",
+        "landlab": "10828e81ea9be0e62e19b135ee3fa06b9da844cf11e4789a91811fe8250f1358",
+        "lasio": "292bc9810880d5668728b4bfeb8aaac9e7ab6e39133cb0f55c7e1743e4c238d0",
+        "loopstructural": "d11166d997802148ddc6f4f5dd76cd00240f0bb2b8cb57ac175275afef51add0",
+        "mplstereonet": "fc99460004919c9eae6a16856955ac41df4327b286bc590182b01a2c9e692a94",
+        "mtpy": "6de95db1754998c97f09c05958914683b03f98f047cbf2987a0a7d5b86f54d64",
+        "obspy": "2b25109c4c6f70daf173a6dc009c6840b9c5173cd2bb18c807818a107fd660f3",
+        "pastas": "ed5118e3bd6d7d7715d325f31b5e26cb0543c13481eb224b7cb39bca24635363",
+        "petropy": "f9ffcc1a8f890a88d230aac0149f574234328d3f8058ab1ed26a4e9497926bec",
+        "pooch": "c234fa362c1b8bc5cb9c2eaa7242167484dce7a2bd967ba508aef35ad7e6bf75",
+        "pygimli": "cc7348b32d8406754c6529261bb4911557cc389ea0b05b2c9228ff0a527a4959",
+        "pygmt": "46c4ea6e781c46857009e6c856a143e1686be054e9aa2c84c50dad340e746cb0",
+        "pyleoclim": "686eed444a259fb6aad946a393d64bf9072311214f43e0017c252fa6acece72a",
+        "pylops": "f8a0e19c74b06527435480311e7d87a0139982dc8133ab37f8851d8c7162cc4c",
+        "pyrolite": "1969959563f6f111d93bf97b13a0dc76c72a31645e61ce10ce5d934882588ae6",
+        "pyvista": "dcfc9c9eb7aafca58ac96244fd51b1c419f94e195581b486e51b378982e26b74",
+        "rockhound": "00db9d9645e6545164eb712b8aa6d6cd4f23679119b449a81f98c0c59bb80f99",
+        "scikit-gstat": "3a202609de230c5cfe19f2bb366faedc5a8ac0efef7ceadc6e53654d3c431ffe",
+        "segyio": "7e9b8c101751d2975209810853177b92b809f7d1d631371d3d7cb0d1617e4b05",
+        "segysak": "0b2084e44e359471a0efbf4626e8dab898138e58e0c64713966de7c02d8f2924",
+        "simpeg": "ce7208a802b2e6a57fe979f856ed5d8950eafb886a1eb2c924ff40105d82745b",
+        "striplog": "724a4e35c4a007f460d2bd10b17fd99784fe38f85bcd8eaaee804a6e951c1c36",
+        "using-geoscience-skills": "4f4cbcc8c32a038772ba2acac002540e4f14293f55c9427ea8c8fa44e1f25fc9",
+        "verde": "a8820b51dd4dc47c4fc20bbdd209f3288e973670882b0cb065d18782ca6fc041",
+        "welly": "8e6c74d890aa519ce62b7e8922454ad821db0663a15ef16f3c045d18d4e88001",
+        "climate-analysis": "f2010b34d80609e5dfb4034152ab769f42a87e8fb6540891bb325b69ea487bd5",
+        "geological-modelling": "0ea9ebf2d917d6aedfdd4865eba3db674b210b7b6c182551a4aa3382b4cc8550",
+        "geophysical-inversion": "5f486ec6fc1dceb9a220ea62a8f975a83d386202b86d6652d0c5f56531982c85",
+        "hydrogeological-analysis": "f407849b3932248f7966817dd84640b15eb5806ba4c9dd240b00e16a354e8e89",
+        "near-surface-geophysics": "8c9d37e408d38af6d5882aeff153457a68229e185d2168ee3a126d39890d51b6",
+        "rock-physics-avo": "50c9bd22ac7b52afa93e35e58d6b8195d83aaaefd3b41761e053449ef4e928a8",
+        "seismic-interpretation": "9441105652a2cdfd0227bb9e00f617ade95ac7a7bac6808d74dfe75a8239a762",
+        "well-log-evaluation": "3db62ad06a1f0f92fcf0ab300ba6607edfb843d2fe0befec63047ad706f16444",
+        "xarray": "f74e833bc1cf7c4daa3f3e83cfa18e082428ba7cb236873a9de313e1d5872481"
+      },
+      "input_files_sha256": {
+        "well.las": "715053faac2efe4f6d220a7a066204e5575c492cf9705c669f5969252652e463"
+      },
+      "command": [
+        "codex",
+        "exec",
+        "--json",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "--sandbox",
+        "workspace-write",
+        "-c",
+        "approval_policy=\"never\"",
+        "-c",
+        "features.multi_agent=false",
+        "-"
+      ],
+      "isolation": "bubblewrap-allowlist",
+      "limits": {
+        "timeout_seconds": 300.0,
+        "budget_usd": null
+      },
+      "expected_skill": "lasio",
+      "status": "passed",
+      "reason": null,
+      "native_discovery": {
+        "method": "codex app-server skills/list",
+        "passed": true,
+        "expected_count": 48,
+        "discovered_count": 48,
+        "missing": [],
+        "parse_error_count": 0,
+        "skills": [
+          {
+            "name": "boule",
+            "path": "/workspace/.agents/skills/boule/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "bruges",
+            "path": "/workspace/.agents/skills/bruges/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "climate-analysis",
+            "path": "/workspace/.agents/skills/climate-analysis/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "devito",
+            "path": "/workspace/.agents/skills/devito/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "disba",
+            "path": "/workspace/.agents/skills/disba/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "discretize",
+            "path": "/workspace/.agents/skills/discretize/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "dlisio",
+            "path": "/workspace/.agents/skills/dlisio/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "ensaio",
+            "path": "/workspace/.agents/skills/ensaio/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "flopy",
+            "path": "/workspace/.agents/skills/flopy/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "gemgis",
+            "path": "/workspace/.agents/skills/gemgis/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "gempy",
+            "path": "/workspace/.agents/skills/gempy/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "geolime",
+            "path": "/workspace/.agents/skills/geolime/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "geological-modelling",
+            "path": "/workspace/.agents/skills/geological-modelling/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "geophysical-inversion",
+            "path": "/workspace/.agents/skills/geophysical-inversion/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "geostatspy",
+            "path": "/workspace/.agents/skills/geostatspy/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "gnnwr",
+            "path": "/workspace/.agents/skills/gnnwr/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "gprpy",
+            "path": "/workspace/.agents/skills/gprpy/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "harmonica",
+            "path": "/workspace/.agents/skills/harmonica/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "hydrogeological-analysis",
+            "path": "/workspace/.agents/skills/hydrogeological-analysis/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "landlab",
+            "path": "/workspace/.agents/skills/landlab/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "lasio",
+            "path": "/workspace/.agents/skills/lasio/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "loopstructural",
+            "path": "/workspace/.agents/skills/loopstructural/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "mplstereonet",
+            "path": "/workspace/.agents/skills/mplstereonet/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "mtpy",
+            "path": "/workspace/.agents/skills/mtpy/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "near-surface-geophysics",
+            "path": "/workspace/.agents/skills/near-surface-geophysics/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "obspy",
+            "path": "/workspace/.agents/skills/obspy/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "pastas",
+            "path": "/workspace/.agents/skills/pastas/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "petropy",
+            "path": "/workspace/.agents/skills/petropy/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "pooch",
+            "path": "/workspace/.agents/skills/pooch/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "pygimli",
+            "path": "/workspace/.agents/skills/pygimli/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "pygmt",
+            "path": "/workspace/.agents/skills/pygmt/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "pyleoclim",
+            "path": "/workspace/.agents/skills/pyleoclim/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "pylops",
+            "path": "/workspace/.agents/skills/pylops/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "pyrolite",
+            "path": "/workspace/.agents/skills/pyrolite/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "pyvista",
+            "path": "/workspace/.agents/skills/pyvista/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "rock-physics-avo",
+            "path": "/workspace/.agents/skills/rock-physics-avo/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "rockhound",
+            "path": "/workspace/.agents/skills/rockhound/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "scikit-gstat",
+            "path": "/workspace/.agents/skills/scikit-gstat/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "segyio",
+            "path": "/workspace/.agents/skills/segyio/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "segysak",
+            "path": "/workspace/.agents/skills/segysak/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "seismic-interpretation",
+            "path": "/workspace/.agents/skills/seismic-interpretation/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "simpeg",
+            "path": "/workspace/.agents/skills/simpeg/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "striplog",
+            "path": "/workspace/.agents/skills/striplog/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "using-geoscience-skills",
+            "path": "/workspace/.agents/skills/using-geoscience-skills/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "verde",
+            "path": "/workspace/.agents/skills/verde/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "well-log-evaluation",
+            "path": "/workspace/.agents/skills/well-log-evaluation/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "welly",
+            "path": "/workspace/.agents/skills/welly/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          },
+          {
+            "name": "xarray",
+            "path": "/workspace/.agents/skills/xarray/SKILL.md",
+            "scope": "repo",
+            "enabled": true
+          }
+        ]
+      },
+      "observed_skill_reads": [
+        "lasio"
+      ],
+      "tool_commands": [
+        {
+          "tool": "command_execution",
+          "sha256": "66f40e9a7bc1d3bf954f3f9660056a4a4ab91b1738dc96f743b8e025ec9faa8d",
+          "command": "sed -n 1,240p /workspace/.agents/skills/lasio/SKILL.md"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "ea68a10826da80740b7c9a8752f65aef025f4660235492b31ebf6dd352da1de7",
+          "command": "sed -n 1,180p inputs/well.las"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "05bdc76f6c8e8735ebb669e17ef137325db16c9b6acea12a04f6ef3dcb618b1f",
+          "command": "rg --files"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "c440ec26ffd9e75df33041bc77b609031a9b549b136ad4a247ebda6eccaa8d27"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "e09fdad85b875b6562b1726df9f65a32ae8a8a7f8d385ff2662e7785d83b36d9",
+          "command": "python solution.py"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "f824616ff6220cbff1789dc4a2cd98cbf5d1f0f5712ee124ae955c02f534a008",
+          "command": "sed -n 1,220p result.json"
+        },
+        {
+          "tool": "command_execution",
+          "sha256": "c68452d5b37ca640c45b2a310eac52479ac6d3fadbbcbb1c4e955b284339e512"
+        }
+      ],
+      "skill_read_evidence": [
+        {
+          "skill": "lasio",
+          "tool": "command_execution",
+          "path": "/workspace/.agents/skills/lasio/SKILL.md",
+          "output_sha256": "e722b61473ff9df2416f88094c91352179d7e49986fd4a68d4f2720a13b57cbe"
+        }
+      ],
+      "observed_models": [],
+      "exit_code": 0,
+      "numerical_checks": {
+        "passed": true,
+        "failures": [],
+        "output_sha256": "568e8260dc05e51b96ce6e84abfa27c32ccffe74e1eb4d274e74e1dca620eecb"
+      },
+      "claimed_skills": [],
+      "native_activation_verified": true,
+      "skill_selection_verified": true,
+      "skill_content_sha256": {
+        "lasio": "e722b61473ff9df2416f88094c91352179d7e49986fd4a68d4f2720a13b57cbe"
+      },
+      "transcript_sha256": "c13e01aacc3356c1ce6401a74e836fdf83648edce3f547a2cb37b57daf45a3b5",
+      "artifacts": {
+        "solution.py": "6e4ac06427432b76c961fab32d8892b0187fbed9664defdd9b38a62232a6989c",
+        "result.json": "568e8260dc05e51b96ce6e84abfa27c32ccffe74e1eb4d274e74e1dca620eecb"
+      },
+      "source_retained": true,
+      "source_replay_verified": false,
+      "duration_seconds": 93.919,
+      "cli_version": "0.154.0",
+      "prompt_artifact": "evals/results/prompts/native-v1-las-qc.md",
+      "assessment_revision": {
+        "version": 2,
+        "recorded_at": "2026-09-14T14:35:20.835685+00:00",
+        "previous_report": "evals/results/assessments/2026-09-14-native-las-qc-initial.json",
+        "previous_report_sha256": "c0765419a9cc5b96b770f0dbf223636b612a157bb6b1001865b0c5635e5b9c06",
+        "reason": "Recognize successful sed reads inside a double-quoted bash -lc command; content and native-path requirements unchanged.",
+        "model_rerun": false,
+        "numerical_checks_changed": false
+      },
+      "snapshot_artifact": "evals/results/2026-09-14-native-snapshot.json",
+      "token_usage": {
+        "input_tokens": 126558,
+        "cached_input_tokens": 103680,
+        "output_tokens": 3427
+      }
+    }
+  ]
+}
