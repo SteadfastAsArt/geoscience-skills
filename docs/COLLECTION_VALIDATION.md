@@ -22,7 +22,7 @@ PyGMT **0.19.0**, GMT **6.6.0**, Python 3.12 and Ghostscript **10.08.0** passed
 | Ensaio 0.7.1 | Genuine versioned Alps GNSS bytes seeded into a temporary cache, verified by the actual fetcher and read as 186 CSV rows. | Cached acquisition contract; this test needs no live download. |
 | RockHound 0.2.0 | Actual PREM parser and Pooch cache contract with project-owned synthetic rows, including repeated boundary radii and zero shear velocity. | Upstream is archived. Its live PREM URL returned HTTP 404; no successful live PREM fetch or validation of the PREM model is claimed. |
 | PyGMT 0.19.0 | Actual GMT PDF export and grid-node sampling with independent coordinate/value checks. | Offline synthetic map/grid; no remote relief or projection-accuracy audit. |
-| GeoLime | Public 1.4.0 wheel/source inspected; it contains a license-contact stub and no modelling API. | Licensed modelling runtime unavailable. No numerical test is counted as passed for it. |
+| GeoLime | Public 1.4.0 wheel/source inspected; it contains a license-contact stub and no modelling API. | Runtime testing explicitly excluded this round because no licensed environment is available (confirmed 2026-09-15). No numerical test is counted as passed for it. |
 
 The FloPy benchmark places the 20 m thick aquifer between elevations -20 and
 0 m, with every head above its top; it also fails if MODFLOW is absent or the solve fails. The test
@@ -39,7 +39,8 @@ RockHound's maintenance-only scope follows its
 restriction is visible in the
 [public distribution source](https://github.com/deeplime-io/geolime-pypi-package).
 A licensed environment is needed before adding version-specific GeoLime API
-examples; the current skill remains useful for preparation and review.
+examples; the current skill remains useful for preparation and review. This
+documented exclusion does not block the other P1–P3 work.
 
 ## New workflow guidance
 

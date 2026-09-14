@@ -1,6 +1,6 @@
 # Roadmap
 
-Updated **2026-09-14**. The original portability work was merged in
+Updated **2026-09-15**. The original portability work was merged in
 [PR #3](https://github.com/SteadfastAsArt/geoscience-skills/pull/3).
 The [verification summary](../README.md#verification-results) and reports below
 record the subsequent P1–P3 work and its validation boundaries.
@@ -25,9 +25,11 @@ tracks each requested priority against concrete evidence.
 These are external requirements or additional coverage, not claims established
 by completing the above engineering work:
 
-- **GeoLime licensed runtime:** the public PyPI distribution is a placeholder.
-  The new skill supports preparation/review; executing vendor modelling APIs
-  requires an available licensed environment and its version-specific examples.
+- **GeoLime runtime — excluded this round (confirmed 2026-09-15):** no licensed
+  environment is available, so execution is explicitly skipped and does not
+  block the other work. The skill retains its preparation/review guidance and
+  limitation notice. Future API testing requires a licensed vendor distribution;
+  the public PyPI placeholder is not a functional substitute.
 - **Other agent runtimes:** OpenClaw needs model/provider configuration; absent
   clients need a usable environment. Claude runtime testing remains excluded.
   Installation support is not equivalent to model-task execution.
