@@ -62,13 +62,23 @@ baselines passed **85 scientific tests with no skips**: 18 I/O, 10 seismic/rock
 physics, 9 well-log, 8 modelling, 30 Bruges/disba domain, and 10 field-data tests.
 Two additional evaluation-fixture readback tests passed in the core environment.
 The separate lightweight suite passed 53 tests, and the skill validator reported
-36 skills with no errors or warnings.
+36 skills with no errors or warnings. Together these are **140 automated tests**;
+the manual Codex task runs are reported separately in [agent evaluations](AGENT_EVALUATIONS.md).
 
 The modelling suite executed GemPy's synthetic inclined contact and both
 frameworks' short forward/inversion runs. Its checks include an analytic contact
 plane, reduced SimPEG data misfit, homogeneous-earth pyGIMLi recovery, and real
 VTK file readback. The scientific CI workflow uses the same core/modelling
 separation and also checks the field-data and agent-evaluation fixtures.
+
+Both jobs in the remote [Scientific Examples run](https://github.com/SteadfastAsArt/geoscience-skills/actions/runs/34810508438)
+passed on **2026-09-14** for implementation
+[`db5156c`](https://github.com/SteadfastAsArt/geoscience-skills/commit/db5156c211fe28b87a0085961f1f82bee86fcb31).
+They installed the pinned dependency baselines in fresh Linux environments and
+ran the scientific suites and fixture readback checks. The separate
+[validation and installation run](https://github.com/SteadfastAsArt/geoscience-skills/actions/runs/34810508410)
+passed all three jobs, including installation on Windows. Windows scientific
+execution has not been validated.
 
 ## Remaining validation
 

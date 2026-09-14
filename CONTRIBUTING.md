@@ -107,6 +107,9 @@ python3 scripts/check_installation.py
 This installs through a pinned upstream `skills` CLI in temporary projects and
 checks that all skills and resources arrive intact. It requires Node.js and
 network access. Agent task evaluations are separate from installation checks.
+Use the [evaluation guide](docs/AGENT_EVALUATIONS.md) for free fixture/acceptance
+tests and recorded CLI runs. When updating verification claims, link the checked
+revision and result, and distinguish explicit skill reading from native activation.
 
 For dependency maintenance, use the [read-only version report](docs/DEPENDENCY_MAINTENANCE.md)
 and validate proposed upgrades in an isolated environment before changing pins.

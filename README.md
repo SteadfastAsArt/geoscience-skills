@@ -2,7 +2,7 @@
 
 **Portable geoscience skills for Codex, Claude Code, GitHub Copilot, Gemini CLI, Windsurf, OpenCode, Cline, Roo Code, OpenClaw, and other coding agents using the [Agent Skills format](https://agentskills.io/specification).**
 
-30 domain skills + 5 workflows + 1 discovery skill. The same skill files are shared across agents; platform commands, hooks, and subagents are optional. See the [compatibility matrix and verification scope](docs/COMPATIBILITY.md).
+30 domain skills + 5 workflows + 1 discovery skill. The same skill files are shared across agents; platform commands, hooks, and subagents are optional. See the [verification results](#verification-results) and [compatibility matrix](docs/COMPATIBILITY.md).
 
 [![Skills](https://img.shields.io/badge/Skills-36-blue)](SKILLS.md)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -180,6 +180,26 @@ SessionStart hook are not installed by the generic skills CLI.
 
 ---
 
+## Verification results
+
+Recorded on **2026-09-14** for implementation
+[`db5156c`](https://github.com/SteadfastAsArt/geoscience-skills/commit/db5156c211fe28b87a0085961f1f82bee86fcb31).
+
+| Check | Recorded result |
+| --- | --- |
+| Codex task execution | **LAS QC and SEG-Y subsetting passed**, with observed skill reads and checked outputs. The initial SEG-Y timeout and successful controlled retry are both retained in the [evaluation record](docs/AGENT_EVALUATIONS.md). |
+| Automated tests | **140 passed**: 53 lightweight checks, 85 scientific tests and 2 evaluation-fixture readback tests. See [scientific testing](docs/SCIENTIFIC_TESTING.md). |
+| Installation | **All 36 skills across nine targets passed on Linux and Windows**, including preservation of bundled resources. See [compatibility evidence](docs/COMPATIBILITY.md#verification-scope). |
+| Remote CI | **All five jobs passed**: [validation and installation](https://github.com/SteadfastAsArt/geoscience-skills/actions/runs/34810508410), plus [core and modelling science](https://github.com/SteadfastAsArt/geoscience-skills/actions/runs/34810508438). |
+
+The Codex tasks explicitly select skills from a catalog; native automatic
+discovery and activation remain untested. Claude Code retains format and
+installation support, with runtime evaluation excluded from this round.
+Scientific tests currently run on Linux. See the [next priorities](docs/ROADMAP.md#next-priorities)
+for remaining domain audits, agent checks and field-data coverage.
+
+---
+
 ## 🔄 Workflow Skills
 
 Multi-step workflows that chain domain skills together:
@@ -196,8 +216,7 @@ The audited examples have separate [scientific regression checks](docs/SCIENTIFI
 using generated LAS/SEG-Y files, elastic logs, geological/inversion models, and
 [published GNSS station data](docs/FIELD_DATA_VALIDATION.md). These check numerical
 outputs, coordinates and uncertainty assumptions. Recorded [Codex task evaluations](docs/AGENT_EVALUATIONS.md)
-also check skill selection and produced files; native automatic discovery and
-Claude runtime execution remain untested.
+separately check skill selection and produced files.
 
 ## 🤖 Optional Role Guides
 

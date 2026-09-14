@@ -1,6 +1,7 @@
 # Coding Agent Compatibility
 
-Documentation checked: **2026-09-11**.
+Vendor documentation reviewed: **2026-09-11**.
+Project verification recorded: **2026-09-14**.
 
 Geoscience Skills uses the open Agent Skills format so the same scientific
 instructions can be installed in multiple coding agents. The portable collection
@@ -137,18 +138,23 @@ the upstream CLI remains responsible for installation.
 Portable validation reports **36 skills, zero errors, zero warnings**. The
 lightweight regression suite has **53 passing tests** covering validation,
 manifests, installation checks, dependency reporting and the evaluation harness.
-Repository CI includes Linux and Windows installation jobs; see the
-[workflow runs](https://github.com/SteadfastAsArt/geoscience-skills/actions/workflows/validate-skills.yml)
-for the result at a particular revision.
+Remote [validation and installation CI](https://github.com/SteadfastAsArt/geoscience-skills/actions/runs/34810508410)
+also passed on **2026-09-14** for implementation
+[`db5156c`](https://github.com/SteadfastAsArt/geoscience-skills/commit/db5156c211fe28b87a0085961f1f82bee86fcb31).
+Both Linux and Windows jobs installed and checked all 36 skills for all nine
+targets, using skills CLI 1.5.25, Node.js 22 and Python 3.11. These CI jobs do
+not launch the target agents. Later revisions have their own
+[workflow results](https://github.com/SteadfastAsArt/geoscience-skills/actions/workflows/validate-skills.yml).
 
-Recorded [Codex task evaluations](AGENT_EVALUATIONS.md) test LAS QC and SEG-Y
-subsetting through explicit selection from the 36-skill catalog. They record
-actual document reads, CLI/model/library versions and independent output checks.
-Each result also records process completion and timeouts; correct output alone
-does not make a timed-out run pass. This mode does not establish native automatic
-skill discovery or activation. Claude runtime evaluation is outside this round;
-its support remains based on the format and installation evidence above. Codex
-results do not establish runtime behavior in another agent.
+Recorded [Codex task evaluations](AGENT_EVALUATIONS.md) passed LAS QC and SEG-Y
+subsetting with Codex 0.154.0 and configured model `gpt-5.5`, using explicit
+selection from the 36-skill catalog. Each successful run completed normally,
+read the expected skill and passed independent output checks. The first SEG-Y
+attempt timed out after producing correct output; that failure remains recorded
+alongside the successful controlled retry. Native automatic skill discovery and
+activation remain untested. Claude runtime evaluation is excluded from this
+round; its support remains based on the format and installation evidence above.
+Codex results do not establish runtime behavior in another agent.
 
 Separate [scientific regression suites](SCIENTIFIC_TESTING.md) execute audited
 Python examples and check numerical results and exported coordinates. Their

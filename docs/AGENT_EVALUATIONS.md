@@ -1,5 +1,9 @@
 # Coding agent task evaluations
 
+**Recorded result, 2026-09-14:** Codex passed both LAS QC and SEG-Y subsetting
+after selecting and reading the relevant skills. The [recorded runs](#recorded-local-run)
+include the original SEG-Y timeout and the successful controlled retry.
+
 These evaluations run a coding-agent CLI on synthetic LAS and SEG-Y tasks and
 check the files it produces. They supplement installation checks and Python
 example tests with a narrow, observable task run. They do not establish broad
