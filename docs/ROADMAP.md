@@ -2,6 +2,9 @@
 
 Updated **2026-09-15**. The original portability work was merged in
 [PR #3](https://github.com/SteadfastAsArt/geoscience-skills/pull/3).
+The subsequent P1–P3 delivery was merged in
+[PR #5](https://github.com/SteadfastAsArt/geoscience-skills/pull/5) on 2026-09-15
+after all nine CI checks passed.
 The [verification summary](../README.md#verification-results) and reports below
 record the subsequent P1–P3 work and its validation boundaries.
 
@@ -20,6 +23,26 @@ tracks each requested priority against concrete evidence.
 | P3 | Planned skills, workflows and role guide | Added nine domain skills, three workflows and optional cross-validation guidance. [Collection report](COLLECTION_VALIDATION.md). |
 | P3 | Optional adapters | Native installation and Codex scanning establish no need for another content adapter; existing optional manifests were regenerated for 48 skills. [Assessment](PLATFORM_ADAPTER_ASSESSMENT.md). |
 
+## Workflow execution follow-up
+
+The three new guides now have reproducible paths with real APIs, independent
+numerical checks and reopened outputs:
+
+- **Hydrogeology:** published groundwater head and meteorological stresses,
+  Pastas calibration, chronological holdout, training-only baselines and saved
+  model readback. [Case and limits](HYDRO_WORKFLOW_VALIDATION.md).
+- **Near-surface:** actual GPR import/processing/export, pyGIMLi field layered
+  inversion diagnostics and MTpy-v2 EDI/QC/rotation/export. Unknown field GPR
+  timing stays unknown; a separate synthetic raw-format example checks physical
+  units and depth. [Cases and limits](NEAR_SURFACE_WORKFLOW_VALIDATION.md).
+- **Climate:** NOAA daily-maximum temperature through calendar-aware aggregation,
+  fixed references, spatial holdout, model-grid summaries and NetCDF readback.
+  [Case and limits](CLIMATE_WORKFLOW_VALIDATION.md).
+
+These are scientific execution checks, separate from the three recorded native
+Codex activation tasks. They establish the named paths and their assumptions,
+not arbitrary field interpretations or all optional modelling branches.
+
 ## Remaining validation boundaries
 
 These are external requirements or additional coverage, not claims established
@@ -33,10 +56,11 @@ by completing the above engineering work:
 - **Other agent runtimes:** OpenClaw needs model/provider configuration; absent
   clients need a usable environment. Claude runtime testing remains excluded.
   Installation support is not equivalent to model-task execution.
-- **Full scientific workflows:** hydrogeology, near-surface and climate guides
-  provide decision/validation procedures; their full Pastas/GPR/MT/climate field
-  branches have not each been run end to end. Field-scale geological/inversion
-  interpretation and additional OS/library combinations need separate evidence.
+- **Further scientific coverage:** site-calibrated MODFLOW, GPR field depth or
+  migration with verified acquisition units/velocity, multidimensional/joint
+  inversion, raw MT time-series estimation and climate forecasting/regridding
+  remain task-specific extensions. Additional OS/library combinations and
+  independent field interpretation require their own evidence.
 - **Legacy data availability:** RockHound is archived and its PREM URL returned
   404. Its real parser is tested with synthetic cached bytes; migration needs a
   verified replacement dataset or an existing valid cache for the user's task.

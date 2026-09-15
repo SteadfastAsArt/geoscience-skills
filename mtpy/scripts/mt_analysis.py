@@ -1,291 +1,215 @@
 #!/usr/bin/env python3
-"""
-MT data analysis and quality control.
+"""Direct-impedance EDI -> checked MTpy-v2 response -> CSV and provenance.
 
-Usage:
-    python mt_analysis.py <file.edi>
-    python mt_analysis.py <directory> --recursive
-    python mt_analysis.py <file.edi> --plot
-    python mt_analysis.py <file.edi> --export csv
+Requires caller-confirmed mV/km/nT, exp(+i omega t) and north/east/down.
+HEAD UNITS may describe distances; it does not prove impedance units.
+Spectra-only and rho/phase-only files require another reader route.
 """
 
 import argparse
-import sys
+import hashlib
+import importlib.metadata
+import json
 from pathlib import Path
+import re
 
 import numpy as np
 import pandas as pd
 
+COMPONENTS = ("xx", "xy", "yx", "yy")
 
-def analyze_mt(filepath: str, plot: bool = False) -> dict:
-    """
-    Analyze MT data from an EDI file and return a report.
 
-    Args:
-        filepath: Path to EDI file
-        plot: Whether to generate plots
+def source_blocks(filepath):
+    """Preserve EMPTY/absent errors before mt-metadata substitutes zeros."""
+    contents = Path(filepath).read_text(encoding="utf-8-sig")
+    match = re.search(r"\bEMPTY\s*=\s*([\d.eE+\-]+)", contents, re.I)
+    empty = float(match[1]) if match else 1e32
+    wanted = {"FREQ", "ZROT"} | {
+        "Z" + c.upper() + suffix for c in COMPONENTS
+        for suffix in ("R", "I", ".VAR")}
+    blocks, key = {}, None
+    for line in contents.splitlines():
+        line = line.strip()
+        if not line or line.startswith(">!"):
+            continue
+        if line.startswith(">"):
+            candidate = line[1:].strip().split()[0].upper()
+            key = candidate if candidate in wanted else None
+            if key:
+                if key in blocks:
+                    raise ValueError(f"Duplicate EDI block: {key}")
+                blocks[key] = []
+        elif key:
+            for token in line.split("!", 1)[0].split():
+                try:
+                    value = float(token.replace("D", "E").replace("d", "e"))
+                except ValueError:
+                    value = np.nan
+                blocks[key].append(np.nan if value == empty else value)
+    if "FREQ" not in blocks or not any(k.endswith("R") for k in blocks):
+        raise ValueError("Expected direct-impedance EDI with FREQ and Z blocks")
+    frequency = np.asarray(blocks["FREQ"])
+    if (not frequency.size or not np.all(np.isfinite(frequency) & (frequency > 0))
+            or np.unique(frequency).size != frequency.size):
+        raise ValueError("Frequencies must be positive, finite and unique")
+    order = np.argsort(frequency)[::-1]
+    for key, values in blocks.items():
+        if len(values) != len(frequency):
+            raise ValueError(f"EDI block {key} has a different sample count")
+        blocks[key] = np.asarray(values)[order]
+    return blocks
 
-    Returns:
-        dict with keys: valid, errors, warnings, info, data
-    """
+
+def prepare(filepath, *, impedance_units, sign_convention, rotation_deg=0.0,
+            relative_error_limit=0.5):
+    """Read real MTpy-v2 data and flag every tensor value without deleting rows."""
     from mtpy import MT
-
-    report = {
-        "valid": True,
-        "errors": [],
-        "warnings": [],
-        "info": {},
-        "data": {},
-    }
-
-    # Try to read the file
-    try:
-        mt = MT(filepath)
-    except Exception as e:
-        report["valid"] = False
-        report["errors"].append(f"Failed to read file: {e}")
-        return report
-
-    # Basic info
-    report["info"]["station"] = mt.station
-    report["info"]["latitude"] = mt.latitude
-    report["info"]["longitude"] = mt.longitude
-    report["info"]["elevation"] = getattr(mt, "elevation", None)
-    report["info"]["n_frequencies"] = len(mt.frequency)
-
-    if len(mt.frequency) > 0:
-        report["info"]["frequency_range"] = (
-            f"{mt.frequency.min():.4f} - {mt.frequency.max():.2f} Hz"
-        )
-        report["info"]["period_range"] = (
-            f"{1/mt.frequency.max():.4f} - {1/mt.frequency.min():.2f} s"
-        )
-
-    # Check for tipper
-    report["info"]["has_tipper"] = mt.has_tipper
-
-    # Data quality checks
-    if len(mt.frequency) == 0:
-        report["errors"].append("No frequency data")
-        report["valid"] = False
-        return report
-
-    # Check impedance quality
-    Z = mt.Z
-    Z_err = mt.Z_err
-
-    # Calculate relative errors
+    if impedance_units != "mt" or sign_convention != "+":
+        raise ValueError("This route requires confirmed mV/km/nT, exp(+i wt), NED")
+    if not np.isfinite(rotation_deg):
+        raise ValueError("Rotation must be finite")
+    if not np.isfinite(relative_error_limit) or relative_error_limit <= 0:
+        raise ValueError("Relative-error limit must be positive and finite")
+    blocks = source_blocks(filepath)
+    mt = MT(filepath, impedance_units="mt")
+    mt.read(get_elevation=False)
+    if mt.coordinate_reference_frame != "NED" or not mt.has_impedance():
+        raise ValueError("Expected impedance with the declared NED convention")
+    np.testing.assert_allclose(mt.frequency, blocks["FREQ"], rtol=1e-12)
+    source_rotation = np.asarray(mt.rotation_angle).copy()
+    size = len(mt.frequency)
+    real = np.full((size, 2, 2), np.nan)
+    imag, variance = real.copy(), real.copy()
+    for index, component in enumerate(COMPONENTS):
+        i, j = divmod(index, 2)
+        for suffix, destination in (("R", real), ("I", imag), (".VAR", variance)):
+            key = "Z" + component.upper() + suffix
+            if key in blocks:
+                destination[:, i, j] = blocks[key]
+    present = np.isfinite(real) & np.isfinite(imag)
+    known_error = np.isfinite(variance) & (variance >= 0)
+    sigma = np.sqrt(np.where(known_error, variance, np.nan))
+    z_object = mt.Z
+    np.testing.assert_allclose(z_object.z[present], (real + 1j*imag)[present],
+                               rtol=1e-12, atol=1e-12)
+    if known_error.any():
+        reader_sigma = (np.zeros_like(variance) if z_object.z_error is None
+                        else z_object.z_error)
+        np.testing.assert_allclose(reader_sigma[known_error], sigma[known_error],
+                                   rtol=1e-12, atol=1e-12)
+    if rotation_deg:
+        if not np.all(present & known_error):
+            raise ValueError("Rotation requires a complete tensor with known variances")
+        mt.rotate(rotation_deg, inplace=True)
+        z_object = mt.Z
+        real, imag = z_object.z.real, z_object.z.imag
+        sigma = (np.zeros_like(variance) if z_object.z_error is None else z_object.z_error)
+    elif not np.all(present & known_error):
+        # Restore masks in the object used for plotting as well as the CSV.
+        # A missing real or imaginary part invalidates that complex component.
+        mt.impedance = np.where(present, real + 1j*imag, np.nan + 1j*np.nan)
+        mt.impedance_error = sigma
+        z_object = mt.Z
+    magnitude = np.hypot(real, imag)
     with np.errstate(divide="ignore", invalid="ignore"):
-        rel_err_xy = np.abs(Z_err[:, 0, 1]) / np.abs(Z[:, 0, 1])
-        rel_err_yx = np.abs(Z_err[:, 1, 0]) / np.abs(Z[:, 1, 0])
-
-    # Count bad data points (relative error > 50%)
-    bad_xy = np.sum(rel_err_xy > 0.5)
-    bad_yx = np.sum(rel_err_yx > 0.5)
-    n_freq = len(mt.frequency)
-
-    if bad_xy > n_freq * 0.3:
-        report["warnings"].append(
-            f"Zxy: {bad_xy}/{n_freq} points have >50% relative error"
-        )
-
-    if bad_yx > n_freq * 0.3:
-        report["warnings"].append(
-            f"Zyx: {bad_yx}/{n_freq} points have >50% relative error"
-        )
-
-    # Check for NaN/Inf values
-    if np.any(~np.isfinite(Z)):
-        nan_count = np.sum(~np.isfinite(Z))
-        report["warnings"].append(f"{nan_count} NaN/Inf values in impedance tensor")
-
-    # Check frequency spacing
-    log_freq = np.log10(mt.frequency)
-    freq_spacing = np.diff(log_freq)
-    if np.std(freq_spacing) > 0.1 * np.mean(np.abs(freq_spacing)):
-        report["warnings"].append("Irregular frequency spacing detected")
-
-    # Phase tensor analysis
-    try:
-        pt = mt.phase_tensor
-        skew = pt.skew
-
-        # Check for 3D effects
-        max_skew = np.nanmax(np.abs(skew))
-        if max_skew > 5:
-            report["warnings"].append(
-                f"Max |skew| = {max_skew:.1f} deg suggests 3D structure"
-            )
-
-        report["info"]["max_skew"] = f"{max_skew:.2f} deg"
-    except Exception:
-        report["warnings"].append("Could not compute phase tensor")
-
-    # Apparent resistivity range check
-    rho_xy = mt.apparent_resistivity[:, 0, 1]
-    rho_yx = mt.apparent_resistivity[:, 1, 0]
-
-    valid_rho = rho_xy[(rho_xy > 0) & np.isfinite(rho_xy)]
-    if len(valid_rho) > 0:
-        report["info"]["resistivity_range_xy"] = (
-            f"{np.min(valid_rho):.2f} - {np.max(valid_rho):.2f} Ohm-m"
-        )
-
-    valid_rho = rho_yx[(rho_yx > 0) & np.isfinite(rho_yx)]
-    if len(valid_rho) > 0:
-        report["info"]["resistivity_range_yx"] = (
-            f"{np.min(valid_rho):.2f} - {np.max(valid_rho):.2f} Ohm-m"
-        )
-
-    # Store data summary
-    report["data"]["frequency"] = mt.frequency
-    report["data"]["apparent_resistivity_xy"] = rho_xy
-    report["data"]["apparent_resistivity_yx"] = rho_yx
-    report["data"]["phase_xy"] = mt.phase[:, 0, 1]
-    report["data"]["phase_yx"] = mt.phase[:, 1, 0]
-
-    # Generate plots if requested
-    if plot:
-        try:
-            from mtpy.imaging import PlotMTResponse
-
-            plot_obj = PlotMTResponse(mt)
-            plot_obj.plot()
-            plot_filename = Path(filepath).stem + "_response.png"
-            plot_obj.save_figure(plot_filename, dpi=150)
-            report["info"]["plot_saved"] = plot_filename
-        except Exception as e:
-            report["warnings"].append(f"Could not generate plot: {e}")
-
-    return report
+        relative = sigma / magnitude
+    valid = present & (magnitude > 0)
+    good = valid & known_error & (relative <= relative_error_limit)
+    rho, phase = z_object.resistivity, z_object.phase
+    table = pd.DataFrame({
+        "frequency_hz": np.repeat(mt.frequency, 4),
+        "period_s": np.repeat(1/mt.frequency, 4),
+        "component": np.tile(COMPONENTS, size),
+        "z_real_mV_per_km_per_nT": real.ravel(),
+        "z_imag_mV_per_km_per_nT": imag.ravel(),
+        "z_sigma_mV_per_km_per_nT": sigma.ravel(),
+        "impedance_present": present.ravel(),
+        "variance_known": known_error.ravel(),
+        "relative_error": relative.ravel(),
+        "qc_pass": good.ravel(),
+        "rho_ohm_m": np.where(valid, rho, np.nan).ravel(),
+        "phase_deg": np.where(valid, phase, np.nan).ravel(),
+    })
+    report = {
+        "source_sha256": hashlib.sha256(Path(filepath).read_bytes()).hexdigest(),
+        "source_filename": Path(filepath).name, "station": mt.station,
+        "latitude_deg": mt.latitude, "longitude_deg": mt.longitude,
+        "elevation_m": mt.elevation,
+        "horizontal_crs_reader_value": mt.datum_crs.to_string(),
+        "vertical_datum": "not established by this helper",
+        "impedance_units": "mV/km/nT", "apparent_resistivity_units": "ohm m",
+        "sign_convention": "exp(+i omega t)", "coordinate_frame": "NED",
+        "convention_evidence": "caller-confirmed; original EDI retained",
+        "source_rotation_deg": source_rotation.tolist(),
+        "additional_clockwise_rotation_deg": float(rotation_deg),
+        "output_rotation_deg": np.asarray(mt.rotation_angle).tolist(),
+        "rotation_error_model": "library marginal errors, without full covariance",
+        "n_frequencies": size, "n_tensor_values": len(table),
+        "qc_pass_count": int(good.sum()),
+        "missing_impedance_count": int((~present).sum()),
+        "unknown_variance_count": int((~known_error).sum()),
+        "relative_error_limit": relative_error_limit,
+        "filter_action": "flags only; retain every frequency and tensor component",
+        "interpretation": "QC only; no inversion or dimensionality certification",
+        "versions": {n: importlib.metadata.version(n) for n in
+                     ("mtpy-v2", "mt-metadata", "numpy", "pandas")},
+    }
+    return mt, table, report
 
 
-def export_data(filepath: str, format: str = "csv") -> str:
-    """
-    Export MT data to specified format.
-
-    Args:
-        filepath: Path to EDI file
-        format: Output format ('csv', 'excel')
-
-    Returns:
-        Path to exported file
-    """
-    from mtpy import MT
-
-    mt = MT(filepath)
-
-    df = pd.DataFrame(
-        {
-            "frequency_hz": mt.frequency,
-            "period_s": 1 / mt.frequency,
-            "rho_xy_ohm_m": mt.apparent_resistivity[:, 0, 1],
-            "rho_yx_ohm_m": mt.apparent_resistivity[:, 1, 0],
-            "phase_xy_deg": mt.phase[:, 0, 1],
-            "phase_yx_deg": mt.phase[:, 1, 0],
-            "z_xy_real": mt.Z[:, 0, 1].real,
-            "z_xy_imag": mt.Z[:, 0, 1].imag,
-            "z_yx_real": mt.Z[:, 1, 0].real,
-            "z_yx_imag": mt.Z[:, 1, 0].imag,
-            "z_xy_err": mt.Z_err[:, 0, 1],
-            "z_yx_err": mt.Z_err[:, 1, 0],
-        }
-    )
-
+def run_workflow(filepath, output_dir, *, impedance_units, sign_convention,
+                 rotation_deg=0.0, relative_error_limit=0.5, plot=False):
+    """Export and reopen CSV plus metadata; existing outputs are never replaced."""
+    mt, table, report = prepare(
+        filepath, impedance_units=impedance_units, sign_convention=sign_convention,
+        rotation_deg=rotation_deg, relative_error_limit=relative_error_limit)
+    directory = Path(output_dir)
     stem = Path(filepath).stem
-
-    if format == "csv":
-        output_path = f"{stem}_data.csv"
-        df.to_csv(output_path, index=False)
-    elif format == "excel":
-        output_path = f"{stem}_data.xlsx"
-        df.to_excel(output_path, index=False, sheet_name="MT_Data")
-    else:
-        raise ValueError(f"Unknown format: {format}")
-
-    return output_path
-
-
-def print_report(filepath: str, report: dict) -> None:
-    """Print analysis report."""
-    status = "VALID" if report["valid"] else "INVALID"
-    print(f"\n{'='*60}")
-    print(f"File: {filepath}")
-    print(f"Status: {status}")
-    print(f"{'='*60}")
-
-    if report["info"]:
-        print("\nStation Information:")
-        for key, value in report["info"].items():
-            if value is not None:
-                print(f"  {key}: {value}")
-
-    if report["errors"]:
-        print("\nErrors:")
-        for error in report["errors"]:
-            print(f"  - {error}")
-
-    if report["warnings"]:
-        print("\nWarnings:")
-        for warning in report["warnings"]:
-            print(f"  - {warning}")
-
-    if not report["errors"] and not report["warnings"]:
-        print("\nNo issues found.")
+    csv_path = directory / f"{stem}_qc.csv"
+    json_path = directory / f"{stem}_metadata.json"
+    figure_path = directory / f"{stem}_response.png"
+    paths = [csv_path, json_path] + ([figure_path] if plot else [])
+    if any(path.exists() for path in paths):
+        raise FileExistsError("Output exists; choose a fresh directory")
+    directory.mkdir(parents=True, exist_ok=True)
+    table.to_csv(csv_path, index=False, float_format="%.17g")
+    reopened = pd.read_csv(csv_path, float_precision="round_trip")
+    pd.testing.assert_frame_equal(reopened, table, check_exact=False, rtol=1e-13)
+    report["csv_sha256"] = hashlib.sha256(csv_path.read_bytes()).hexdigest()
+    if plot:
+        import matplotlib.pyplot as plt
+        response = mt.plot_mt_response(show_plot=False)
+        response.plot()
+        response.fig.savefig(figure_path, dpi=150)
+        plt.close(response.fig)
+    json_path.write_text(json.dumps(report, indent=2, allow_nan=False) + "\n")
+    if json.loads(json_path.read_text())["source_sha256"] != report["source_sha256"]:
+        raise RuntimeError("Metadata readback failed")
+    return report, csv_path, json_path
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Analyze MT/EDI files")
-    parser.add_argument("path", help="EDI file or directory to analyze")
-    parser.add_argument(
-        "-r", "--recursive", action="store_true", help="Recursively search directories"
-    )
-    parser.add_argument(
-        "-p", "--plot", action="store_true", help="Generate response plots"
-    )
-    parser.add_argument(
-        "-e",
-        "--export",
-        choices=["csv", "excel"],
-        help="Export data to specified format",
-    )
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("path", type=Path, help="Direct-impedance EDI file")
+    parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--impedance-units", choices=["mt"], required=True)
+    parser.add_argument("--sign-convention", choices=["+"], required=True)
+    parser.add_argument("--rotation-deg", type=float, default=0.0,
+                        help="Additional clockwise angle, not absolute strike")
+    parser.add_argument("--relative-error-limit", type=float, default=0.5)
+    parser.add_argument("--plot", action="store_true")
     args = parser.parse_args()
-
-    path = Path(args.path)
-
-    if path.is_file():
-        files = [path]
-    elif path.is_dir():
-        pattern = "**/*.edi" if args.recursive else "*.edi"
-        files = list(path.glob(pattern))
-        if not files:
-            # Try uppercase extension
-            pattern = "**/*.EDI" if args.recursive else "*.EDI"
-            files = list(path.glob(pattern))
-    else:
-        print(f"Error: {path} not found")
-        sys.exit(1)
-
-    if not files:
-        print("No EDI files found")
-        sys.exit(1)
-
-    valid_count = 0
-    for filepath in sorted(files):
-        report = analyze_mt(str(filepath), plot=args.plot)
-        print_report(str(filepath), report)
-        if report["valid"]:
-            valid_count += 1
-
-        if args.export and report["valid"]:
-            try:
-                output = export_data(str(filepath), args.export)
-                print(f"  Exported to: {output}")
-            except Exception as e:
-                print(f"  Export failed: {e}")
-
-    print(f"\n{'='*60}")
-    print(f"Summary: {valid_count}/{len(files)} files valid")
+    try:
+        report, csv_path, json_path = run_workflow(
+            args.path, args.output_dir, impedance_units=args.impedance_units,
+            sign_convention=args.sign_convention, rotation_deg=args.rotation_deg,
+            relative_error_limit=args.relative_error_limit, plot=args.plot)
+    except (ValueError, OSError, AssertionError) as error:
+        parser.exit(1, f"MT workflow failed: {error}\n")
+    print(f"{report['station']}: {report['n_frequencies']} frequencies; "
+          f"{report['qc_pass_count']}/{report['n_tensor_values']} values pass QC")
+    print(csv_path)
+    print(json_path)
 
 
 if __name__ == "__main__":

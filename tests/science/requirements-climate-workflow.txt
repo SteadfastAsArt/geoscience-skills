@@ -1,0 +1,8 @@
+# Python 3.12; install only in an isolated environment.
+numpy==2.5.3
+pandas==3.0.5
+scipy==1.18.1
+xarray==2026.7.0
+cftime==1.6.5
+verde==1.9.0
+pyproj==3.8.0

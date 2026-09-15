@@ -9,195 +9,121 @@ description: |
   functions, (7) Perform model diagnostics and uncertainty analysis.
 license: MIT
 metadata:
-  version: 1.0.1
+  version: "1.0.2"
   author: Geoscience Skills
   tags: '["Groundwater", "Hydrology", "Time Series", "Transfer Function", "Well Response"]'
-  dependencies: '["pastas>=1.0.0", "pandas", "scipy"]'
+  dependencies: '["pastas>=2.0,<2.1", "pandas>=2.2,<4", "scipy>=1.16,<2", "tqdm"]'
   complements: '["xarray"]'
   workflow_role: analysis
   skill_type: domain
 ---
 
-# Pastas - Groundwater Time Series Analysis
+# Groundwater response models with Pastas
 
-## Quick Reference
+Use Pastas for a well's response to time-varying stresses. Fitted response
+parameters are effective model parameters; they do not by themselves establish
+transmissivity, aquifer geometry or hydraulic connectivity. Use FloPy/MODFLOW
+for a supported spatial-flow question.
+
+This entrypoint targets **Pastas 2.0**. Its component constructors accept the
+owning model and register themselves; older `add_stressmodel` patterns are
+being retired. Use the tested dependency baseline for reproducible work. The
+2.0 package also needs `tqdm` for its imported solver timer in the checked environment.
+
+## Prepare data and reserve evaluation dates
+
+Record the head unit and vertical reference, well/screen, timestamp convention,
+stress units and whether evaporation is measured or estimated reference
+potential evaporation. A negative relative head or depth-to-water series is
+not automatically elevation above sea level. Preserve the original datum.
+
+For daily recharge models use consistently converted head (m), precipitation
+and reference evaporation (mm/day). Preserve daily accumulation labels; do not
+invent a timezone or shift dates without knowing the observation support.
+Missing rainfall is not zero. Keep head gaps unfilled, check stress coverage
+through the model warmup, and record any stress infilling with its calibration
+source. Pastas defaults can fill and extend stresses, so make these choices
+explicit before constructing the model.
+
+Fix calibration and holdout dates before fitting. Construct the model using
+calibration heads and stresses only, including data-derived initial values.
+Future observed stresses may support a hindcast; future observed heads must
+not adjust fitted parameters or simulated state. A forecast additionally needs
+specified future stress scenarios and uncertainty.
+
+## Calibrate a checked recharge model
+
+This function expects unique, ordered daily-date Series, complete nonnegative
+stresses covering the requested observed warmup, and at least three finite
+calibration heads. Those input checks are enforced by the bundled helper.
 
 ```python
 import pastas as ps
-import pandas as pd
 
-# Load data
-head = pd.read_csv('well.csv', index_col=0, parse_dates=True).squeeze()
-precip = pd.read_csv('precip.csv', index_col=0, parse_dates=True).squeeze()
-evap = pd.read_csv('evap.csv', index_col=0, parse_dates=True).squeeze()
-
-# Create model
-ml = ps.Model(head, name='Well_001')
-
-# Add recharge stress
-sm = ps.RechargeModel(precip, evap, rfunc=ps.Gamma(), name='recharge')
-ml.add_stressmodel(sm)
-
-# Solve and plot
-ml.solve()
-ml.plot()
+def fit_recharge(calibration_head, calibration_precip, calibration_evap,
+                 start, end, warmup_days):
+    model = ps.Model(calibration_head, name='well')
+    settings = {'freq': 'D', 'sample_up': 'bfill', 'sample_down': 'mean',
+                'fill_nan': None, 'fill_before': None, 'fill_after': None}
+    ps.RechargeModel(model, calibration_precip, calibration_evap,
+                     rfunc=ps.Gamma(), recharge=ps.rch.Linear(), name='recharge',
+                     settings=(settings.copy(), settings.copy()))
+    ps.ArNoiseModel(model)
+    model.solve(tmin=start, tmax=end, warmup=warmup_days, report=False)
+    if not model.solver.result.success:
+        raise RuntimeError('Calibration did not converge')
+    return model
 ```
 
-## Key Classes
+The [calibration helper](scripts/groundwater_model.py) validates CSV shape,
+dates, explicit calibration windows and stress coverage, then saves `.pas`
+with `model.to_file(...)`. Plotting is optional. It assumes already normalized
+units; it does not guess them from column names or perform missing-stress fills.
 
-| Class | Purpose |
-|-------|---------|
-| `ps.Model` | Main model container |
-| `ps.StressModel` | Response to external stress (pumping, river) |
-| `ps.RechargeModel` | Recharge from precipitation minus evaporation |
-| `ps.Gamma` | Gamma distribution response function |
-| `ps.Exponential` | Simple exponential response function |
-
-## Essential Operations
-
-### Create and Solve Model
-```python
-ml = ps.Model(head, name='well')
-ml.add_stressmodel(ps.RechargeModel(precip, evap, rfunc=ps.Gamma(), name='recharge'))
-ml.solve()
+```bash
+python scripts/groundwater_model.py head_m.csv rain_mm_day.csv evap_mm_day.csv \
+  --calibration-start 2005-01-01 --calibration-end 2013-12-31 \
+  --warmup-days 730 --noise --output fitted.pas
 ```
 
-### Add Pumping Well
-```python
-pumping = pd.read_csv('pumping.csv', index_col=0, parse_dates=True).squeeze()
-ml.add_stressmodel(ps.StressModel(pumping, rfunc=ps.Hantush(),
-                                   name='pumping', up=False))  # up=False for drawdown
-```
+Resolve the script relative to this installed skill directory. A calibrated
+file is not a completed holdout evaluation: report baselines, independent
+observed-date metrics and residuals using the fixed evaluation period.
 
-### Model Diagnostics
-```python
-print(f"EVP: {ml.stats.evp():.1f}%")      # Explained variance
-print(f"RMSE: {ml.stats.rmse():.3f} m")   # Root mean square error
-print(f"AIC: {ml.stats.aic():.1f}")       # Model selection criterion
+## Contributions, diagnostics and persistence
 
-ml.plots.diagnostics()                     # Diagnostic plots
-ml.plots.acf()                            # Autocorrelation
-```
+`model.get_contributions()` returns a list of Series, possibly split into
+precipitation and evaporation components. Iterate the list or request one
+combined contribution with `model.get_contribution('recharge')`; do not call
+`.items()` on it. Add the fitted constant when checking the total simulation.
+A block response represents a finite-duration stress block, not an instantaneous
+impulse. Use `model.get_step_response` and `model.get_block_response` accordingly.
 
-### Get Contributions
-```python
-contributions = ml.get_contributions()
-for name, contrib in contributions.items():
-    print(f"{name}: mean={contrib.mean():.2f}")
-```
+Save with `model.to_file('model.pas')`, reload with `ps.io.load('model.pas')`,
+and compare simulations on the same date window. There is no `Model.to_json`
+method in the checked API. Adding `ps.ArNoiseModel(model)` is distinct from
+merely passing a `noise=True` solver flag.
 
-### Step and Impulse Response
-```python
-step = ml.get_step_response('recharge')    # Step response
-block = ml.get_block_response('recharge')  # Impulse response
-```
+Use `ps.stats.acf(residuals, lags=[1, 7, 30], bin_method='gaussian')` when
+observations have gaps; specify lag units in days and inspect pair counts.
+Residual and noise-series diagnostics answer different questions. AIC/BIC
+comparison requires the same observations/objective, and a universal EVP>70%
+threshold is not a validation criterion. Persistent innovation correlation
+limits confidence in conventional parameter standard errors.
 
-### Export and Load
-```python
-ml.to_json('model.pas')                    # Save model
-ml_loaded = ps.io.load('model.pas')        # Load model
+Read [stress configuration](references/stress_models.md) for pumping/river
+inputs and nonlinear recharge, or [response interpretation](references/response_functions.md)
+for parameter signs, units and response tails. These conditional structures
+need their own data and diagnostics.
 
-sim = ml.simulate()
-sim.to_csv('simulation.csv')               # Export results
-```
+## Executed scope
 
-## Model Statistics
+The project's hydrogeological workflow runs a fixed public USGS/GSOD recharge
+hindcast with Pastas 2.0: QC, calibration-only fitting, three baselines, residual
+ACF, continuous holdout simulation and save/load readback. The helper's daily
+recharge path and pumping-response sign also have real-library checks. This
+does not validate every nonlinear, multiwell or uncertainty configuration.
 
-| Statistic | Description | Good Value |
-|-----------|-------------|------------|
-| EVP | Explained variance percentage | >70% |
-| RMSE | Root mean square error | Low (context-dependent) |
-| AIC | Akaike Information Criterion | Lower = better |
-| BIC | Bayesian Information Criterion | Lower = better |
-
-## Common Patterns
-
-### Compare Response Functions
-```python
-for rfunc in [ps.Gamma(), ps.Exponential(), ps.Hantush()]:
-    ml = ps.Model(head)
-    ml.add_stressmodel(ps.RechargeModel(precip, evap, rfunc=rfunc, name='r'))
-    ml.solve(report=False)
-    print(f"{rfunc.name}: EVP={ml.stats.evp():.1f}%, AIC={ml.stats.aic():.1f}")
-```
-
-### Forecast Future Levels
-```python
-ml.solve()
-forecast = ml.simulate(tmin='2024-01-01', tmax='2025-12-31')
-ml.plot(tmax='2025-12-31')
-```
-
-### River or Custom Stress
-```python
-river = pd.read_csv('river_stage.csv', index_col=0, parse_dates=True).squeeze()
-sm = ps.StressModel(river, rfunc=ps.Exponential(), name='river',
-                    settings='waterlevel')
-ml.add_stressmodel(sm)
-```
-
-## When to Use vs Alternatives
-
-| Use Case | Tool | Why |
-|----------|------|-----|
-| Groundwater time series analysis | **Pastas** | Purpose-built transfer function models |
-| Well response to recharge/pumping | **Pastas** | Built-in stress models and response functions |
-| Numerical groundwater flow (MODFLOW) | **FloPy** | Full 3D finite-difference groundwater model |
-| Simple exponential decay fitting | **Custom scipy** | `scipy.optimize.curve_fit` is sufficient |
-| Regional groundwater flow modelling | **FloPy** | Spatially distributed parameters and boundaries |
-| Aquifer test analysis (pumping tests) | **Aqtesolv / custom** | Dedicated well test interpretation |
-| Multi-well network analysis | **Pastas** | Model each well independently, compare responses |
-| Signal decomposition | **Pastas** | Separate recharge, pumping, and trend contributions |
-
-**Choose Pastas when**: You have groundwater level time series and want to model
-responses to precipitation, evaporation, or pumping using transfer function noise
-models. Excellent for rapid model building with diagnostics.
-
-**Choose FloPy when**: You need spatially distributed groundwater flow modelling
-with MODFLOW, including multiple layers, boundary conditions, and transport.
-
-**Choose custom scipy when**: You only need to fit a simple analytical model
-(e.g., Theis equation) to pumping test data without time series decomposition.
-
-## Common Workflows
-
-### Groundwater Response Model with Diagnostics
-- [ ] Load head time series and stress data (precipitation, evaporation, pumping)
-- [ ] Inspect data: check for gaps, outliers, and time coverage
-- [ ] Create `ps.Model(head)` with observation data
-- [ ] Add recharge stress with `ps.RechargeModel(precip, evap, rfunc=ps.Gamma())`
-- [ ] Add pumping or river stresses if applicable
-- [ ] Solve model with `ml.solve()`
-- [ ] Check EVP (>70%), RMSE, and AIC
-- [ ] Run `ml.plots.diagnostics()` to inspect residuals
-- [ ] Check residual autocorrelation; enable noise model if needed: `ml.solve(noise=True)`
-- [ ] Compare response functions (Gamma vs Exponential vs Hantush) using AIC
-- [ ] Extract step/block responses to interpret aquifer behavior
-- [ ] Decompose signal into individual stress contributions
-- [ ] Export model to JSON and simulation results to CSV
-
-## Tips
-
-1. **Start simple** - Add stresses incrementally
-2. **Check residuals** - Should be white noise (use `ml.plots.diagnostics()`)
-3. **Compare response functions** - Use AIC/BIC to select best model
-4. **Use daily data** - Pastas works best with daily time series
-5. **Normalize units** - Precipitation in mm/day, head in meters
-
-## Common Issues
-
-| Issue | Solution |
-|-------|----------|
-| Poor fit (low EVP) | Try different response functions |
-| Residual autocorrelation | Add noise model: `ml.solve(noise=True)` |
-| Unstable parameters | Set parameter bounds or fix values |
-| Missing stress data | Interpolate or use `fillna()` before modeling |
-
-## References
-
-- **[Stress Models](references/stress_models.md)** - Available stress model types
-- **[Response Functions](references/response_functions.md)** - Response function selection
-
-## Scripts
-
-- **[scripts/groundwater_model.py](scripts/groundwater_model.py)** - Complete groundwater modeling workflow
+[Official Pastas 2.0 release](https://github.com/pastas/pastas/releases/tag/v2.0.0),
+[versioned model API source](https://github.com/pastas/pastas/blob/fe740c1c270be41a95f4a8b8b0965f26c4ef6769/pastas/model.py),
+checked 2026-09-15.

@@ -1,0 +1,8 @@
+# GPRPy source is installed separately at the commit in the validation guide.
+numpy==1.26.4
+scipy==1.17.1
+matplotlib==3.10.8
+tqdm==4.67.1
+Pmw==2.1.1
+pyevtk==1.6.0
+segyio==1.9.14

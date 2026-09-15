@@ -64,3 +64,19 @@ and external-executable checks are in [collection validation](COLLECTION_VALIDAT
 The registry script monitors exact Python pins in `requirements-*.txt` and the
 skills CLI; the separate conda GMT/Ghostscript environment and MODFLOW binary
 hashes are reviewed through their dedicated tests, not that registry report.
+
+## Workflow baselines added on 2026-09-15
+
+Groundwater, climate, GPR and MT execution use four additional isolated Python
+environments; ERT reuses the modelling environment. Their exact direct pins are
+included automatically in the registry report. See
+[scientific testing](SCIENTIFIC_TESTING.md) for installation and suite commands.
+
+Pastas 2.0 changes model/stress/solver construction and imports `tqdm` without
+declaring it as a core dependency, so the tested baseline includes it explicitly.
+The modern MT distribution is `mtpy-v2` (imported as `mtpy`); the older `mtpy`
+distribution does not supply the tested v2 API. GPRPy is installed from upstream
+commit `3b1f75eba820764b2147568fc0cc40f3a47919d5`, separately from its Python
+dependency pins. That source commit is recorded in the GPR validation report
+and CI; it is not a PyPI version and is not monitored by the registry script.
+These environments must not be installed over one another or over user packages.

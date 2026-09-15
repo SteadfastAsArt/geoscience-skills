@@ -1,0 +1,26 @@
+{
+  "upstream_repository": "https://github.com/MTgeophysics/mt_metadata",
+  "upstream_commit": "40b897dc977f13ec0cd15f4606aada9f95396b3b",
+  "source_path": "mt_metadata/data/transfer_functions/test.edi",
+  "retrieved_date": "2026-09-15",
+  "license": "MIT (upstream regression fixture; retained LICENSE)",
+  "file_sha256": "77f30c7c95294a8f8b91fb0791971c3ce37348b66e1a286ce2056de7b38b829d",
+  "license_sha256": "22711cd6af57a755bd356990d412b50cd0c1aa12fb0c148122bc4a167daf1ff2",
+  "classification": "upstream field-derived transfer-function regression sample; not raw time-series acquisition",
+  "raw_data_id": "14-IEB0537A",
+  "reader_station_id": "14_IEB0537A",
+  "acquisition": "2014-07-28",
+  "crs": "WGS84 per EDI HEAD DATUM",
+  "vertical_datum": "not specified",
+  "elevation_m": 158.0,
+  "impedance_units": "mV/km/nT; EDI HEAD and INFO transfer_function.units",
+  "variance_units": "(mV/km/nT)^2",
+  "sign_convention": "exp(+i omega t), NED; INFO sign_convention=+",
+  "zrot_degrees": 5.0,
+  "notes": [
+    "Original bytes unchanged; native reader normalizes station hyphens to underscores.",
+    "No independent geological truth or verification of every instrument processing step.",
+    "QC thresholds are diagnostic choices, not universal field acceptance limits.",
+    "Source orientation metadata is inconsistent: original Ey system information says 90 degrees true north, while INFO ey.measurement_azimuth and translated_azimuth say 116.61629962451384 degrees. Tests use the published tensor and its ZROT=5 degrees; they do not reconstruct acquisition channel geometry."
+  ]
+}

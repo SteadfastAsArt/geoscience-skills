@@ -1,0 +1,12 @@
+# Python 3.12; real MTpy-v2 EDI/QC/rotation/export, separate from GPR and ERT.
+mtpy-v2==2.1.4
+mt-metadata==1.0.10
+mth5==0.6.9
+numpy==2.5.3
+pandas==3.0.5
+scipy==1.18.1
+xarray==2026.7.0
+matplotlib==3.11.2
+pyproj==3.8.0
+simpeg==0.25.2
+aurora==0.6.2
