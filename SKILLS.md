@@ -36,13 +36,13 @@ establish that every scientific operation has been tested.
 | Spatial analysis | [geostatspy](geostatspy/SKILL.md) | Variograms, kriging and geostatistical simulation |
 | Spatial analysis | [scikit-gstat](scikit-gstat/SKILL.md) | Variogram estimation and fitting |
 | Spatial analysis | [gnnwr](gnnwr/SKILL.md) | Neural geographically weighted regression |
-| Hydrology / surface | [pastas](pastas/SKILL.md) | Groundwater head time series and response models |
+| Hydrology / surface | [pastas](pastas/SKILL.md) | Groundwater head response models, chronological validation and diagnostics |
 | Hydrology / surface | [flopy](flopy/SKILL.md) | MODFLOW flow models, heads and water budgets |
 | Hydrology / surface | [landlab](landlab/SKILL.md) | Landscape and surface-process models |
 | Geology / geochemistry | [mplstereonet](mplstereonet/SKILL.md) | Structural orientation and stereonets |
 | Geology / geochemistry | [pyrolite](pyrolite/SKILL.md) | Geochemical ratios, normalization and diagrams |
-| Near-surface | [gprpy](gprpy/SKILL.md) | Ground-penetrating radar processing |
-| Near-surface | [mtpy](mtpy/SKILL.md) | Magnetotelluric impedance and models |
+| Near-surface | [gprpy](gprpy/SKILL.md) | GPR import, documented processing and sampling-aware export |
+| Near-surface | [mtpy](mtpy/SKILL.md) | MTpy-v2 transfer-function QC, tensor rotations and modelling preparation |
 | Climate / data | [xarray](xarray/SKILL.md) | Labelled NetCDF/HDF5/Zarr arrays and climate fields |
 | Climate / data | [pyleoclim](pyleoclim/SKILL.md) | Paleoclimate proxy spectra and chronology sensitivity |
 | Visualization | [pyvista](pyvista/SKILL.md) | 3D meshes, volumes and VTK exports |
@@ -65,9 +65,9 @@ they do not claim all Pastas/GPR/MT/climate branches were executed end to end.
 | [geological-modelling](workflows/geological-modelling/SKILL.md) | GIS/borehole preparation, implicit modelling and exports |
 | [geophysical-inversion](workflows/geophysical-inversion/SKILL.md) | Survey preparation, forward/inverse modelling and uncertainty |
 | [rock-physics-avo](workflows/rock-physics-avo/SKILL.md) | Elastic logs, fluid substitution, AVO and synthetics |
-| [hydrogeological-analysis](workflows/hydrogeological-analysis/SKILL.md) | Well logs, groundwater head time series and aquifer hypotheses |
-| [near-surface-geophysics](workflows/near-surface-geophysics/SKILL.md) | Coordinate- and resolution-aware comparison of GPR, ERT and MT |
-| [climate-analysis](workflows/climate-analysis/SKILL.md) | Climate time/space analysis, anomalies and spatial holdouts |
+| [hydrogeological-analysis](workflows/hydrogeological-analysis/SKILL.md) | Groundwater/log interpretation with an executed Pastas field hindcast case |
+| [near-surface-geophysics](workflows/near-surface-geophysics/SKILL.md) | Independent GPR, ERT and MT processing/validation branches |
+| [climate-analysis](workflows/climate-analysis/SKILL.md) | Climate aggregation, anomalies, spatial holdouts and labelled exports |
 
 ## Discovery and optional review roles
 

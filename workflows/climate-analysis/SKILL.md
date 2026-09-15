@@ -7,11 +7,11 @@ description: >-
   distinguish descriptive analysis from future-time prediction.
 license: MIT
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
   author: Geoscience Skills
   skill_type: workflow
   tags: '["Climate", "Time Series", "Spatial Analysis", "Validation"]'
-  dependencies: '["xarray", "numpy", "pandas", "cftime", "verde", "pyproj"]'
+  dependencies: '["xarray", "numpy", "pandas", "cftime", "verde", "pyproj", "scipy"]'
   complements: '["xarray", "verde", "pooch"]'
   workflow_role: analysis
 ---
@@ -91,7 +91,21 @@ baseline. Account for temporal/spatial dependence when estimating uncertainty;
 model spread is not automatically a calibrated predictive interval, and trend
 significance is not causal attribution.
 
-This workflow supplies checked procedural guidance without a new runnable API
-example. Domain-library tests cover only their documented operations; a complete
-field climate analysis, regridding method or prediction experiment needs its
-own data-specific validation and recorded execution.
+## Executed station case
+
+The [NOAA station example](references/validated-station-case.md) executes the
+workflow from real daily maximum temperatures through QC, calendar-aware means,
+short-reference anomalies, spatial holdout and a labelled NetCDF export. Its
+[offline script](scripts/station_pipeline.py) requires the recorded source and
+provenance files and preserves existing output directories.
+
+The example separates each station's descriptive anomaly from a spatial model
+relative to a station-network reference. Every spatial fold learns that reference
+from training stations alone; the held-out station's past values are also excluded.
+The final grid contains model estimates, with a recorded support mask and spherical
+cell areas. A regional model mean is not a measured regional climate change.
+
+Tests also cover synthetic `360_day`/`noleap` calendars, missing coverage and
+all-NaN periods/regions. This verification does not establish forecasts,
+30-year climate normals, homogenization, precipitation integration or arbitrary
+regridding accuracy. Use a data-specific validation for those branches.

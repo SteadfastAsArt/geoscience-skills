@@ -7,11 +7,11 @@ description: >-
   geophysical anomalies to independently supported geological hypotheses.
 license: MIT
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
   author: Geoscience Skills
   skill_type: workflow
   tags: '["Near Surface", "GPR", "ERT", "Magnetotellurics"]'
-  dependencies: '["gprpy", "pygimli", "mtpy", "numpy", "matplotlib"]'
+  dependencies: '["gprpy", "pygimli", "mtpy-v2", "numpy", "pandas", "scipy", "matplotlib"]'
   complements: '["gprpy", "pygimli", "mtpy", "simpeg", "pyvista"]'
   workflow_role: analysis
 ---
@@ -46,8 +46,9 @@ tuning an image or model to resemble an expected structure.
 
 ## GPR branch
 
-Inspect unprocessed radargrams first. Apply time-zero correction and documented
-signal processing in a reproducible sequence; compare each step to the input.
+Inspect unprocessed radargrams first. Apply time-zero correction only when a
+justified reference is available, and select documented signal processing;
+compare each step to the input.
 Record filter bands relative to sample interval and antenna bandwidth. Gain
 changes amplitude interpretation, and background removal can suppress genuine
 laterally continuous reflectors. Preserve original amplitudes when an amplitude
@@ -58,6 +59,13 @@ supported by survey measurements or a stated scenario. Report the assumed
 velocity, units and uncertainty for depth conversion or migration; do not use
 a generic dielectric constant as a measured site property. Separate an observed
 reflector from a geological boundary hypothesis.
+
+The checked GPR route is raw SEG-Y via segyio or native paired MALA via GPRPy,
+selected sample/trace operations, then NPZ plus JSON export and readback. The
+`gprpy` helper records encoded headers and leaves unresolved time/position units
+as indices. GPRPy's dewow window is a sample count; it has no native SEG-Y
+export API. Use the companion helper when installed, or implement the same
+auditable steps with the available libraries and their current documentation.
 
 ## ERT branch
 
@@ -75,6 +83,15 @@ resolved depth model. A small misfit alone does not establish uniqueness or
 depth of investigation; mark weakly constrained regions using justified
 sensitivity/resolution analysis and alternative plausible models.
 
+For an explicitly flat two-layer diagnostic, the bundled
+[ERT helper](scripts/ert_layered_diagnostic.py) provides an executed route from
+quadrupole measurements and nominal electrode positions to inversion, a fixed
+reciprocal-group holdout, and CSV/JSON response/residual readback. It checks
+local convergence and reports when the combined model/error assumptions fail.
+This lightweight route is not a topographic 2D/3D ERT reconstruction; use an
+appropriate mesh/solver for those tasks. See the
+[input schema and branch limits](references/validated_branches.md).
+
 ## MT branch
 
 Inspect tensor components, uncertainty, frequency sampling and phase behaviour.
@@ -84,6 +101,13 @@ installed-version documentation for EDI and transfer-function details. Choose
 1D, 2D or 3D modelling only after examining dimensionality, survey geometry and
 available computational tools; a plotting library does not guarantee an
 installed inversion solver.
+
+The checked MT route uses the `mtpy-v2` distribution: read direct-impedance EDI,
+inspect source masks/variances, apply an explicitly requested tensor rotation,
+then export QC CSV/JSON and optional response plots with readback. Complete
+tensors also undergo actual EDI write/read. A field-derived transfer-function
+sample supports this route; raw time-series estimation and MT inversion remain
+separate tasks. Preserve signed component phases and unknown uncertainties.
 
 ## Comparison, outputs and limits
 
@@ -99,6 +123,10 @@ Electrical properties also depend on fluids, salinity, saturation, temperature
 and clay; avoid converting a resistivity anomaly directly into a unique lithology,
 water table or hydraulic conductivity without calibrated supporting evidence.
 
-This entrypoint introduces process guidance, not a newly executed multi-method
-field example. Existing small-library regressions do not validate all branches,
-joint inversion or site-specific interpretation; report the branch actually run.
+The three branches now have separate executed import-to-export checks: observed
+GPR sample-index processing plus separately generated physical-unit data,
+observed ERT fit/holdout plus separate controlled model recovery, and an upstream
+field-derived MT EDI plus independent tensor/impedance checks. They are different
+surveys and must not be combined into a fictitious common-site interpretation.
+Joint inversion, general field accuracy and every vendor format are outside
+these checks; report the branch and physical assumptions actually exercised.

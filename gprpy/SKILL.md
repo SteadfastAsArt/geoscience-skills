@@ -1,163 +1,102 @@
 ---
 name: gprpy
-description: |
-  Process and visualize ground-penetrating radar (GPR) data with signal processing,
-  velocity analysis, and depth conversion. Use when the agent needs to: (1) Load GPR
-  files (.DZT, .DT1, .GPR, .rd3), (2) Apply dewow, gain, and filters to radargrams,
-  (3) Convert two-way travel time to depth, (4) Perform CMP/WARR velocity analysis,
-  (5) Apply topographic corrections, (6) Export processed profiles as images or SEG-Y,
-  (7) Batch process multiple GPR survey lines.
+description: >-
+  Read and process ground-penetrating radar profiles using GPRPy. Use for
+  sample-based dewow/background removal, auditable gain, time/depth scenarios,
+  and radargram export with explicit acquisition units. SEG-Y input uses a
+  separate segyio adapter; native GPRPy files are serialized sessions.
 license: MIT
 metadata:
-  version: 1.0.1
+  version: "1.0.2"
   author: Geoscience Skills
   tags: '["GPR", "Ground-Penetrating Radar", "Near-Surface", "Signal Processing", "GPRPy", "Geophysics", "Depth Conversion", "Radargram"]'
-  dependencies: '["gprpy>=1.0.0", "numpy", "matplotlib", "scipy"]'
+  dependencies: '["gprpy>=1.0.14", "numpy<2", "matplotlib", "scipy", "segyio>=1.9.14"]'
   complements: '["pyvista"]'
   workflow_role: data-loading
   skill_type: domain
 ---
 
-# GPRPy - Ground Penetrating Radar Processing
+# Auditable GPR processing
 
-## Quick Reference
+GPRPy operates on arrays shaped `(samples, traces)`. Inspect acquisition
+metadata before assigning physical axes: a trace index is not distance, and a
+radar vendor's SEG-Y interval field may need a documented time scale. Preserve
+unknown units explicitly. Do not obtain a site velocity from a generic material
+lookup and present it as measured.
+
+## Read and select operations
+
+GPRPy 1.0.14 natively reads paired MALA `.rad/.rd3`, Sensors & Software
+`.DT1/.HD`, GSSI `.DZT`, and its documented BSQ inputs. Native `.gpr` files are
+Python pickle sessions, not a MALA exchange format; read only trusted sessions.
+GPRPy does not natively read or export SEG-Y.
 
 ```python
 import gprpy.gprpy as gp
-import matplotlib.pyplot as plt
 
-# Load and display
-data = gp.gprpyProfile()
-data.importdata('profile.DZT')
-data.showProfile()
-plt.show()
-
-# Access data
-print(f"Traces: {data.data.shape[1]}")
-print(f"Samples: {data.data.shape[0]}")
-print(f"Time range: {data.twtt.max():.1f} ns")
+profile = gp.gprpyProfile()
+profile.importdata('profile.rad')  # requires matching profile.rd3
+raw = profile.data.copy()
+profile.dewow(window=64)  # argument is sample count, not ns
 ```
 
-## Supported Formats
+Select operations to answer the user's question. `dewow(window)` and
+`agcGain(window)` take sample counts; `remMeanTrace(ntraces)` takes traces.
+Background subtraction may remove real continuous reflectors. Time-power gain
+changes amplitude scaling and is not a calibrated attenuation correction.
+Keep the raw arrays and record every applied operation. Window edge behaviour
+and the effective interior support need particular care; see the
+[processing reference](references/processing_steps.md).
 
-| Format | Manufacturer |
-|--------|-------------|
-| .DZT | GSSI |
-| .DT1 | Sensors & Software |
-| .GPR | MALA |
-| .rd3/.rad | MALA |
-| .sgy | SEG-Y |
+`setVelocity(velocity)` uses m/ns and computes the zero-offset constant-velocity
+scenario `depth = twtt * velocity / 2`; it does not estimate velocity or migrate
+reflectors. Resolve time zero and antenna-offset assumptions first. Retain
+native two-way time alongside any assumed depth, and state which independent
+measurements support velocity and its uncertainty.
 
-## Essential Operations
+## Reproducible helper
 
-### Basic Processing
-```python
-data = gp.gprpyProfile()
-data.importdata('profile.DZT')
+The [processing helper](scripts/process_gpr.py) supports tested `.rad/.rd3` and
+`.sgy/.segy` routes. The latter explicitly uses segyio before real GPRPy
+processing. It writes `profile.npz` and `processing.json` and reads them back;
+NPZ loading uses `allow_pickle=False`. Outputs include raw amplitudes,
+intermediate arrays, final amplitudes, original sample/trace indices, available
+physical axes, source checksums, parameters and selected encoded header fields.
+A new output directory prevents silent replacement of a previous result.
 
-data.dewow(window=10)           # Remove low-frequency drift
-data.remMeanTrace(ntraces=50)   # Remove background ringing
-data.tpowGain(power=1.5)        # Time-power gain
-data.agcGain(window=25)         # Automatic gain control
-
-data.showProfile()
+```bash
+python scripts/process_gpr.py profile.rad --metadata sampling.json \
+  --output processed --dewow-samples 64
 ```
 
-### Apply Filters
-```python
-data.bandpassFilter(minfreq=100, maxfreq=800)  # MHz
-data.lowpassFilter(maxfreq=500)
-data.highpassFilter(minfreq=50)
-```
+Resolve paths relative to the installed skill directory. `sampling.json`
+contains `source_note`, `sample_interval_ns`, `time_origin_ns`,
+`trace_spacing_m`, `profile_origin_m`, `horizontal_crs` and `vertical_reference`.
+Use JSON `null` for unknown time or spacing; explain provenance in `source_note`.
+Uniform physical sampling requires a finite origin and a positive interval.
+Irregular positions require a separately validated geometry route; do not
+replace them with a fabricated regular line.
 
-### Time-to-Depth Conversion
-```python
-velocity = 0.1  # m/ns (typical for dry sand)
-data.setVelocity(velocity)
-data.showProfile(yrng=[0, 5])  # Top 5 meters
-```
+Only supply `--gain-power` when nonnegative physical time is known. Only supply
+`--velocity-m-ns` for an explicitly labelled zero-offset constant-velocity depth
+scenario. Both are rejected when time calibration is unresolved. No processing
+step is enabled by default. The helper fails on missing/nonfinite amplitudes,
+unsupported formats, non-live SEG-Y trace flags, variable trace sampling or a
+failed requested export instead of reporting partial work as success.
 
-### Topographic Correction
-```python
-data.topoCorrect(topofile='topography.txt', velocity=0.1)
-# File format: x_position, elevation
-```
+## Other APIs and verification boundary
 
-### Export Results
-```python
-data.exportFig('processed.png', dpi=300)
-data.exportSEGY('processed.sgy')
-data.exportASCII('processed.txt')
-```
+For plotting, use `showProfile()` or `printProfile(...)`; neither accepts the
+previously documented `ax=` export pattern. GPRPy 1.0.14 has no
+`bandpassFilter`, `exportASCII`, `exportSEGY` or `gprpyCMP` API. Its CMP/WARR
+class is `gprpyCW`; consult the installed source before using its stacked
+amplitude methods. Topographic correction uses `topoCorrect(topofile,
+delimiter=',')` after a separately chosen velocity, not a `velocity=` keyword.
+These advanced branches require their own acceptance checks.
 
-## Velocity Analysis (CMP)
-
-```python
-cmp = gp.gprpyCMP()
-cmp.importdata('cmp_survey.DZT')
-cmp.showCMP()
-
-cmp.semblance(vmin=0.05, vmax=0.15, vstep=0.01)
-cmp.showSemblance()
-```
-
-## Processing Parameters
-
-| Parameter | Typical Value | Description |
-|-----------|---------------|-------------|
-| Dewow window | 5-20 ns | Low-frequency removal window |
-| Gain power | 1.0-2.0 | Time-power gain exponent |
-| AGC window | 10-50 ns | Automatic gain window |
-| Bandpass | 100-800 MHz | Frequency filter range |
-
-## Material Velocities
-
-| Material | Velocity (m/ns) |
-|----------|-----------------|
-| Air | 0.30 |
-| Dry sand | 0.10-0.15 |
-| Wet sand | 0.06-0.08 |
-| Dry soil | 0.08-0.12 |
-| Wet soil | 0.05-0.08 |
-| Limestone | 0.10-0.12 |
-| Granite | 0.10-0.13 |
-| Water | 0.033 |
-| Ice | 0.16-0.17 |
-
-## When to Use vs Alternatives
-
-| Tool | Best For | Limitations |
-|------|----------|-------------|
-| **gprpy** | Python-based GPR processing, scripted workflows, open-source | Limited advanced migration algorithms |
-| **GPRMax** | Forward modelling and simulation of GPR responses | Simulation only, not for data processing |
-| **REFLEXW** | Full commercial processing suite, advanced migration | Commercial license required |
-| **Custom scipy** | Custom signal processing, research algorithms | Must build everything from scratch |
-
-**Use gprpy when** you need open-source GPR processing in Python, batch processing
-of survey lines, or integration with other Python geoscience tools.
-
-**Consider alternatives when** you need forward modelling of GPR responses (use GPRMax),
-advanced migration or commercial-grade processing (use REFLEXW), or highly custom
-signal processing algorithms (use scipy directly).
-
-## Common Workflows
-
-### Process raw GPR profile for interpretation
-- [ ] Import raw data with `gp.gprpyProfile()` and `importdata()`
-- [ ] Apply dewow filter to remove low-frequency drift
-- [ ] Remove mean trace to eliminate background ringing
-- [ ] Apply time-power gain or AGC for depth equalization
-- [ ] Apply bandpass filter to remove noise
-- [ ] Determine velocity from CMP analysis or material tables
-- [ ] Convert time axis to depth with `setVelocity()`
-- [ ] Apply topographic correction if survey has elevation changes
-- [ ] Export processed profile as image and/or SEG-Y
-
-## References
-
-- **[Processing Steps](references/processing_steps.md)** - Complete processing workflow guide
-- **[Material Velocities](references/processing_steps.md#velocity-selection)** - Velocity selection by material type
-
-## Scripts
-
-- **[scripts/process_gpr.py](scripts/process_gpr.py)** - Batch process GPR files with standard workflow
+The checked path uses fixed GPRPy source version 1.0.14, native generated MALA
+bytes, and one licensed observed SEG-Y line. The field line's time scaling and
+coordinate units remain unresolved, so only sample-index processing is claimed.
+Synthetic timing and impulse depth checks are separate from field accuracy.
+See [source installation and limits](references/processing_steps.md#tested-source)
+for the tested commit and dependency distinction.

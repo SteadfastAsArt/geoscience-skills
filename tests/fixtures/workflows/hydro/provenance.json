@@ -1,0 +1,66 @@
+{
+  "dataset": "Pastas collenteur_2019 / Kingstown, Rhode Island, USA",
+  "source_commit": "dcc1363765c0a40ee9dfb2a418f8589b3a146580",
+  "source_commit_date": "2025-07-29T13:00:33Z",
+  "retrieved": "2026-09-15",
+  "license": "GPL-3.0 (upstream data-repository declaration; retain LICENSE.upstream)",
+  "license_scope": "Raw data and upstream settings copied without modification from a dedicated data repository, not inferred from the Pastas software MIT license. Project workflow/test code has its own repository license.",
+  "source_repository": "https://github.com/pastas/pastas-data",
+  "files": {
+    "head.csv": {
+      "url": "https://raw.githubusercontent.com/pastas/pastas-data/dcc1363765c0a40ee9dfb2a418f8589b3a146580/collenteur_2019/head.csv",
+      "sha256": "da501d94c408f8252d577c7c089a5d23d4e27e9434e79f378c4c2dd78eba8823",
+      "bytes": 102481
+    },
+    "rain.csv": {
+      "url": "https://raw.githubusercontent.com/pastas/pastas-data/dcc1363765c0a40ee9dfb2a418f8589b3a146580/collenteur_2019/rain.csv",
+      "sha256": "c8a90336d9456f5a1e8b6cb4aad9aa8b480105cfdb354f5d0aa7fc4a92309ca2",
+      "bytes": 125309
+    },
+    "evap.csv": {
+      "url": "https://raw.githubusercontent.com/pastas/pastas-data/dcc1363765c0a40ee9dfb2a418f8589b3a146580/collenteur_2019/evap.csv",
+      "sha256": "c0f92f382809d5799ac893816be904825048845c306c520f8ca40acd788126df",
+      "bytes": 183268
+    },
+    "LICENSE.upstream": {
+      "url": "https://raw.githubusercontent.com/pastas/pastas-data/dcc1363765c0a40ee9dfb2a418f8589b3a146580/LICENSE",
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+      "bytes": 35149
+    },
+    "settings.upstream.json": {
+      "url": "https://raw.githubusercontent.com/pastas/pastas-data/dcc1363765c0a40ee9dfb2a418f8589b3a146580/collenteur_2019/settings.json",
+      "sha256": "1ea94d68eec21c2d575c61339d9f316b624c9f0dd7c278e1642a1dcaf20b00ff",
+      "bytes": 374
+    }
+  },
+  "well": {
+    "provider": "USGS Groundwater Climate Response Network",
+    "site_id": "412918071321001",
+    "variable": "relative head as supplied, negative source values retained",
+    "source_unit": "ft",
+    "model_unit": "m",
+    "vertical_datum": "Not established by these CSV files; no conversion to an absolute elevation datum",
+    "screen": "not documented in cached CSVs"
+  },
+  "meteorology": {
+    "provider": "NCDC/NOAA Global Summary of the Day",
+    "station": "Kingston, WBAN 54796",
+    "latitude": 41.491,
+    "longitude": -71.541,
+    "precipitation_source_unit": "ft/day",
+    "evaporation_source_unit": "ft/day",
+    "model_unit": "mm/day",
+    "evaporation_method": "Daily reference evaporation estimated using Thornthwaite method (Pereira and Pruitt, 2004), not observed actual evapotranspiration"
+  },
+  "time": {
+    "cadence": "daily date labels with omitted observation dates",
+    "timezone": "unspecified upstream; preserve timezone-naive date labels, do not assert UTC or local midnight instant",
+    "stress_interval": "Daily upstream date labels retained; end/start-of-day accumulation convention not established independently"
+  },
+  "sources": {
+    "publication": "https://doi.org/10.1111/gwat.12925",
+    "source_and_units_notebook": "https://github.com/pastas/pastas/blob/fe740c1c270be41a95f4a8b8b0965f26c4ef6769/doc/examples/groundwater_paper/Ex1_simple_model/Example1.ipynb",
+    "data_description": "https://github.com/pastas/pastas-data/blob/dcc1363765c0a40ee9dfb2a418f8589b3a146580/README.md",
+    "data_license": "https://raw.githubusercontent.com/pastas/pastas-data/dcc1363765c0a40ee9dfb2a418f8589b3a146580/LICENSE"
+  }
+}

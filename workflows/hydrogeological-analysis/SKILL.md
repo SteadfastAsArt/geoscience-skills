@@ -7,11 +7,11 @@ description: >-
   modelling only when its geometry and boundary data are available.
 license: MIT
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
   author: Geoscience Skills
   skill_type: workflow
   tags: '["Hydrogeology", "Groundwater", "Time Series", "Well Logs"]'
-  dependencies: '["pastas", "lasio", "welly", "pandas", "numpy", "flopy"]'
+  dependencies: '["pastas>=2.0,<2.1", "tqdm", "lasio", "welly", "pandas", "numpy", "flopy"]'
   complements: '["pastas", "lasio", "welly", "flopy", "xarray", "verde"]'
   workflow_role: modelling
 ---
@@ -54,7 +54,7 @@ the chosen branch; FloPy is an optional spatial-flow branch.
 
 For a Pastas model, start with the simplest physically plausible stress-response
 structure. Match APIs, units and parameter bounds to the installed version;
-consult its [calibration guidance](https://pastas.readthedocs.io/stable/examples/calibration_options.html).
+consult its [versioned calibration API](https://github.com/pastas/pastas/blob/fe740c1c270be41a95f4a8b8b0965f26c4ef6769/pastas/model.py).
 Choose calibration and validation windows before fitting. Fit normalisation,
 response parameters and noise models on calibration data only; carry model
 state into validation using available stresses, not held-out head observations.
@@ -84,9 +84,33 @@ prepared inputs and clearly mark simulation as not run when these are missing.
   withhold future periods. Tune model choices inside the training partition and
   keep the final evaluation observations untouched.
 
+## Executed daily groundwater case
+
+The bundled [Pastas runner](scripts/run_pastas_workflow.py) completes a daily
+recharge hindcast from locally supplied raw CSVs, a fixed design and provenance:
+QC and explicit unit conversion, calibration-only stress infilling/initialization,
+Gamma + linear recharge + AR noise fitting, three calibration-only baselines,
+held-out metrics, residual/noise ACF, model save/load and CSV/JSON readback.
+It disables implicit stress filling and history extension. Each output records
+the unchanged date labels and unresolved vertical/time reference.
+
+Read [the public field-case recipe](references/field_case.md) for the cached
+USGS/GSOD source, exact calibration/holdout dates, commands, input schema and
+observed limitations. The script is local to this installed workflow; the
+licensed regression data are separately stored in the project checkout.
+
 ## Verification boundary
 
-This entrypoint provides procedural guidance and introduces no claimed runnable
-API example. Its structure and references are checked in this project; a full
-Pastas or MODFLOW run on hydrogeological field data is not established by these
-checks. Record actual execution and domain validation separately for each job.
+Executed with Pastas 2.0.0 using a fixed public Kingstown, Rhode Island, record:
+2005–2013 calibration and 2014–2018 holdout. The head source is USGS; rainfall is
+GSOD and reference evaporation is a published estimate. Held-out RMSE is about
+0.129 m against about 0.269 m for the training-month climatology. This is a
+hindcast conditional on observed meteorology, not a forecast with unknown weather.
+
+Innovations still show autocorrelation, so parameter standard errors are not
+validated prediction intervals. Missing rainfall days use flagged
+calibration-month means; missing heads remain unscored. Absolute head datum,
+screen information and timestamp timezone are unresolved by the cached CSVs.
+No field MODFLOW calibration, aquifer-property truth, logging interpretation or
+cross-well spatial validation is inferred from this time-series test. Keep the
+optional FloPy branch's separate solver/water-balance checks and limitations.

@@ -56,6 +56,75 @@ jobs:
         run: python tests/science/test_field_data.py -v
       - name: Check field ERT holdout and independent synthetic recovery
         run: python tests/science/test_field_ert_survey.py -v
+      - name: Execute near-surface ERT workflow and export checks
+        run: python tests/science/test_near_surface_workflow_ert.py -v
+
+  hydro-workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: tests/science/requirements-hydro-workflow.txt
+      - name: Install isolated Pastas workflow dependencies
+        run: python -m pip install -r tests/science/requirements-hydro-workflow.txt
+      - name: Execute groundwater field workflow and held-out checks
+        env:
+          MPLCONFIGDIR: ${{ runner.temp }}/hydro-mpl
+          NUMBA_THREADING_LAYER: workqueue
+        run: python tests/science/test_hydro_workflow.py -v
+
+  climate-workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tests/science/requirements-climate-workflow.txt
+      - name: Install isolated climate workflow dependencies
+        run: python -m pip install -r tests/science/requirements-climate-workflow.txt
+      - name: Execute station climate workflow and calendar/spatial checks
+        env:
+          MPLCONFIGDIR: ${{ runner.temp }}/climate-mpl
+        run: python tests/science/test_climate_workflow.py -v
+
+  mt-workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tests/science/requirements-near-surface-mt.txt
+      - name: Install isolated MTpy-v2 dependencies
+        run: python -m pip install -r tests/science/requirements-near-surface-mt.txt
+      - name: Execute EDI import, tensor QC/rotation and output readback
+        env:
+          MPLCONFIGDIR: ${{ runner.temp }}/mt-mpl
+        run: python tests/science/test_near_surface_workflow_mt.py -v
+
+  gpr-workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: tests/science/requirements-near-surface-gpr.txt
+      - name: Install isolated GPR dependencies and fixed upstream source
+        run: |
+          python -m pip install -r tests/science/requirements-near-surface-gpr.txt
+          python -m pip install https://github.com/NSGeophysics/GPRPy/archive/3b1f75eba820764b2147568fc0cc40f3a47919d5.zip
+      - name: Execute GPR import, processing, units and export checks
+        env:
+          MPLCONFIGDIR: ${{ runner.temp }}/gpr-mpl
+        run: python tests/science/test_near_surface_workflow_gpr.py -v
 
   collection:
     runs-on: ubuntu-latest

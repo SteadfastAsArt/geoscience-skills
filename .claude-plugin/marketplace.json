@@ -36,7 +36,7 @@
         "./workflows/climate-analysis"
       ],
       "description": "Analyse labelled climate time series and gridded or station observations with checked calendars, aggregation, climatological baselines and spatial validation. Use for climate anomalies, regional summaries or station-to-grid analysis; distinguish descriptive analysis from future-time prediction.",
-      "version": "1.0.0"
+      "version": "1.0.1"
     },
     {
       "name": "devito",
@@ -175,8 +175,8 @@
       "skills": [
         "./gprpy"
       ],
-      "description": "Process and visualize ground-penetrating radar (GPR) data with signal processing, velocity analysis, and depth conversion. Use when the agent needs to: (1) Load GPR files (.DZT, .DT1, .GPR, .rd3), (2) Apply dewow, gain, and filters to radargrams, (3) Convert two-way travel time to depth, (4) Perform CMP/WARR velocity analysis, (5) Apply topographic corrections, (6) Export processed profiles as images or SEG-Y, (7) Batch process multiple GPR survey lines.",
-      "version": "1.0.1"
+      "description": "Read and process ground-penetrating radar profiles using GPRPy. Use for sample-based dewow/background removal, auditable gain, time/depth scenarios, and radargram export with explicit acquisition units. SEG-Y input uses a separate segyio adapter; native GPRPy files are serialized sessions.",
+      "version": "1.0.2"
     },
     {
       "name": "harmonica",
@@ -196,7 +196,7 @@
         "./workflows/hydrogeological-analysis"
       ],
       "description": "Combine groundwater observations, well logs, and meteorological stresses into a checked hydrogeological interpretation or groundwater-level model. Use for aquifer monitoring and recharge/pumping response analysis, with spatial flow modelling only when its geometry and boundary data are available.",
-      "version": "1.0.0"
+      "version": "1.0.1"
     },
     {
       "name": "landlab",
@@ -245,8 +245,8 @@
       "skills": [
         "./mtpy"
       ],
-      "description": "Magnetotelluric data processing and modelling. Read EDI files, analyze MT responses, perform inversions, and visualize resistivity models. Use when the agent needs to: (1) Read/write EDI files, (2) Process MT impedance tensors, (3) Analyze phase tensors and dimensionality, (4) Plot apparent resistivity and phase curves, (5) Create pseudosections, (6) Perform strike analysis, (7) Run 1D inversions, (8) Prepare data for 2D/3D modelling.",
-      "version": "1.0.1"
+      "description": "Read and validate magnetotelluric transfer functions with MTpy-v2. Use for EDI import, impedance uncertainty, apparent resistivity/phase, documented tensor rotations, response plots and preparation for modelling. External inversion solvers and raw time-series processing require separate tools and validation.",
+      "version": "1.0.2"
     },
     {
       "name": "near-surface-geophysics",
@@ -256,7 +256,7 @@
         "./workflows/near-surface-geophysics"
       ],
       "description": "Plan and validate near-surface interpretation from GPR, electrical resistivity tomography, or magnetotelluric data. Use when selecting acquisition-dependent processing and inversion branches, comparing survey results, or relating geophysical anomalies to independently supported geological hypotheses.",
-      "version": "1.0.0"
+      "version": "1.0.1"
     },
     {
       "name": "obspy",
@@ -276,7 +276,7 @@
         "./pastas"
       ],
       "description": "Groundwater time series analysis and modelling using transfer function noise models. Use when the agent needs to: (1) Analyze groundwater level time series, (2) Model well responses to precipitation/pumping, (3) Calibrate aquifer parameters from head data, (4) Forecast or hindcast groundwater levels, (5) Decompose hydrological signals into components, (6) Compare response functions, (7) Perform model diagnostics and uncertainty analysis.",
-      "version": "1.0.1"
+      "version": "1.0.2"
     },
     {
       "name": "petropy",

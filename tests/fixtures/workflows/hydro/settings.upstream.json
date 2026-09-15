@@ -1,0 +1,20 @@
+{
+    "head.csv": {
+        "index_col": 0,
+        "parse_dates": true,
+        "header": 0,
+        "dtype": "float"
+    },
+    "rain.csv": {
+        "index_col": 0,
+        "parse_dates": true,
+        "header": 0,
+        "dtype": "float"
+    },
+    "evap.csv": {
+        "index_col": 0,
+        "parse_dates": true,
+        "header": 0,
+        "dtype": "float"
+    }
+}

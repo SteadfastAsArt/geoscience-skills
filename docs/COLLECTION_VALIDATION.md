@@ -42,19 +42,22 @@ A licensed environment is needed before adding version-specific GeoLime API
 examples; the current skill remains useful for preparation and review. This
 documented exclusion does not block the other P1–P3 work.
 
-## New workflow guidance
+## Workflow execution follow-up (2026-09-15)
 
 | Workflow | Decisions and validation it requires |
 | --- | --- |
-| [Hydrogeological analysis](../workflows/hydrogeological-analysis/SKILL.md) | Separate downhole depth from groundwater head, align datums/time, test Pastas responses with withheld periods and treat logs as aquifer constraints. |
-| [Near-surface geophysics](../workflows/near-surface-geophysics/SKILL.md) | Select available GPR/ERT/MT branches, preserve measurement units and geometry, and compare resolution before interpreting shared structures. |
-| [Climate analysis](../workflows/climate-analysis/SKILL.md) | Preserve calendars and missingness, choose anomaly baselines before fitting, and prevent spatial or temporal leakage in validation. |
+| [Hydrogeological analysis](../workflows/hydrogeological-analysis/SKILL.md) | Executed published head/stress data through Pastas calibration, chronological holdout, baseline comparison and saved-model readback. [Evidence](HYDRO_WORKFLOW_VALIDATION.md). |
+| [Near-surface geophysics](../workflows/near-surface-geophysics/SKILL.md) | Executed GPR processing/export, field ERT layered diagnostics and MT EDI/QC/rotation/export; separate controlled cases verify units and known numerical responses. [Evidence](NEAR_SURFACE_WORKFLOW_VALIDATION.md). |
+| [Climate analysis](../workflows/climate-analysis/SKILL.md) | Executed NOAA daily-TMAX aggregation, fixed references, spatial holdout and NetCDF readback, plus independent non-Gregorian calendar and missingness checks. [Evidence](CLIMATE_WORKFLOW_VALIDATION.md). |
 
-These three entrypoints provide reviewed process guidance, with no new unexecuted
-API snippets presented as tested examples. Their full hydrology/GPR/MT/climate
-branches have **not** each been run end to end. Their role is to guide task-specific
-work; the executed workflow Agent case is the separate formation-evaluation case
-in [agent evaluations](AGENT_EVALUATIONS.md).
+The original 2026-09-14 delivery reviewed these guides as procedures only. The
+follow-up adds executable cases and scientific checks. Field GPR sampling units
+remain unverified, ERT uses a deliberately limited layered diagnostic, and the MT
+sample is an upstream field-derived regression fixture. Climate uses a short
+reference period, not standard climate normals; groundwater prediction is a
+hindcast conditional on observed meteorology. None establishes joint inversion
+or geological truth. The actual native workflow Agent case remains the separate
+formation-evaluation task in [agent evaluations](AGENT_EVALUATIONS.md).
 
 The new [cross-validation review guide](../agents/cross-validation-reviewer.md)
 can be followed in the same session or used as an optional role. It is not a

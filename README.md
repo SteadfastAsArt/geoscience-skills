@@ -169,15 +169,19 @@ SessionStart hook are not installed by the generic skills CLI.
 
 ## Verification results
 
-Recorded on **2026-09-14**. [PR #3](https://github.com/SteadfastAsArt/geoscience-skills/pull/3)
-was merged first; the following P1–P3 work extends that baseline.
+Updated **2026-09-15**. [PR #3](https://github.com/SteadfastAsArt/geoscience-skills/pull/3)
+and the subsequent P1–P3 delivery in
+[PR #5](https://github.com/SteadfastAsArt/geoscience-skills/pull/5) are merged.
+The workflow follow-up extends their scientific evidence; native Agent runs
+retain their original recorded revisions.
 
 | Check | Recorded result |
 | --- | --- |
 | Native Codex tasks | **LAS QC, SEG-Y subsetting and formation evaluation passed** without task prompts naming skills or catalog paths. Each run discovered all 48 skills and retained successful native skill-read evidence. See [agent evaluations](docs/AGENT_EVALUATIONS.md). |
 | Installation | **48 skills × nine targets passed locally** with skills CLI 1.5.26, including bundled resources. Linux/Windows CI runs the same checks; see [compatibility evidence](docs/COMPATIBILITY.md#verification-scope). |
-| Automated tests | **216 passed**: 152 scientific checks across six isolated environments, 61 lightweight checks and 3 evaluation-fixture readbacks. See [suite results and reproduction](docs/SCIENTIFIC_TESTING.md). |
+| Automated tests | **268 checks**: 204 scientific across ten isolated environments, 61 lightweight and 3 evaluation-fixture readbacks. The workflow follow-up adds 52 passing scientific checks to the previous 216-test baseline. See [results, CI scope and reproduction](docs/SCIENTIFIC_TESTING.md). |
 | Field data | Published well logs, earthquake waveform and ERT observations now join GNSS, with licenses, units, holdout checks and explicit uncertainty limits. See [field-data validation](docs/FIELD_DATA_VALIDATION.md). |
+| Workflow execution | Groundwater head/stress data → Pastas hindcast; GPR/ERT/MT → checked processing or model diagnostics; NOAA TMAX → labelled climate outputs. Independent numerical, holdout and output-readback checks are recorded in the [hydro](docs/HYDRO_WORKFLOW_VALIDATION.md), [near-surface](docs/NEAR_SURFACE_WORKFLOW_VALIDATION.md) and [climate](docs/CLIMATE_WORKFLOW_VALIDATION.md) reports. |
 | Dependencies | Candidate NumPy/SciPy updates passed; incompatible pandas/setuptools combinations were rejected. The [report workflow ran successfully on main](https://github.com/SteadfastAsArt/geoscience-skills/actions/runs/34854160260). See [decisions](docs/DEPENDENCY_MAINTENANCE.md). |
 
 Claude runtime testing is excluded from this round. Other client availability
@@ -185,7 +189,8 @@ and optional-adapter decisions are in the [platform assessment](docs/PLATFORM_AD
 Scientific execution is verified on Linux. GeoLime requires a licensed vendor
 runtime; RockHound is maintained here for legacy migration, with its failed
 upstream PREM URL documented. The [new collection report](docs/COLLECTION_VALIDATION.md)
-also distinguishes executable examples from the new workflow process guides.
+distinguishes the executed workflow cases from remaining field-calibration,
+sampling-metadata, joint-inversion and forecasting limits.
 
 ---
 

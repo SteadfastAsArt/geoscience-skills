@@ -1,0 +1,10 @@
+{
+  "source_note": "Zenodo 18769571 v1 Site_2 ground_cart p1_75 (1).SGY. Binary and trace dt fields equal 293, but the radar-specific scaling is not documented in the release or pinned author reader. CoordinateUnits is 0. Preserve sample/trace order and encoded coordinates; do not infer ns, metres, CRS, survey distance or depth.",
+  "sample_interval_ns": null,
+  "time_origin_ns": null,
+  "trace_spacing_m": null,
+  "profile_origin_m": null,
+  "horizontal_crs": null,
+  "vertical_reference": null,
+  "measurement_uncertainty": null
+}

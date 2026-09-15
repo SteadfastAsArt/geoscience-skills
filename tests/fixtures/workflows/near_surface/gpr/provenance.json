@@ -1,0 +1,73 @@
+{
+  "dataset": {
+    "title": "Low-Frequency Ground Penetrating Radar (GPR) Dataset Acquired via Ground-Based and UAV Platforms",
+    "doi": "10.5281/zenodo.18769571",
+    "version": "1.0",
+    "creators": [
+      {
+        "name": "FAMIGLIETTI, NICOLA ANGELO",
+        "affiliation": "Istituto Nazionale di Geofisica e Vulcanologia",
+        "orcid": "0000-0001-5568-2385"
+      },
+      {
+        "name": "Gragnaniello, Diego",
+        "affiliation": "University of Salerno",
+        "orcid": "0000-0003-4271-8160"
+      },
+      {
+        "name": "Memmolo, Antonino",
+        "affiliation": "Istituto Nazionale di Geofisica e Vulcanologia",
+        "orcid": "0000-0002-1791-4162"
+      },
+      {
+        "name": "Migliazza, Robert",
+        "affiliation": "Istituto Nazionale di Geofisica e Vulcanologia",
+        "orcid": "0000-0002-3186-6902"
+      },
+      {
+        "name": "Ritrovato, Pierluigi",
+        "affiliation": "University of Salerno",
+        "orcid": "0000-0003-4534-6972"
+      },
+      {
+        "name": "Vicari, Annamaria",
+        "affiliation": "Istituto Nazionale di Geofisica e Vulcanologia",
+        "orcid": "0000-0003-0175-101X"
+      }
+    ],
+    "license": "CC-BY-4.0",
+    "license_evidence_url": "https://zenodo.org/api/records/18769571",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/"
+  },
+  "archive": {
+    "url": "https://zenodo.org/records/18769571/files/Site_2.zip?download=1",
+    "bytes": 3565988,
+    "sha256": "073a5c0eaedd5bdf7a08f54c8884a12c7b80ba9244e121c170f2bff6123ee069",
+    "md5": "b38b4962a361ea2deb32ee1eb65d45ab"
+  },
+  "files": {
+    "site2_ground_p1.SGY": {
+      "archive_member": "Site_2/ground_cart/p1_75 (1).SGY",
+      "bytes": 694992,
+      "sha256": "65a5ab409365aa431fd8d725b5741cf384c778029c18f12d3bb62a500a9c2829"
+    },
+    "zenodo-record.json": {
+      "url": "https://zenodo.org/api/records/18769571",
+      "sha256": "fdb81bddf608cbae47bc0c4a9af34a602c843d8efd7a5e81194a865c84fc3fdb"
+    }
+  },
+  "processing": [
+    "Extract this complete ground-cart line without changing any bytes. No UAV pairing, coordinate perturbation, resampling or padding.",
+    "Read all 312 traces and 494 samples with segyio; process with GPRPy sample-index operators only unless independently supported sampling metadata becomes available."
+  ],
+  "author_reader": {
+    "url": "https://github.com/dgragnaniello/AI4DITE_GPR_data/blob/ddaaee3e02afd5b22a3c184dd6986b47ca811afe/paired_GPR_dataset.py",
+    "revision": "ddaaee3e02afd5b22a3c184dd6986b47ca811afe",
+    "scope": "Reader supplies amplitudes and sample-index plots; no physical sample-time calibration."
+  },
+  "limitations": [
+    "Digital amplitude units are uncalibrated; zero is retained as a valid reading.",
+    "Unknown radar time scaling, coordinate units, horizontal CRS and vertical datum prohibit a field depth or velocity claim.",
+    "No field ground truth, reflector labels, amplitude/timing error budget or joint interpretation."
+  ]
+}

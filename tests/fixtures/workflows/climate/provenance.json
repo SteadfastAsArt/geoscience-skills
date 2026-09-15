@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "dataset": {
+    "title": "GHCN-Daily Version 3: twelve Northeast and Mid-Atlantic US stations, TMAX, 2018–2020",
+    "provider": "NOAA National Centers for Environmental Information",
+    "doi": "10.7289/V5D21VHZ",
+    "license": "CC0-1.0",
+    "license_evidence_url": "https://catalog.data.gov/dataset/global-historical-climatology-network-daily-ghcn-daily-version-3",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "retrieved_utc": "2026-09-15",
+    "version": "Pinned NCEI access-service response; underlying historical observations and station metadata may be revised"
+  },
+  "files": {
+    "ghcnd-tmax-2018-2020.csv.gz": {
+      "url": "https://www.ncei.noaa.gov/access/services/data/v1?dataset=daily-summaries&stations=USW00014739%2CUSW00094728%2CUSW00013739%2CUSW00013743%2CUSW00094823%2CUSW00014733%2CUSW00014735%2CUSW00014768%2CUSW00014742%2CUSW00014764%2CUSW00014740%2CUSW00093721&startDate=2018-01-01&endDate=2020-12-31&dataTypes=TMAX&units=metric&format=csv&includeAttributes=true&includeStationName=true&includeStationLocation=true",
+      "bytes": 60144,
+      "sha256": "0486b0992a955f65e32932cee8cc09564e965f2277854d375b631c039260de99",
+      "uncompressed_bytes": 1491604,
+      "uncompressed_sha256": "8f3c60133f21efb7936d72d2850fd0c90bbe4e8138e2f857ed8fba024ffef1d3",
+      "processing": "Complete CSV response bytes, losslessly gzip-compressed with mtime=0; no rows, columns or source flags removed"
+    }
+  },
+  "query": {
+    "dataset": "daily-summaries",
+    "stations": "USW00014739,USW00094728,USW00013739,USW00013743,USW00094823,USW00014733,USW00014735,USW00014768,USW00014742,USW00014764,USW00014740,USW00093721",
+    "startDate": "2018-01-01",
+    "endDate": "2020-12-31",
+    "dataTypes": "TMAX",
+    "units": "metric",
+    "format": "csv",
+    "includeAttributes": "true",
+    "includeStationName": "true",
+    "includeStationLocation": "true"
+  },
+  "station_ids": [
+    "USW00014739",
+    "USW00094728",
+    "USW00013739",
+    "USW00013743",
+    "USW00094823",
+    "USW00014733",
+    "USW00014735",
+    "USW00014768",
+    "USW00014742",
+    "USW00014764",
+    "USW00014740",
+    "USW00093721"
+  ],
+  "selection": "Twelve named long-running stations chosen by geography before inspecting returned temperatures; 2018–2019 reference and 2020 evaluation fixed before fitting. This short reference is not a 30-year climate normal.",
+  "units": {
+    "TMAX": "degrees Celsius returned by metric API; daily maximum, not daily mean temperature",
+    "coordinates": "source latitude/longitude in degrees; no source datum stated by this CSV",
+    "elevation": "metres, source datum not stated",
+    "date": "Gregorian observing-date label; exact UTC observation interval not supplied"
+  },
+  "quality_flags": {
+    "format": "measurement flag,quality flag,source flag[,observation time]",
+    "accepted": "Only empty quality flag and finite TMAX; flags retained even when value is masked",
+    "source_code_W": "WBAN/ASOS Summary of the Day from Integrated Surface Data",
+    "documentation": "https://www.ncei.noaa.gov/pub/data/ghcn/daily/readme.txt"
+  },
+  "spatial_assumptions": {
+    "projection": "WGS84 treated as working datum, local azimuthal equidistant centred at 41.5 N, 75 W; source coordinate datum not independently established",
+    "spherical_cell_area_radius_m": 6371008.8,
+    "grid": "Model predictions at geographic cell centres, not new station observations; retain only cells with all corners inside station convex hull"
+  },
+  "limitations": [
+    "Selected station records are complete and carry blank quality flags; rejection/missing branches are tested on explicitly altered copies, not relabelled field data.",
+    "Reference period is deliberately short and not homogenized; station moves, urban effects, elevation and long-term climate trends are not estimated.",
+    "Spatial holdout shares region and year; errors are descriptive, not independent confidence intervals or forecasts.",
+    "Final grid and its area mean are model-derived summaries within support, not measured regional climate truth."
+  ]
+}

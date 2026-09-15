@@ -1,183 +1,51 @@
-# Pastas Stress Models
+# Conditional stress-model configuration
 
-## Table of Contents
-- [Overview](#overview)
-- [StressModel](#stressmodel)
-- [RechargeModel](#rechargemodel)
-- [WellModel](#wellmodel)
-- [Stress Settings](#stress-settings)
-- [Multiple Stresses](#multiple-stresses)
+## Daily recharge
 
-## Overview
+Pastas 2.0 accepts `ps.RechargeModel(model, prec, evap, ...)`. Pass a recharge
+object such as `ps.rch.Linear()` or `ps.rch.FlexModel()`, not the string
+`"FlexModel"`. Linear recharge is `P + f*E`: the fitted `f` is normally negative,
+so this represents an evaporation loss. Do not apply another minus sign when
+interpreting a fitted negative parameter.
 
-Stress models describe how external influences (stresses) affect groundwater levels. Each stress model combines:
-- **Stress time series** - The input signal (e.g., precipitation, pumping)
-- **Response function** - How the aquifer responds over time
+Use mm/day for nonlinear recharge models, which include parameters expressed
+in millimetres. A daily total in mm is numerically a mean rate in mm/day for a
+one-day interval; preserve which date labels that interval. Unequal-duration
+accumulations need explicit conversion before use.
 
-## StressModel
+Defaults such as `settings="prec"` can fill missing values and extend stress
+history. The checked workflow supplies complete daily series and disables
+`fill_nan`, `fill_before` and `fill_after`. Its three missing rainfall days are
+explicitly imputed from calibration-only monthly means and remain flagged.
 
-The general-purpose stress model for any single time series input.
+## Pumping and river stages
 
-```python
-import pastas as ps
+For a single pumping series, use
+`ps.StressModel(model, pumping, ps.Hantush(), name="pumping", up=False, settings=...)`.
+Positive abstraction with `up=False` produces negative head contributions.
+Record the pumping rate unit and extraction/injection sign. Missing pumping
+records must not imply that a well was off.
 
-# Basic stress model
-sm = ps.StressModel(stress, rfunc=ps.Gamma(), name='stress_name')
-ml.add_stressmodel(sm)
-```
+`ps.WellModel(model, stresses, name="wells", distances=...)` uses a
+`HantushWellModel` response, not an ordinary `Hantush` instance. Distances,
+well identifiers and source-specific stress histories must align. Multiwell
+parameter interpretation needs the documented coordinate and distance units;
+it is not established by the single-series sign regression.
 
-### Parameters
+For river stages, `ps.StressModel(model, river, ps.Exponential(), name="river",
+settings="waterlevel")` is the applicable shape of the API. Review its filling
+and centering assumptions. Do not use precipitation settings for barometric
+pressure simply because both are time series.
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `stress` | Pandas Series with datetime index | Required |
-| `rfunc` | Response function object | Required |
-| `name` | Identifier for the stress | Required |
-| `up` | True if stress increases head | True |
-| `settings` | Predefined settings string | None |
+## Future stresses
 
-### Common Use Cases
+After fitting, `model.stressmodels['recharge'].set_stress(prec=series)` replaces
+precipitation. Set evaporation in a separate call: supplying both in one call
+is rejected in 2.0. Supply actual warmup through evaluation coverage, keep the
+fitted parameter vector fixed, and simulate continuously through the holdout.
+Using observed holdout meteorology is a conditional hindcast, not a forecast
+with unknown future weather.
 
-```python
-# Pumping well (causes drawdown)
-sm = ps.StressModel(pumping, rfunc=ps.Hantush(), name='pumping', up=False)
-
-# River stage (water level input)
-sm = ps.StressModel(river, rfunc=ps.Exponential(), name='river',
-                    settings='waterlevel')
-
-# Barometric pressure
-sm = ps.StressModel(baro, rfunc=ps.One(), name='baro', settings='prec')
-```
-
-## RechargeModel
-
-Specialized model for groundwater recharge from precipitation and evaporation.
-
-```python
-# Basic recharge model
-sm = ps.RechargeModel(precip, evap, rfunc=ps.Gamma(), name='recharge')
-ml.add_stressmodel(sm)
-```
-
-### Parameters
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `prec` | Precipitation series (mm/day) | Required |
-| `evap` | Evaporation series (mm/day) | Required |
-| `rfunc` | Response function | Required |
-| `name` | Identifier | Required |
-| `recharge` | Recharge calculation method | 'Linear' |
-
-### Recharge Methods
-
-| Method | Formula | Use Case |
-|--------|---------|----------|
-| `'Linear'` | P - f*E | Default, simple linear |
-| `'FlexModel'` | Non-linear | Variable recharge factor |
-| `'Berendrecht'` | Soil moisture model | Detailed water balance |
-
-```python
-# With FlexModel recharge
-sm = ps.RechargeModel(precip, evap, rfunc=ps.Gamma(),
-                      name='recharge', recharge='FlexModel')
-```
-
-## WellModel
-
-For modeling pumping well influence with distance considerations.
-
-```python
-# Well model with distance
-sm = ps.WellModel(
-    stress=[pumping1, pumping2],      # List of pumping series
-    rfunc=ps.Hantush(),
-    name='wells',
-    distances=[100, 250],             # Distances to observation well (m)
-    up=False
-)
-ml.add_stressmodel(sm)
-```
-
-### Parameters
-
-| Parameter | Description |
-|-----------|-------------|
-| `stress` | List of pumping time series |
-| `rfunc` | Response function (typically Hantush) |
-| `distances` | List of distances from each well |
-| `up` | False for pumping (drawdown) |
-
-## Stress Settings
-
-Predefined settings for common stress types:
-
-| Setting | Description | Typical Use |
-|---------|-------------|-------------|
-| `'prec'` | Precipitation | Rainfall data |
-| `'evap'` | Evaporation | Evapotranspiration |
-| `'well'` | Pumping well | Extraction rates |
-| `'waterlevel'` | Surface water level | River/lake stage |
-| `'head'` | Groundwater head | Boundary conditions |
-
-```python
-# Using settings
-sm = ps.StressModel(river, rfunc=ps.Exponential(),
-                    name='river', settings='waterlevel')
-```
-
-## Multiple Stresses
-
-Models can include multiple stress models to capture different influences:
-
-```python
-ml = ps.Model(head, name='well')
-
-# Recharge
-ml.add_stressmodel(ps.RechargeModel(
-    precip, evap, rfunc=ps.Gamma(), name='recharge'
-))
-
-# Pumping
-ml.add_stressmodel(ps.StressModel(
-    pumping, rfunc=ps.Hantush(), name='pumping', up=False
-))
-
-# River
-ml.add_stressmodel(ps.StressModel(
-    river, rfunc=ps.Exponential(), name='river', settings='waterlevel'
-))
-
-ml.solve()
-
-# Get individual contributions
-for name, contrib in ml.get_contributions().items():
-    print(f"{name}: {contrib.mean():.3f} m")
-```
-
-## Stress Model Selection Guide
-
-| Stress Type | Model | Response Function |
-|-------------|-------|-------------------|
-| Precipitation + Evap | `RechargeModel` | Gamma, Exponential |
-| Single pumping well | `StressModel(up=False)` | Hantush, Theis |
-| Multiple pumping wells | `WellModel` | Hantush |
-| River/lake level | `StressModel` | Exponential, Polder |
-| Barometric pressure | `StressModel` | One |
-| Temperature | `StressModel` | Gamma |
-
-## Parameter Bounds
-
-Set parameter bounds to constrain calibration:
-
-```python
-# After adding stress model
-ml.set_parameter('recharge_A', initial=100, pmin=1, pmax=1000)
-ml.set_parameter('recharge_a', initial=10, pmin=1, pmax=365)
-```
-
-Common parameter naming convention:
-- `{name}_A` - Scaling factor
-- `{name}_a` - Time parameter (days)
-- `{name}_n` - Shape parameter
+[Pastas 2.0 stress models](https://github.com/pastas/pastas/blob/fe740c1c270be41a95f4a8b8b0965f26c4ef6769/pastas/stressmodels.py),
+checked 2026-09-15. FlexModel, river and multiwell field calibrations remain
+conditional guidance rather than executed branches of this workflow case.

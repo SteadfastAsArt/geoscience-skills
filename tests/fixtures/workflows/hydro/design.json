@@ -1,0 +1,30 @@
+{
+  "calibration_start": "2005-01-01",
+  "calibration_end": "2013-12-31",
+  "holdout_start": "2014-01-01",
+  "holdout_end": "2018-12-25",
+  "warmup_days": 730,
+  "model": "Gamma response + Linear recharge + ArNoiseModel",
+  "response_cutoff": 0.999,
+  "missing_stress_policy": "calendar-month mean learned from observed calibration stresses only",
+  "baselines": [
+    "calibration_mean",
+    "calibration_monthly_mean",
+    "last_calibration_head_fixed"
+  ],
+  "head_input_unit": "ft",
+  "stress_input_unit": "ft/day",
+  "head_model_unit": "m",
+  "stress_model_unit": "mm/day",
+  "timestamp_convention": "date labels, timezone unspecified upstream; preserve naive dates",
+  "vertical_reference": "relative head in upstream CSV; absolute datum not established",
+  "model_name": "Kingstown",
+  "max_nfev": 300,
+  "gap_fill_limit_fraction": 0.01,
+  "data_files": {
+    "head": "head.csv",
+    "precipitation": "rain.csv",
+    "evaporation": "evap.csv"
+  },
+  "calibration_sampling": "all observed daily-date heads; no head infilling"
+}
