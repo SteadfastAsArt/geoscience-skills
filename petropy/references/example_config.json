@@ -1,0 +1,43 @@
+{
+  "depth_basis": "tvd_below_surface",
+  "depth_datum": "synthetic vertical well ground surface",
+  "interval_ft": [5000.0, 5002.5],
+  "fluid": {
+    "mast": 67.0,
+    "temp_grad": 0.015,
+    "press_grad": 0.5,
+    "rws": 0.1,
+    "rwt": 70.0,
+    "rmfs": 0.4,
+    "rmft": 100.0,
+    "gas_grav": 0.67,
+    "oil_api": 38.0
+  },
+  "multimineral": {
+    "gr_matrix": 10.0,
+    "gr_clay": 120.0,
+    "vclay_linear_weight": 1.0,
+    "vclay_clavier_weight": 0.0,
+    "vclay_larionov_weight": 0.0,
+    "vclay_nphi_weight": 0.0,
+    "vclay_nphi_rhob_weight": 0.0,
+    "include_qtz": "YES",
+    "include_clc": "YES",
+    "include_dol": "NO",
+    "include_x": "NO",
+    "rho_qtz": 2.65,
+    "nphi_qtz": -0.04,
+    "rho_clc": 2.71,
+    "nphi_clc": 0.0,
+    "a": 1.0,
+    "m": 2.0,
+    "n": 2.0,
+    "archie_weight": 1.0,
+    "indonesia_weight": 0.0,
+    "simandoux_weight": 0.0,
+    "modified_simandoux_weight": 0.0,
+    "waxman_smits_weight": 0.0,
+    "buckles_parameter": 0.02
+  },
+  "pay": {"phi_min": 0.1, "sw_max": 0.5, "vclay_max": 0.3}
+}

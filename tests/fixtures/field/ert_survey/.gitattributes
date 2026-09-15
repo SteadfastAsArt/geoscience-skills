@@ -1,0 +1,5 @@
+# Preserve fixed source bytes across platform checkouts.
+*.tab -text
+*.xml -text
+*.mseed -text
+*.gz -text

@@ -1,0 +1,23 @@
+# Python 3.11; isolated DLIS, GIS and LoopStructural domain audit baseline.
+# Do not combine with the PetroPy baseline (incompatible lasio versions).
+numpy==1.26.4
+pandas==2.3.3
+scipy==1.17.1
+matplotlib==3.11.2
+setuptools==80.9.0
+dlisio==1.0.4
+dliswriter==1.2.0
+lasio==0.32
+GemGIS==1.1.9
+geopandas==1.1.4
+rasterio==1.4.4
+affine==3.0.1
+shapely==2.1.2
+pyproj==3.7.2
+pyogrio==0.13.0
+LoopStructural==1.8.0
+loop-common==0.0.2
+loop-interpolation==0.0.2
+pyvista==0.49.0
+vtk==9.7.0
+scikit-image==0.26.0

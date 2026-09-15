@@ -3,3 +3,5 @@
 *.json text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
+# Published source bytes are hash-checked and must survive Windows checkout.
+tests/fixtures/field/** -text

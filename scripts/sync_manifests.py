@@ -16,7 +16,7 @@ else:
     from validate_skills import find_skill_dirs, parse_frontmatter
 
 
-RELEASE_VERSION = "2.4.0"
+RELEASE_VERSION = "2.5.0"
 MARKETPLACE_PATH = Path(".claude-plugin/marketplace.json")
 OPENCLAW_PATH = Path("openclaw.plugin.json")
 

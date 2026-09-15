@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "case_id": "seismic_waveform",
+  "dataset": {
+    "title": "GEOFON Seismic Network: GE.MATE..BHZ recorded waveform",
+    "authors": [
+      "GEOFON Data Centre"
+    ],
+    "doi": "10.14470/TR560404",
+    "version": "FDSN query snapshot retrieved 2026-09-14",
+    "license": "CC-BY-4.0",
+    "license_evidence_url": "https://geofon.gfz.de/waveform/archive/network.php?ncode=GE",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/"
+  },
+  "files": {
+    "GE.MATE.BHZ.20160824.mseed": {
+      "url": "https://geofon.gfz.de/fdsnws/dataselect/1/query?network=GE&station=MATE&location=*&channel=BHZ&starttime=2016-08-24T01:35:00&endtime=2016-08-24T01:40:00",
+      "role": "Unmodified archive response; includes complete MiniSEED records outside requested interval",
+      "bytes": 11776,
+      "sha256": "99f5619ca6823f1b4a6b8ec49e7c2bfb6d27803359db144ee6916e188bd81ec4"
+    },
+    "GE.MATE.BHZ.20160824.xml": {
+      "url": "https://geofon.gfz.de/fdsnws/station/1/query?network=GE&station=MATE&channel=BHZ&starttime=2016-08-24T01:35:00&endtime=2016-08-24T01:40:00&level=response&format=xml",
+      "role": "Unmodified station and instrument-response snapshot",
+      "bytes": 27956,
+      "sha256": "ae0d257faaafc1ede83a42b09a81fa5e923ca45629f987f83db5a4056a0f2a24"
+    }
+  },
+  "units": {
+    "waveform": "digital counts",
+    "corrected": "m/s, response removed with output=VEL",
+    "sample_interval": "0.05 s",
+    "timestamp": "UTC",
+    "latitude_longitude": "degrees, WGS84 default for the absent StationXML datum attribute; no projected CRS inferred",
+    "station_elevation": "494 m above sea level per StationXML",
+    "channel_depth": "5 m below local surface",
+    "azimuth": "0 degrees clockwise from north",
+    "dip": "-90 degrees, down from horizontal"
+  },
+  "coordinate_convention_source": "https://docs.fdsn.org/projects/stationxml/en/latest/reference.html",
+  "missing_values": "No gaps or masked samples in this interval. Never fill gaps or extend beyond observed data.",
+  "processing": [
+    "Preserve all 6047 server-returned integer samples, start 2016-08-24T01:34:57.895Z.",
+    "For a contained window, retain actual sample times; requested round-second boundaries are not relabelled as existing samples.",
+    "Apply ObsPy full response deconvolution to velocity, fixed prefilter (0.05,0.1,4,5) Hz, no water-level clipping, mean removal and 5% cosine taper."
+  ],
+  "uncertainty": "Source does not supply a complete amplitude/timing error model. Sample phase and sampling interval are known; PSD/RMS are not confidence intervals.",
+  "limitations": [
+    "StationXML Created timestamp and archive metadata can change on a new query: hashes identify this vendored snapshot, not an immutable FDSN service revision.",
+    "No event catalogue, arrival labels, source inversion, or physical interpretation is validated.",
+    "Instrument-corrected output is band limited; endpoint and out-of-band ground motion are excluded."
+  ]
+}

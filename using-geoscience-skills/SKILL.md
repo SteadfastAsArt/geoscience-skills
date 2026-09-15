@@ -8,7 +8,7 @@ description: |
 license: MIT
 metadata:
   skill_type: meta
-  version: 1.0.1
+  version: 1.0.2
   author: Geoscience Skills
   tags: '["Geoscience", "Skills", "Routing", "Discovery", "Workflows", "Agents"]'
   dependencies: '[]'
@@ -48,6 +48,7 @@ Match user intent keywords to the appropriate domain skill.
 | Keywords / Triggers | Skill | Domain |
 |---------------------|-------|--------|
 | SEG-Y, seismic traces, trace headers, inline, crossline | `segyio` | Seismic I/O |
+| SEG-Y to xarray, labelled seismic cube, Dask seismic | `segysak` | Seismic I/O |
 | waveform, earthquake, FDSN, seismogram, miniSEED | `obspy` | Seismology |
 | surface wave, dispersion, Rayleigh, Love wave | `disba` | Seismology |
 | LAS, well logs, wireline, borehole curves | `lasio` | Well Logs |
@@ -58,25 +59,33 @@ Match user intent keywords to the appropriate domain skill.
 | 3D model, geology, implicit surface, faults | `gempy` | 3D Modelling |
 | fold modelling, structural frame, Loop3D | `loopstructural` | 3D Modelling |
 | GIS, spatial data prep, borehole to GemPy | `gemgis` | GIS Preprocessing |
+| existing licensed GeoLime project, mining block model API | `geolime` | Licensed Modelling |
 | inversion, DC resistivity, magnetics, gravity, EM | `simpeg` | Inversion |
+| TensorMesh, TreeMesh, cell/face operators, finite-volume mesh | `discretize` | Meshes |
 | ERT, SRT, IP, near-surface inversion | `pygimli` | Inversion |
 | PDE, wave equation, finite differences, stencil | `devito` | Simulation |
 | linear operator, inverse problem, sparsity | `pylops` | Inverse Problems |
 | gravity, magnetic, Bouguer, upward continuation | `harmonica` | Potential Fields |
+| reference ellipsoid, normal gravity, geocentric latitude | `boule` | Geodesy |
 | AVO, Zoeppritz, Gassmann, fluid substitution, wavelet | `bruges` | Rock Physics |
 | gridding, interpolation, spatial, Verde | `verde` | Spatial Analysis |
 | variogram, kriging, GSLIB, geostatistics | `geostatspy` | Geostatistics |
 | variogram fitting, scikit-learn style geostat | `scikit-gstat` | Geostatistics |
 | spatial regression, GWR, GNNWR, non-stationarity, coefficient mapping | `gnnwr` | Spatial Regression |
 | groundwater, time series, pumping test | `pastas` | Hydrology |
+| MODFLOW, aquifer flow, head, recharge, water budget | `flopy` | Hydrology |
 | landscape, erosion, surface processes, DEM | `landlab` | Surface Processes |
 | stereonet, strike, dip, poles, structural | `mplstereonet` | Structural Geology |
 | geochemistry, REE, spider diagram, ternary | `pyrolite` | Geochemistry |
 | GPR, ground-penetrating radar, radargram | `gprpy` | Near-Surface |
 | magnetotellurics, MT, impedance tensor | `mtpy` | Near-Surface |
 | NetCDF, xarray, multi-dimensional, climate | `xarray` | Data Formats |
+| paleoclimate proxy, age ensemble, irregular spectrum | `pyleoclim` | Paleoclimate |
 | 3D visualization, mesh, VTK, point cloud | `pyvista` | Visualization |
+| GMT, PyGMT, map projection, geographic grid cartography | `pygmt` | Cartography |
 | data download, sample data, cache, fetch | `pooch` | Utilities |
+| Fatiando datasets, explicit dataset version, Ensaio | `ensaio` | Datasets |
+| existing RockHound cache, legacy PREM loader migration | `rockhound` | Legacy Datasets |
 
 ## Workflow Skills
 
@@ -90,6 +99,9 @@ available workflow instructions. Natural-language requests can match these tasks
 | `geological-modelling` | Build a 3D model from mapping, boreholes, or GIS inputs | gemgis, gempy or loopstructural, pyvista |
 | `geophysical-inversion` | Recover physical properties from ERT, EM, gravity, or magnetic data | simpeg or pygimli, verde, pyvista |
 | `rock-physics-avo` | Compute elastic properties, fluid substitution, AVO, or synthetics | lasio, welly, bruges, segyio |
+| `hydrogeological-analysis` | Combine well logs, groundwater head time series and aquifer hypotheses | lasio, welly, pastas, optionally flopy |
+| `near-surface-geophysics` | Compare GPR, ERT and MT evidence with matched coordinates and resolution | gprpy, pygimli or simpeg, mtpy |
+| `climate-analysis` | Analyse climate time series and grid spatial observations without leakage | xarray, verde, optionally pyleoclim |
 
 ## Composition and Data Handoffs
 
@@ -108,7 +120,8 @@ available workflow instructions. Natural-language requests can match these tasks
 
 ## Optional Role References
 
-The repository's `agents/data-qc-reviewer.md` and `agents/geoscience-mentor.md` are
+The repository's `agents/data-qc-reviewer.md`, `agents/geoscience-mentor.md` and
+`agents/cross-validation-reviewer.md` are
 optional role references for hosts that support them. Ordinary skill installation
 may omit these files. Perform QC and explanations with available capabilities;
 these roles and host-specific integrations are not requirements for routing or

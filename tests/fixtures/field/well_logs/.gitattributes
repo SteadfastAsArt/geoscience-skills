@@ -1,0 +1,7 @@
+# Preserve fixed source bytes across platform checkouts.
+*.tab -text
+# Original trailing tabs represent missing columns; preserve provider bytes.
+FDB-1_wireline_original.tab whitespace=-blank-at-eol
+*.xml -text
+*.mseed -text
+*.gz -text

@@ -2,9 +2,9 @@
 
 **Portable geoscience skills for Codex, Claude Code, GitHub Copilot, Gemini CLI, Windsurf, OpenCode, Cline, Roo Code, OpenClaw, and other coding agents using the [Agent Skills format](https://agentskills.io/specification).**
 
-30 domain skills + 5 workflows + 1 discovery skill. The same skill files are shared across agents; platform commands, hooks, and subagents are optional. See the [verification results](#verification-results) and [compatibility matrix](docs/COMPATIBILITY.md).
+39 domain skills + 8 workflows + 1 discovery skill. The same skill files are shared across agents; platform commands, hooks, and subagents are optional. See the [verification results](#verification-results) and [compatibility matrix](docs/COMPATIBILITY.md).
 
-[![Skills](https://img.shields.io/badge/Skills-36-blue)](SKILLS.md)
+[![Skills](https://img.shields.io/badge/Skills-48-blue)](SKILLS.md)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
@@ -112,37 +112,26 @@ additional domain-specific package lists.
 
 ---
 
-## 🧠 30 Domain Skills
-
-### By Popularity (GitHub Stars)
-
-| Top Skills | Stars | Use Case |
-|------------|-------|----------|
-| **xarray** | 4.1k | NetCDF, climate data, multi-dimensional arrays |
-| **pyvista** | 3.5k | 3D visualization, mesh analysis |
-| **obspy** | 1.3k | Seismology, waveforms, earthquake catalogs |
-| **gempy** | 1.2k | 3D implicit geological modelling |
-| **devito** | 658 | Finite-difference wave simulation |
-| **verde** | 648 | Spatial gridding, ML-style interpolation |
-| **simpeg** | 607 | Geophysical inversion framework |
+## 🧠 39 Domain Skills
 
 ### By Domain
 
 ```
-Seismic & Seismology     → obspy, segyio, disba
+Seismic & Seismology     → obspy, segyio, segysak, disba
 Well Logs & Petrophysics → lasio, welly, dlisio, striplog, petropy
-3D Geological Modelling  → gempy, loopstructural, gemgis
-Geophysical Inversion    → simpeg, devito, pylops, pygimli
-Potential Fields         → harmonica
+3D Geological Modelling  → gempy, loopstructural, gemgis, geolime (licensed)
+Geophysical Inversion    → simpeg, devito, pylops, pygimli, discretize
+Potential Fields         → harmonica, boule
 Rock Physics             → bruges
 Geostatistics            → verde, geostatspy, scikit-gstat, gnnwr
-Hydrology                → pastas
+Hydrology                → pastas, flopy
 Surface Processes        → landlab
 Structural Geology       → mplstereonet
 Geochemistry             → pyrolite
 Near-surface Geophysics  → gprpy, mtpy
-Data Formats             → xarray (NetCDF/HDF5/Zarr)
-Visualization            → pyvista
+Data Formats             → xarray (NetCDF/HDF5/Zarr), pyleoclim
+Visualization            → pyvista, pygmt
+Datasets                 → pooch, ensaio, rockhound (legacy)
 ```
 
 > 📋 Full details: [SKILLS.md](SKILLS.md)
@@ -173,30 +162,30 @@ SessionStart hook are not installed by the generic skills CLI.
 
 | Metric | Value |
 |--------|-------|
-| Installable Skills | 36 (30 domain + 5 workflow + 1 router) |
-| Domains Covered | 17 |
-| Combined GitHub Stars | 18,000+ |
+| Installable Skills | 48 (39 domain + 8 workflow + 1 router) |
 | File Formats Supported | SEG-Y, LAS, DLIS, NetCDF, HDF5, Zarr, GRIB, VTK |
 
 ---
 
 ## Verification results
 
-Recorded on **2026-09-14** for implementation
-[`db5156c`](https://github.com/SteadfastAsArt/geoscience-skills/commit/db5156c211fe28b87a0085961f1f82bee86fcb31).
+Recorded on **2026-09-14**. [PR #3](https://github.com/SteadfastAsArt/geoscience-skills/pull/3)
+was merged first; the following P1–P3 work extends that baseline.
 
 | Check | Recorded result |
 | --- | --- |
-| Codex task execution | **LAS QC and SEG-Y subsetting passed**, with observed skill reads and checked outputs. The initial SEG-Y timeout and successful controlled retry are both retained in the [evaluation record](docs/AGENT_EVALUATIONS.md). |
-| Automated tests | **140 passed**: 53 lightweight checks, 85 scientific tests and 2 evaluation-fixture readback tests. See [scientific testing](docs/SCIENTIFIC_TESTING.md). |
-| Installation | **All 36 skills across nine targets passed on Linux and Windows**, including preservation of bundled resources. See [compatibility evidence](docs/COMPATIBILITY.md#verification-scope). |
-| Remote CI | **All five jobs passed**: [validation and installation](https://github.com/SteadfastAsArt/geoscience-skills/actions/runs/34810508410), plus [core and modelling science](https://github.com/SteadfastAsArt/geoscience-skills/actions/runs/34810508438). |
+| Native Codex tasks | **LAS QC, SEG-Y subsetting and formation evaluation passed** without task prompts naming skills or catalog paths. Each run discovered all 48 skills and retained successful native skill-read evidence. See [agent evaluations](docs/AGENT_EVALUATIONS.md). |
+| Installation | **48 skills × nine targets passed locally** with skills CLI 1.5.26, including bundled resources. Linux/Windows CI runs the same checks; see [compatibility evidence](docs/COMPATIBILITY.md#verification-scope). |
+| Automated tests | **216 passed**: 152 scientific checks across six isolated environments, 61 lightweight checks and 3 evaluation-fixture readbacks. See [suite results and reproduction](docs/SCIENTIFIC_TESTING.md). |
+| Field data | Published well logs, earthquake waveform and ERT observations now join GNSS, with licenses, units, holdout checks and explicit uncertainty limits. See [field-data validation](docs/FIELD_DATA_VALIDATION.md). |
+| Dependencies | Candidate NumPy/SciPy updates passed; incompatible pandas/setuptools combinations were rejected. The [report workflow ran successfully on main](https://github.com/SteadfastAsArt/geoscience-skills/actions/runs/34854160260). See [decisions](docs/DEPENDENCY_MAINTENANCE.md). |
 
-The Codex tasks explicitly select skills from a catalog; native automatic
-discovery and activation remain untested. Claude Code retains format and
-installation support, with runtime evaluation excluded from this round.
-Scientific tests currently run on Linux. See the [next priorities](docs/ROADMAP.md#next-priorities)
-for remaining domain audits, agent checks and field-data coverage.
+Claude runtime testing is excluded from this round. Other client availability
+and optional-adapter decisions are in the [platform assessment](docs/PLATFORM_ADAPTER_ASSESSMENT.md).
+Scientific execution is verified on Linux. GeoLime requires a licensed vendor
+runtime; RockHound is maintained here for legacy migration, with its failed
+upstream PREM URL documented. The [new collection report](docs/COLLECTION_VALIDATION.md)
+also distinguishes executable examples from the new workflow process guides.
 
 ---
 
@@ -211,10 +200,13 @@ Multi-step workflows that chain domain skills together:
 | Geological Modelling | gemgis → gempy/loopstructural → pyvista | 3D model building |
 | Geophysical Inversion | simpeg/pygimli → verde → pyvista | ERT, magnetics, gravity |
 | Rock Physics & AVO | lasio/welly → bruges → segyio | AVO feasibility studies |
+| Hydrogeological Analysis | well logs + pastas; optional flopy | Groundwater head and aquifer hypotheses |
+| Near-surface Geophysics | gprpy + pygimli/simpeg + mtpy | Compare GPR, ERT and MT evidence |
+| Climate Analysis | xarray + verde; optional pyleoclim | Time/space analysis without validation leakage |
 
 The audited examples have separate [scientific regression checks](docs/SCIENTIFIC_TESTING.md)
 using generated LAS/SEG-Y files, elastic logs, geological/inversion models, and
-[published GNSS station data](docs/FIELD_DATA_VALIDATION.md). These check numerical
+[published field data](docs/FIELD_DATA_VALIDATION.md). These check numerical
 outputs, coordinates and uncertainty assumptions. Recorded [Codex task evaluations](docs/AGENT_EVALUATIONS.md)
 separately check skill selection and produced files.
 
@@ -227,6 +219,7 @@ does not register them as subagents; use them explicitly when available.
 |-------|------|
 | data-qc-reviewer | Check well log, seismic, and spatial data quality |
 | geoscience-mentor | Guide skill and workflow selection |
+| cross-validation-reviewer | Review independent holdouts, uncertainty and model comparison |
 
 ---
 
@@ -239,7 +232,7 @@ PRs welcome! See **[CONTRIBUTING.md](CONTRIBUTING.md)** for the full guide, incl
 - Task boundaries, resource loading, and scientific validation guidance
 - Recursive skill validation, generated platform manifests, and installation smoke tests
 
-See **[docs/ROADMAP.md](docs/ROADMAP.md)** for planned skills and infrastructure improvements.
+See **[docs/ROADMAP.md](docs/ROADMAP.md)** for completed priorities and remaining validation boundaries.
 
 [Dependency maintenance](docs/DEPENDENCY_MAINTENANCE.md) describes the weekly
 registry report and the checks required before adopting new library or installer versions.
@@ -258,5 +251,12 @@ registry report and the checks required before adopting new library or installer
 
 MIT © 2024
 
-The bundled [Alps GNSS data](tests/fixtures/field/alps_gps/ATTRIBUTION.md) retain
-their original CC BY 3.0 and curated-data CC BY 4.0 licenses and attribution.
+Bundled data retain their own licenses and attribution:
+
+- [Alps GNSS](tests/fixtures/field/alps_gps/ATTRIBUTION.md): original CC BY 3.0 and curated CC BY 4.0.
+- [Published well logs](tests/fixtures/field/well_logs/ATTRIBUTION.md): CC BY 4.0.
+- [GEOFON waveform and response](tests/fixtures/field/seismic_waveform/ATTRIBUTION.md): CC BY 4.0.
+- [Crescentino ERT](tests/fixtures/field/ert_survey/ATTRIBUTION.md): CC BY 4.0.
+
+Project-generated audit fixtures are explicitly synthetic and do not represent
+field observations.

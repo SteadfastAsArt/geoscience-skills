@@ -1,7 +1,8 @@
-# Verified on Python 3.11. These are a test baseline, not global install rules.
-numpy==1.26.4
+# Verified on Python 3.12. These are a test baseline, not global install rules.
+numpy==2.5.3
+# welly 0.5.2 calls Index.is_numeric, removed in pandas 3.
 pandas==2.3.3
-scipy==1.17.1
+scipy==1.18.1
 lasio==0.32
 segyio==1.9.14
 welly==0.5.2

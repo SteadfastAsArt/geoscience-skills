@@ -15,8 +15,8 @@ import tempfile
 
 import yaml
 
-SKILLS_CLI_VERSION = "1.5.25"
-# Test expectations from skills@1.5.25's agent registry. This is not an installer:
+SKILLS_CLI_VERSION = "1.5.26"
+# Test expectations checked against skills@1.5.26's agent registry. This is not an installer:
 # upstream performs installation, and this snapshot detects destination drift.
 TARGET_SKILL_DIRS = {
     "codex": ".agents/skills",

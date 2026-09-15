@@ -1,28 +1,50 @@
 # Roadmap
 
-Updated **2026-09-14**. Implementation and verification are recorded in
+Updated **2026-09-15**. The original portability work was merged in
 [PR #3](https://github.com/SteadfastAsArt/geoscience-skills/pull/3).
-The [verification summary](../README.md#verification-results) links the recorded
-implementation and its five passing CI jobs.
+The [verification summary](../README.md#verification-results) and reports below
+record the subsequent P1–P3 work and its validation boundaries.
 
-## Next priorities
+## P1–P3 delivery
 
-| Priority | Work | Acceptance |
+The prior portability PR was merged before this work. The current delivery
+tracks each requested priority against concrete evidence.
+
+| Priority | Work delivered | Evidence and scope |
 | --- | --- | --- |
-| P1 | Test native skill discovery and activation in Codex | Install skills, run a task without directing the agent to the catalog or a skill file, and retain observed activation and numerical checks. |
-| P1 | Extend task evaluations to other available agents and workflow branches | Reuse the fixture/grader contracts; record actual CLI/model versions, skill use, outputs and failures. Claude runtime testing is excluded from this round. |
-| P1 | Add field well, seismic and inversion datasets | Record source licenses, units, coordinates and missing values; define uncertainty and recovery criteria before evaluating results. |
-| P2 | Audit DLIS, GIS/DEM, LoopStructural and configured PetroPy examples | Execute documented APIs with suitable fixtures, verify scientific invariants and shorten entrypoints as working examples are established. |
-| P2 | Validate candidate dependency versions | Test proposed pins in isolated environments and rerun relevant science or installer checks before adoption. |
-| P3 | Add planned skills and workflows | Provide concise portable entrypoints, meaningful examples and validation after existing correctness coverage improves. |
-| P3 | Extend optional platform adapters where needed | Establish why native skill installation is insufficient, and keep the adapter optional for ordinary tasks. |
+| P1 | Native Codex discovery and implicit activation | Three task-only runs each scanned 48 enabled skills, read the appropriate native entrypoint and passed independent output checks. [Recorded runs](AGENT_EVALUATIONS.md). |
+| P1 | More agent/workflow coverage | Added a formation-evaluation task and inspected available clients. Claude is excluded by request; OpenClaw is unconfigured and other assessed CLIs are unavailable. [Platform assessment](PLATFORM_ADAPTER_ASSESSMENT.md). |
+| P1 | Field well, seismic and inversion data | Three licensed datasets, 21 scientific tests, explicit uncertainty/holdout and separate synthetic recovery. [Field evidence](FIELD_DATA_VALIDATION.md). |
+| P2 | DLIS, GIS/DEM, LoopStructural and configured PetroPy audit | Real APIs, independent fixtures, corrected helpers and concise entrypoints. [Audit report](DOMAIN_AUDITS.md). |
+| P2 | Candidate dependency validation | Tested isolated Python 3.12 stacks and installer 1.5.26; retained incompatible-branch pins with observed failure reasons. [Dependency decisions](DEPENDENCY_MAINTENANCE.md). |
+| P3 | Planned skills, workflows and role guide | Added nine domain skills, three workflows and optional cross-validation guidance. [Collection report](COLLECTION_VALIDATION.md). |
+| P3 | Optional adapters | Native installation and Codex scanning establish no need for another content adapter; existing optional manifests were regenerated for 48 skills. [Assessment](PLATFORM_ADAPTER_ASSESSMENT.md). |
 
-See [scientific testing](SCIENTIFIC_TESTING.md) for coverage boundaries,
-[agent evaluations](AGENT_EVALUATIONS.md) for task evidence,
-[compatibility](COMPATIBILITY.md) for installation results, and
-[dependency maintenance](DEPENDENCY_MAINTENANCE.md) for the registry report.
+## Remaining validation boundaries
 
-## Completed by 2026-09-14
+These are external requirements or additional coverage, not claims established
+by completing the above engineering work:
+
+- **GeoLime runtime — excluded this round (confirmed 2026-09-15):** no licensed
+  environment is available, so execution is explicitly skipped and does not
+  block the other work. The skill retains its preparation/review guidance and
+  limitation notice. Future API testing requires a licensed vendor distribution;
+  the public PyPI placeholder is not a functional substitute.
+- **Other agent runtimes:** OpenClaw needs model/provider configuration; absent
+  clients need a usable environment. Claude runtime testing remains excluded.
+  Installation support is not equivalent to model-task execution.
+- **Full scientific workflows:** hydrogeology, near-surface and climate guides
+  provide decision/validation procedures; their full Pastas/GPR/MT/climate field
+  branches have not each been run end to end. Field-scale geological/inversion
+  interpretation and additional OS/library combinations need separate evidence.
+- **Legacy data availability:** RockHound is archived and its PREM URL returned
+  404. Its real parser is tested with synthetic cached bytes; migration needs a
+  verified replacement dataset or an existing valid cache for the user's task.
+
+See [scientific testing](SCIENTIFIC_TESTING.md), [agent evaluations](AGENT_EVALUATIONS.md)
+and [compatibility](COMPATIBILITY.md) for exact reproducible checks.
+
+## Earlier work merged in PR #3
 
 ### Scientific correctness
 
@@ -62,29 +84,19 @@ See [scientific testing](SCIENTIFIC_TESTING.md) for coverage boundaries,
 - [x] Audit Bruges and disba examples and helpers against executable API tests;
   shorten their entrypoints and load detailed examples conditionally.
 - [x] Add the read-only dependency report and weekly workflow configuration.
-  Scheduled execution begins after the workflow reaches the default branch;
-  dependency upgrades remain a separate validation task.
+  After merging, its first manual run on main succeeded; validated dependency
+  upgrades and rejected combinations are recorded separately.
 
-## Planned Skills
+## Added in v2.5.0
 
-| Library | Domain | Stars | Priority |
-|---------|--------|-------|----------|
-| flopy | Groundwater Modelling (MODFLOW) | 600+ | High |
-| pygmt | Generic Mapping Tools | 800+ | High |
-| discretize | Mesh generation for SimPEG | 200+ | Medium |
-| segysak | SEG-Y with xarray integration | 100+ | Medium |
-| geolime | Mining geology & block models | 50+ | Medium |
-| pyleoclim | Paleoclimate time series | 200+ | Medium |
-| rockhound | Sample geoscience datasets | 50+ | Low |
-| boule | Reference ellipsoids & gravity | 100+ | Low |
-| ensaio | Geoscience sample datasets | 50+ | Low |
+Domain skills: `flopy`, `pygmt`, `discretize`, `segysak`, `geolime`, `pyleoclim`,
+`rockhound`, `boule` and `ensaio`.
 
-## Planned workflows and role guides
+Workflows: `hydrogeological-analysis`, `near-surface-geophysics` and
+`climate-analysis`. Optional role: `cross-validation-reviewer`.
 
-- Hydrogeological workflow (pastas + well logs)
-- Near-surface geophysics workflow (GPR + ERT + MT)
-- Climate data analysis workflow (xarray + verde)
-- Cross-validation agent for model quality assessment
+The total is 39 domain skills + 8 workflows + 1 router = **48**. A listed skill
+is guidance, not a claim that its entire library is installed or validated.
 
 ## Earlier milestones
 

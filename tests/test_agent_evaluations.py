@@ -14,7 +14,8 @@ from types import SimpleNamespace
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from evals.cases import grade, make_fixture, read_segy
-from scripts.evaluate_agents import classify_failure, extract_evidence, stage_workspace, sandbox_command, main
+from scripts.evaluate_agents import classify_failure, extract_evidence, stage_workspace, sandbox_command, main, summarize_discovery
+from scripts.validate_skills import find_skill_dirs
 
 
 class AcceptanceTests(unittest.TestCase):
@@ -106,11 +107,83 @@ class AcceptanceTests(unittest.TestCase):
         self.assertNotIn('"expected"', prompt)
         self.assertNotIn("skills/segyio", prompt)
         self.assertFalse((workspace / "cases.py").exists())
-        self.assertEqual(len(json.loads((workspace / "skill-catalog.json").read_text())), 36)
+        self.assertEqual(len(json.loads((workspace / "skill-catalog.json").read_text())), len(find_skill_dirs(ROOT)))
         self.assertIn("expected", oracle)
+
+    def test_native_staging_has_no_catalog_or_skill_instruction_in_prompt(self):
+        workspace = self.work / "native"
+        oracle = stage_workspace("segy-subset", workspace, 1, mode="native")
+        prompt = (workspace / "TASK.md").read_text()
+        for forbidden in ("skill-catalog", "SKILL.md", "selected_skills", "segyio", ".agents"):
+            self.assertNotIn(forbidden, prompt)
+        self.assertFalse((workspace / "skill-catalog.json").exists())
+        self.assertFalse((workspace / "skills").exists())
+        self.assertEqual(len(list((workspace / ".agents/skills").glob("*/SKILL.md"))), len(find_skill_dirs(ROOT)))
+        self.assertEqual(oracle["protocol_version"], "native-1")
+
+    def test_workflow_accepts_nulls_clipping_and_gap_preservation(self):
+        oracle = make_fixture("formation-evaluation", self.work / "inputs")
+        for name, expected in oracle["expected"].items():
+            (self.work / name).write_text(json.dumps(expected))
+        self.assertTrue(grade("formation-evaluation", self.work, oracle)["passed"])
+        rows = oracle["expected"]["evaluated.json"]["rows"]
+        self.assertTrue(rows[1]["sw_clipped"])
+        self.assertIsNone(rows[3]["vsh"])
+        self.assertIsNone(rows[8]["phi_d"])
+        self.assertFalse(rows[10]["qc_valid"])
+
+    def test_workflow_rejects_bridged_gaps_and_zero_filled_missing_values(self):
+        oracle = make_fixture("formation-evaluation", self.work / "inputs")
+        for name, expected in oracle["expected"].items():
+            (self.work / name).write_text(json.dumps(expected))
+        actual = copy.deepcopy(oracle["expected"]["evaluated.json"])
+        actual["rows"][3]["vsh"] = 0
+        (self.work / "evaluated.json").write_text(json.dumps(actual))
+        self.assertFalse(grade("formation-evaluation", self.work, oracle)["passed"])
+        (self.work / "evaluated.json").write_text(json.dumps(oracle["expected"]["evaluated.json"]))
+        actual = copy.deepcopy(oracle["expected"]["lithology.json"])
+        actual["intervals"][0]["base_m"] = 1503.0
+        (self.work / "lithology.json").write_text(json.dumps(actual))
+        self.assertFalse(grade("formation-evaluation", self.work, oracle)["passed"])
+
+    def test_workflow_checks_parameter_file_preservation(self):
+        oracle = make_fixture("formation-evaluation", self.work / "inputs")
+        (self.work / "inputs/formation-parameters.json").write_text("{}")
+        self.assertIn("input formation-parameters.json: changed or missing",
+                      grade("formation-evaluation", self.work, oracle)["failures"])
 
 
 class EvidenceTests(unittest.TestCase):
+    def test_native_scanner_requires_enabled_exact_repository_path(self):
+        catalog = [{"name": "lasio", "path": ".agents/skills/lasio/SKILL.md"}]
+        skill = {"name": "lasio", "path": "/workspace/.agents/skills/lasio/SKILL.md", "scope": "repo", "enabled": True}
+        def response(item):
+            return {"result": {"data": [{"cwd": "/workspace", "skills": [item], "errors": []}]}}
+        self.assertTrue(summarize_discovery(response(skill), catalog)["passed"])
+        for key, value in (("enabled", False), ("scope", "user"), ("path", "/workspace/wrong/SKILL.md")):
+            self.assertFalse(summarize_discovery(response({**skill, key: value}), catalog)["passed"])
+
+    def test_native_tool_read_retains_native_path_evidence(self):
+        event = json.dumps({"type": "item.completed", "item": {"type": "command_execution",
+            "command": "cat /workspace/.agents/skills/lasio/SKILL.md", "exit_code": 0,
+            "aggregated_output": "---\nname: lasio\ndescription: Read LAS files\n---"}})
+        evidence = extract_evidence("codex", event)
+        self.assertEqual(evidence["observed_skill_reads"], ["lasio"])
+        self.assertEqual(evidence["skill_read_evidence"][0]["path"], "/workspace/.agents/skills/lasio/SKILL.md")
+
+    def test_double_quoted_shell_sed_native_read_is_observed(self):
+        event = json.dumps({"type": "item.completed", "item": {"type": "command_execution",
+            "command": '/bin/bash -lc "sed -n \'1,240p\' /workspace/.agents/skills/lasio/SKILL.md"',
+            "exit_code": 0, "aggregated_output": "---\nname: lasio\ndescription: LAS I/O\n---"}})
+        evidence = extract_evidence("codex", event)
+        self.assertEqual(evidence["observed_skill_reads"], ["lasio"])
+
+    def test_echoing_a_reader_command_and_frontmatter_is_not_read_evidence(self):
+        event = json.dumps({"type": "item.completed", "item": {"type": "command_execution",
+            "command": "echo 'cat skills/lasio/SKILL.md name: lasio'", "exit_code": 0,
+            "aggregated_output": "cat skills/lasio/SKILL.md name: lasio"}})
+        self.assertEqual(extract_evidence("codex", event)["observed_skill_reads"], [])
+
     def test_blocked_first_task_prevents_duplicate_agent_attempt(self):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "report.json"

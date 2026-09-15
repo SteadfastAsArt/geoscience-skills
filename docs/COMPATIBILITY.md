@@ -5,7 +5,7 @@ Project verification recorded: **2026-09-14**.
 
 Geoscience Skills uses the open Agent Skills format so the same scientific
 instructions can be installed in multiple coding agents. The portable collection
-contains **36 skills**: 30 domain skills, five workflow skills, and the
+contains **48 skills**: 39 domain skills, eight workflow skills, and the
 `using-geoscience-skills` discovery skill. Agent-specific integrations are optional.
 
 ## Install with the upstream skills CLI
@@ -33,7 +33,7 @@ npx skills list
 ```
 
 Keep `--full-depth`: this repository retains domain directories at its root and
-five workflow directories under `workflows/`. A source checkout can also be
+eight workflow directories under `workflows/`. A source checkout can also be
 installed by replacing `SteadfastAsArt/geoscience-skills` with its local path.
 
 Installation is project-scoped by default. Add `--global` for user scope or
@@ -83,13 +83,13 @@ The source layout is:
 ```text
 lasio/SKILL.md                             # Example domain skill
 segyio/SKILL.md                            # Example domain skill
-...                                       # 30 domain skills in total
-workflows/well-log-evaluation/SKILL.md      # One of five workflow skills
+...                                       # 39 domain skills in total
+workflows/well-log-evaluation/SKILL.md      # One of eight workflow skills
 using-geoscience-skills/SKILL.md            # Discovery and routing skill
 ```
 
 The router is separate from `workflows/` so it can be installed independently of
-the five workflows. Workflow instructions refer to related skills by name;
+the eight workflows. Workflow instructions refer to related skills by name;
 agents should resolve those names from their installed skill inventory. A
 workflow can also be followed in a single agent session when delegation is
 unavailable.
@@ -104,7 +104,7 @@ service credentials, or input datasets.
 
 | Repository component | Portable skills installation | Claude Code integration |
 | --- | --- | --- |
-| The 36 skill directories | Installed when selected | Also usable through supported Claude installation routes |
+| The 48 skill directories | Installed when selected | Also usable through supported Claude installation routes |
 | `.claude/commands/` | Not installed as commands | Optional command shortcuts |
 | `.claude/settings.json` SessionStart hook | Not installed or activated | Optional repository configuration |
 | `agents/` role definitions | Not registered as subagents | Optional Claude-specific agent definitions |
@@ -127,38 +127,49 @@ Compatibility evidence has three distinct levels:
 | Installer smoke test | A specified version of the upstream CLI discovers and installs the expected files for selected targets. | That the target application starts, activates the skill, or executes scientific code. |
 | Agent task evaluation | A named agent/version runs a recorded task and produces checked results. | Equivalent behavior in other agents, versions, models, or execution environments. |
 
-On **2026-09-14**, installation checks passed on Linux with **skills CLI 1.5.25**,
-Node.js 24.13.0, and Python 3.13 for all nine named installer targets in the matrix.
-Each target received all **36 skills**, with the expected project directory,
-upstream CLI inventory, and byte-for-byte preservation of bundled resources.
-The check uses fresh temporary projects and does not require the target agent
-application to be installed. Its pinned directory expectations are test fixtures;
-the upstream CLI remains responsible for installation.
+On **2026-09-14**, local installation checks passed with **skills CLI 1.5.26**
+for all nine named installer targets. Each target received all **48 skills**,
+with the expected project directory, upstream inventory and byte-for-byte
+preservation of bundled resources. This uses disposable projects and does not
+require the target application to be installed. The upstream CLI remains
+responsible for installation; this repository checks the result.
 
-Portable validation reports **36 skills, zero errors, zero warnings**. The
-lightweight regression suite has **53 passing tests** covering validation,
-manifests, installation checks, dependency reporting and the evaluation harness.
-Remote [validation and installation CI](https://github.com/SteadfastAsArt/geoscience-skills/actions/runs/34810508410)
-also passed on **2026-09-14** for implementation
-[`db5156c`](https://github.com/SteadfastAsArt/geoscience-skills/commit/db5156c211fe28b87a0085961f1f82bee86fcb31).
-Both Linux and Windows jobs installed and checked all 36 skills for all nine
-targets, using skills CLI 1.5.25, Node.js 22 and Python 3.11. These CI jobs do
-not launch the target agents. Later revisions have their own
-[workflow results](https://github.com/SteadfastAsArt/geoscience-skills/actions/workflows/validate-skills.yml).
+The 48-skill collection passes portable validation. The lightweight regression
+suite covers manifests, installation integrity, dependency reporting and the
+native/explicit evaluation protocols. The
+[validation workflow](../.github/workflows/validate-skills.yml) repeats all nine
+installation targets on Linux and Windows; its
+[run history](https://github.com/SteadfastAsArt/geoscience-skills/actions/workflows/validate-skills.yml)
+identifies the tested revision. The earlier 36-skill/CLI 1.5.25 Windows result
+remains in [PR #3's verification run](https://github.com/SteadfastAsArt/geoscience-skills/actions/runs/34810508410);
+it is not reused as evidence for the added skills.
 
-Recorded [Codex task evaluations](AGENT_EVALUATIONS.md) passed LAS QC and SEG-Y
-subsetting with Codex 0.154.0 and configured model `gpt-5.5`, using explicit
-selection from the 36-skill catalog. Each successful run completed normally,
-read the expected skill and passed independent output checks. The first SEG-Y
-attempt timed out after producing correct output; that failure remains recorded
-alongside the successful controlled retry. Native automatic skill discovery and
-activation remain untested. Claude runtime evaluation is excluded from this
-round; its support remains based on the format and installation evidence above.
-Codex results do not establish runtime behavior in another agent.
+Recorded [native Codex evaluations](AGENT_EVALUATIONS.md) passed **LAS QC, SEG-Y
+subsetting and formation evaluation** using Codex 0.154.0 and configured model
+`gpt-5.5`. Each run scanned all 48 skills with enabled repository scope, received
+no catalog or skill-path hints in its task, successfully read the appropriate
+native skill file, completed normally and passed independent numerical checks.
+The three runs use one recorded skill snapshot; its hashes identify the tested
+content even when later documentation changes.
+
+Earlier explicit-catalog runs remain available, including the initial SEG-Y
+timeout and successful controlled retry. A corrected evidence parser replayed
+native logs after its first assessment missed double-quoted shell reads; those
+initial assessments are retained. No extra model run was needed to recover the
+already-recorded successful read evidence.
+
+Claude runtime testing is excluded from this round by user request. OpenClaw's
+CLI is present but lacks the inspected provider/runtime configuration; the
+other assessed client CLIs were unavailable. The
+[dated availability record and adapter assessment](PLATFORM_ADAPTER_ASSESSMENT.md)
+state the checks and limits. No additional adapter was justified beyond the
+existing optional manifests: shared native installation already preserves the
+full skill bundles. Installation or Codex results do not establish another
+agent's runtime behavior.
 
 Separate [scientific regression suites](SCIENTIFIC_TESTING.md) execute audited
 Python examples and check numerical results and exported coordinates. Their
-isolated core/modelling environments are distinct from these installer checks;
+isolated scientific environments are distinct from these installer checks;
 passing them does not establish skill activation or task execution inside any
 particular coding agent.
 

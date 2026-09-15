@@ -14,6 +14,20 @@ from evals.cases import make_fixture
 
 
 class FixtureReadbackTests(unittest.TestCase):
+    def test_formation_las_readback(self):
+        with tempfile.TemporaryDirectory() as temp:
+            directory = Path(temp)
+            expected = make_fixture("formation-evaluation", directory)["expected"]["evaluated.json"]["rows"]
+            las = lasio.read(directory / "formation.las")
+            self.assertEqual(las.data.shape, (len(expected), 4))
+            self.assertEqual(las.curves["RT"].unit, "OHM-M")
+            self.assertEqual(las.curves["RHOB"].unit, "G/CC")
+            self.assertTrue(np.isnan(las["GR"][3]))
+            self.assertTrue(np.isnan(las["RHOB"][5]))
+            self.assertEqual(las["RT"][10], 0)
+            for depth, row in zip(las.index, expected):
+                self.assertEqual(depth, row["depth_m"])
+
     def test_las_readback(self):
         with tempfile.TemporaryDirectory() as temp:
             directory = Path(temp)

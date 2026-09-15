@@ -1,7 +1,7 @@
 # Repository guidance
 
-Geoscience Skills provides portable Agent Skills for coding assistants: 30 domain
-skills, 5 workflows, and the `using-geoscience-skills` router. Shared content
+Geoscience Skills provides portable Agent Skills for coding assistants: 39 domain
+skills, 8 workflows, and the `using-geoscience-skills` router. Shared content
 follows https://agentskills.io/specification and must work without a particular
 agent's hooks, slash commands, delegation API, or plugin manager.
 
