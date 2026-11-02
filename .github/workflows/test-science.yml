@@ -13,6 +13,29 @@ env:
   OMP_NUM_THREADS: "1"
 
 jobs:
+  geostatistics:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tests/science/requirements-geostatistics.txt
+      - name: Install isolated SciKit-GStat dependencies and validation tooling
+        run: python -m pip install pyyaml -r tests/science/requirements-geostatistics.txt
+      - name: Execute variogram, kriging, holdout and export checks
+        run: >-
+          python scripts/run_science.py --environment geostatistics
+          --python "$(command -v python)" --report "$RUNNER_TEMP/geostatistics.json"
+      - name: Preserve scientific execution evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: geostatistics-results
+          path: ${{ runner.temp }}/geostatistics.json
+          if-no-files-found: warn
+
   core:
     runs-on: ubuntu-latest
     steps:

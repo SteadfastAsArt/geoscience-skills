@@ -37,6 +37,7 @@ part of a packaging or documentation task.
 ```bash
 python3 scripts/validate_skills.py
 python3 scripts/sync_manifests.py --check
+python3 scripts/check_coverage.py --check
 python3 -m unittest discover -s tests -v
 ```
 
@@ -52,6 +53,10 @@ installation check, or an actual agent task run.
 
 For scientific code or example changes, use the separate core/modelling
 environments and relevant tests described in `docs/SCIENTIFIC_TESTING.md`.
+Update `tests/skill_coverage.json` when adding skills, scripts, scientific suites
+or environments, and regenerate `docs/VALIDATION_MATRIX.md` with
+`python3 scripts/check_coverage.py --write`. Declare the exact tested scope;
+an explicit coverage gap is not a successful execution result.
 Preserve user-level packages and skills; install test dependencies only in
 isolated environments. Scientific checks must fail on missing dependencies,
 not report skipped examples as validated results.

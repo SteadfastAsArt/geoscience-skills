@@ -17,7 +17,10 @@ repository guidance and [compatibility](docs/COMPATIBILITY.md) for installation.
    table when it adds a new routing choice.
 5. Run `python3 scripts/sync_manifests.py` to regenerate platform adapters from
    the skill files. Do not maintain separate copies of their descriptions.
-6. Run the checks below, then submit a pull request describing behavior and
+6. Add or update the skill's scope, suites and script mappings in
+   [the coverage registry](tests/skill_coverage.json). Regenerate the matrix with
+   `python3 scripts/check_coverage.py --write`.
+7. Run the checks below, then submit a pull request describing behavior and
    validation. Bump `metadata.version` when changing an existing skill.
 
 ## Frontmatter
@@ -84,6 +87,7 @@ Project conventions:
 python3 -m pip install pyyaml
 python3 scripts/validate_skills.py
 python3 scripts/sync_manifests.py --check
+python3 scripts/check_coverage.py --check
 python3 -m unittest discover -s tests -v
 ```
 
@@ -97,6 +101,19 @@ For changes to scientific examples or processing scripts, also run the relevant
 small generated inputs and assert known numerical results, missing-value
 semantics, units, or exported coordinates. Prefer executing the documented
 example over copying its formula into a test.
+
+Register every scientific suite with its isolated environment in
+`tests/skill_coverage.json` and ensure the corresponding CI job executes it;
+older jobs list their suite commands explicitly. Map a bundled script only to
+tests that execute that script; a related library or workflow test does not
+cover an unused helper.
+For existing untested helpers, retain a specific `gap` and the work needed to
+close it. New executable examples should include an execution test. The generated
+[validation matrix](docs/VALIDATION_MATRIX.md) makes these boundaries visible;
+its inventory check is not a scientific test run. Use `scripts/run_science.py`
+with an existing isolated interpreter to run the registered suites for an
+environment. Missing imports, skipped tests, expected failures and zero-test
+suites fail this runner; its JSON report records the actual dependency versions.
 
 For installation or layout changes:
 

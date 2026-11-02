@@ -6,6 +6,8 @@ Install selected skills with `npx skills add SteadfastAsArt/geoscience-skills --
 See [coding agent compatibility](docs/COMPATIBILITY.md) for target directories and
 verification scope. Installing guidance does not install Python libraries or
 establish that every scientific operation has been tested.
+See the [per-skill validation matrix](docs/VALIDATION_MATRIX.md) for test scopes,
+script coverage gaps and recorded native-task evidence.
 
 ## Domain skills
 
@@ -34,7 +36,7 @@ establish that every scientific operation has been tested.
 | Gravity / rock physics | [bruges](bruges/SKILL.md) | Elastic properties, AVO, wavelets and fluid substitution |
 | Spatial analysis | [verde](verde/SKILL.md) | Spatial interpolation, gridding and validation |
 | Spatial analysis | [geostatspy](geostatspy/SKILL.md) | Variograms, kriging and geostatistical simulation |
-| Spatial analysis | [scikit-gstat](scikit-gstat/SKILL.md) | Variogram estimation and fitting |
+| Spatial analysis | [scikit-gstat](scikit-gstat/SKILL.md) | Variograms, ordinary kriging with variance and spatial holdout validation |
 | Spatial analysis | [gnnwr](gnnwr/SKILL.md) | Neural geographically weighted regression |
 | Hydrology / surface | [pastas](pastas/SKILL.md) | Groundwater head response models, chronological validation and diagnostics |
 | Hydrology / surface | [flopy](flopy/SKILL.md) | MODFLOW flow models, heads and water budgets |

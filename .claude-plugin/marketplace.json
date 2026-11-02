@@ -385,8 +385,8 @@
       "skills": [
         "./scikit-gstat"
       ],
-      "description": "Geostatistical analysis with scikit-learn style API. Compute variograms, kriging interpolation, and spatial correlation analysis. Use when the agent needs to: (1) Compute experimental variograms from spatial data, (2) Fit variogram models (spherical, exponential, gaussian, matern), (3) Perform Ordinary or Universal Kriging interpolation, (4) Assess spatial anisotropy with directional variograms, (5) Cross-validate spatial models, (6) Analyze spatio-temporal data, (7) Export variogram parameters for other geostatistical software.",
-      "version": "1.0.1"
+      "description": "Estimate and diagnose variograms, perform ordinary kriging, and validate spatial interpolation with SciKit-GStat. Use for empirical or directional variograms, covariance-model comparison and kriging prediction/variance; use PyKrige or GSTools when the task requires universal kriging or external drift.",
+      "version": "1.0.2"
     },
     {
       "name": "segyio",

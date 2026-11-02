@@ -1,12 +1,31 @@
 # Roadmap
 
-Updated **2026-09-15**. The original portability work was merged in
+Updated **2026-10-25**. The original portability work was merged in
 [PR #3](https://github.com/SteadfastAsArt/geoscience-skills/pull/3).
 The subsequent P1–P3 delivery was merged in
 [PR #5](https://github.com/SteadfastAsArt/geoscience-skills/pull/5) on 2026-09-15
 after all nine CI checks passed.
 The [verification summary](../README.md#verification-results) and reports below
 record the subsequent P1–P3 work and its validation boundaries.
+
+## October quality follow-up
+
+- Corrected SciKit-GStat prediction/variance handling, training-only spatial
+  validation, Matérn/stable nugget interpretation and diagnostic plotting.
+  Twelve new scientific checks passed in an isolated Python 3.12 environment.
+- Added a [per-skill validation matrix](VALIDATION_MATRIX.md) covering all 48
+  skills and 39 scripts. Sixteen scripts have declared execution tests; the
+  other 23 retain explicit gaps instead of inheriting unrelated library checks.
+- Added an inventory gate and a scientific runner with separate suite processes,
+  actual dependency records and failure on missing imports or skipped tests.
+  The new geostatistics CI job uses the runner and preserves its JSON report.
+
+This addresses the confirmed SciKit-GStat defects and makes coverage auditable.
+Remaining priorities are executing the untested helpers, measuring skill benefit
+against a matched no-skill baseline, adding positive/negative trigger cases and
+independently replaying agent-produced outputs. The three historical native
+tasks do not establish those additional claims. Release artifacts and broader
+contributor onboarding remain separate follow-up work.
 
 ## P1–P3 delivery
 

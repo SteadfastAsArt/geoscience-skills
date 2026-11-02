@@ -80,3 +80,12 @@ commit `3b1f75eba820764b2147568fc0cc40f3a47919d5`, separately from its Python
 dependency pins. That source commit is recorded in the GPR validation report
 and CI; it is not a PyPI version and is not monitored by the registry script.
 These environments must not be installed over one another or over user packages.
+
+## Geostatistics baseline added on 2026-10-25
+
+SciKit-GStat 1.0.24 and its tested direct dependencies have a separate Python
+3.12 [baseline](../tests/science/requirements-geostatistics.txt), included
+automatically in the registry report. Twelve scientific checks passed locally;
+this addition does not upgrade the core, modelling or other workflow stacks.
+The [environment runner](SCIENTIFIC_TESTING.md#run-a-registered-environment)
+records actual installed versions and keeps them distinct from the requested pins.

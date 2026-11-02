@@ -1,210 +1,73 @@
-# Variogram Models Reference
+# Variogram parameter conventions
 
-## Table of Contents
-- [Model Overview](#model-overview)
-- [Spherical Model](#spherical-model)
-- [Exponential Model](#exponential-model)
-- [Gaussian Model](#gaussian-model)
-- [Matern Model](#matern-model)
-- [Stable Model](#stable-model)
-- [Model Selection](#model-selection)
+SciKit-GStat uses effective range `r`, partial sill `c0` and nugget `b`.
+The plateau is `c0 + b`. Range has coordinate-distance units; partial sill and
+nugget have squared observation units. Parameters from another library need an
+explicit convention conversion before reuse.
 
-## Model Overview
+## Parameter order
 
-| Model | Parameters | Near-Origin Behavior | Sill Behavior |
-|-------|------------|---------------------|---------------|
-| `spherical` | range, sill, nugget | Linear | Reaches exactly |
-| `exponential` | range, sill, nugget | Linear | Approaches asymptotically |
-| `gaussian` | range, sill, nugget | Parabolic | Approaches asymptotically |
-| `matern` | range, sill, nugget, smoothness | Configurable | Approaches asymptotically |
-| `stable` | range, sill, nugget, shape | Configurable | Approaches asymptotically |
+| Model | `V.parameters` order |
+| --- | --- |
+| spherical, exponential, gaussian | effective range, partial sill, nugget |
+| matern | effective range, partial sill, smoothness, nugget |
+| stable | effective range, partial sill, shape, nugget |
 
-## Spherical Model
+Use `V.describe(short=True)` for named fields, and `V.transform(lags)` to evaluate
+the fitted function. Truncating the parameter list to its first three entries
+can omit a fitted nugget or mislabel a shape parameter.
 
-The most commonly used variogram model in geostatistics.
+## Effective range
+
+For positive separation `h`, the implemented conventions are:
+
+```text
+spherical:  gamma(h) = b + c0 * (1.5*h/r - 0.5*(h/r)^3), for h <= r
+                       b + c0, for h > r
+exponential: gamma(h) = b + c0 * (1 - exp(-3*h/r))
+gaussian:    gamma(h) = b + c0 * (1 - exp(-4*(h/r)^2))
+```
+
+The exponential reaches about 95% of its partial sill at `r`; the Gaussian
+implementation uses a scale of `r/2`. Neither asymptotic model reaches a sharp
+correlation cutoff. Matérn and stable use their own shape-dependent conventions;
+retain the named shape parameter and consult the upstream function before
+transferring a model. Do not identify `r` with a universal correlation length.
+
+## Named parameters and evaluation
+
+This fragment assumes a fitted `V` and an array of nonnegative `lags`:
 
 ```python
-V.model = 'spherical'
+parameters = V.describe(short=True)
+effective_range = parameters["effective_range"]
+partial_sill = parameters["sill"]
+nugget = parameters["nugget"]
+total_sill = partial_sill + nugget
+shape = {name: parameters[name] for name in ("smoothness", "shape")
+         if name in parameters}
+semivariance = V.transform(lags)
 ```
 
-**Equation:**
-```
-gamma(h) = nugget + sill * [1.5*(h/range) - 0.5*(h/range)^3]  for h <= range
-gamma(h) = nugget + sill                                       for h > range
-```
+The default `use_nugget=False` fixes the nugget at zero. Set `use_nugget=True`
+when the data and intended model justify estimating it. Fitted nugget and
+microscale variance cannot automatically be separated from measurement error.
+There is no universal acceptable nugget/sill ratio.
 
-**Characteristics:**
-- Linear behavior near the origin
-- Reaches the sill exactly at the range
-- Suitable for most geological phenomena
-- Good default choice when unsure
+## Comparing models
 
-**Best for:**
-- Soil properties
-- Geological layers
-- Most spatial data without strong smoothness
+Variogram-bin RMSE measures agreement with the empirical semivariances used for
+fitting. It does not establish out-of-sample interpolation quality. More flexible
+models can improve this score without better predictions. Inspect bin pair
+counts, sampling support, trends and directional coverage. Choose/tune within
+training data and evaluate on independent holdouts using the
+[training-only example](kriging_methods.md#spatial-holdout).
 
-## Exponential Model
+The diagnostic script's `best_model` means lowest in-sample bin RMSE among the
+successful candidate fits. Its `model_failures` records rejected fits; failure
+of every candidate is an error. Compare uncertainty only under clearly stated
+model and sampling assumptions.
 
-Gradual approach to the sill, never quite reaching it.
-
-```python
-V.model = 'exponential'
-```
-
-**Equation:**
-```
-gamma(h) = nugget + sill * [1 - exp(-h/range)]
-```
-
-**Characteristics:**
-- Linear behavior near origin
-- Practical range is ~3x the range parameter
-- Never reaches the sill exactly
-- Rougher interpolation than Gaussian
-
-**Best for:**
-- Groundwater levels
-- Contamination plumes
-- Data with gradual spatial transitions
-
-## Gaussian Model
-
-Parabolic behavior near origin, very smooth interpolation.
-
-```python
-V.model = 'gaussian'
-```
-
-**Equation:**
-```
-gamma(h) = nugget + sill * [1 - exp(-(h/range)^2)]
-```
-
-**Characteristics:**
-- Parabolic (flat) behavior at origin
-- Very smooth interpolation
-- Can cause numerical instability in kriging
-- Often combined with small nugget for stability
-
-**Best for:**
-- Smooth, continuous phenomena
-- Topographic surfaces
-- Temperature fields
-- Data known to be differentiable
-
-**Caution:** Pure Gaussian models can cause singular kriging matrices. Add a small nugget if issues occur.
-
-## Matern Model
-
-Flexible model with controllable smoothness.
-
-```python
-V.model = 'matern'
-# Smoothness is automatically fitted or can be set
-```
-
-**Parameters:**
-- `range`: Correlation distance
-- `sill`: Total variance
-- `nugget`: Measurement error/micro-variability
-- `smoothness` (nu): Controls differentiability
-
-**Smoothness values:**
-| nu | Equivalent Model |
-|----|-----------------|
-| 0.5 | Exponential |
-| 1.5 | Intermediate |
-| inf | Gaussian |
-
-**Best for:**
-- When model flexibility is needed
-- Unknown smoothness characteristics
-- Scientific applications requiring explicit smoothness
-
-## Stable Model
-
-Generalization between exponential and Gaussian.
-
-```python
-V.model = 'stable'
-```
-
-**Parameters:**
-- `range`, `sill`, `nugget`: Standard parameters
-- `shape` (alpha): Between 0 and 2
-
-**Shape values:**
-| alpha | Behavior |
-|-------|----------|
-| 1 | Exponential-like |
-| 2 | Gaussian-like |
-
-## Model Selection
-
-### Compare Models Programmatically
-
-```python
-import skgstat as skg
-
-V = skg.Variogram(coords, values)
-
-models = ['spherical', 'exponential', 'gaussian', 'matern']
-results = []
-
-for model in models:
-    V.model = model
-    results.append({
-        'model': model,
-        'rmse': V.rmse,
-        'range': V.parameters[0],
-        'sill': V.parameters[1]
-    })
-
-# Sort by RMSE
-results.sort(key=lambda x: x['rmse'])
-for r in results:
-    print(f"{r['model']}: RMSE={r['rmse']:.4f}")
-```
-
-### Visual Comparison
-
-```python
-import matplotlib.pyplot as plt
-
-fig, axes = plt.subplots(2, 2, figsize=(10, 8))
-models = ['spherical', 'exponential', 'gaussian', 'matern']
-
-for ax, model in zip(axes.flat, models):
-    V.model = model
-    V.plot(ax=ax)
-    ax.set_title(f"{model} (RMSE: {V.rmse:.4f})")
-
-plt.tight_layout()
-plt.show()
-```
-
-### Selection Guidelines
-
-1. **Start with spherical** - Good default for most cases
-2. **Try exponential** if data shows gradual transitions
-3. **Use Gaussian** only for known smooth phenomena
-4. **Use Matern** when flexibility and physical interpretation matter
-
-### Physical Interpretation
-
-| Parameter | Meaning |
-|-----------|---------|
-| **Range** | Distance at which spatial correlation disappears |
-| **Sill** | Total variance of the spatial process |
-| **Nugget** | Measurement error + micro-scale variability |
-| **Nugget/Sill ratio** | Proportion of unexplained variance (aim for < 0.5) |
-
-### Common Issues
-
-| Issue | Possible Cause | Solution |
-|-------|----------------|----------|
-| High RMSE all models | Trend in data | Detrend before analysis |
-| Nugget > Sill | Poor fit | Try different binning or estimator |
-| Range > study area | Insufficient extent | Increase maxlag or collect more data |
-| Singular kriging matrix | Gaussian model without nugget | Add small nugget |
+[Upstream model definitions](https://scikit-gstat.readthedocs.io/en/latest/reference/models.html)
+and [parameter API](https://scikit-gstat.readthedocs.io/en/latest/reference/variogram.html),
+checked with SciKit-GStat 1.0.24 on 2026-10-25.

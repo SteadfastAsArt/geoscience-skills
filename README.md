@@ -165,11 +165,16 @@ SessionStart hook are not installed by the generic skills CLI.
 | Installable Skills | 48 (39 domain + 8 workflow + 1 router) |
 | File Formats Supported | SEG-Y, LAS, DLIS, NetCDF, HDF5, Zarr, GRIB, VTK |
 
+The [per-skill validation matrix](docs/VALIDATION_MATRIX.md) records test scopes
+for all 48 skills. Of 39 bundled scripts, 16 have declared execution tests and
+23 have explicit coverage gaps. A mapping does not establish a passing run or
+validate an entire library; native-task evidence is listed separately.
+
 ---
 
 ## Verification results
 
-Updated **2026-09-15**. [PR #3](https://github.com/SteadfastAsArt/geoscience-skills/pull/3)
+Updated **2026-10-25**. [PR #3](https://github.com/SteadfastAsArt/geoscience-skills/pull/3)
 and the subsequent P1–P3 delivery in
 [PR #5](https://github.com/SteadfastAsArt/geoscience-skills/pull/5) are merged.
 The workflow follow-up extends their scientific evidence; native Agent runs
@@ -179,7 +184,8 @@ retain their original recorded revisions.
 | --- | --- |
 | Native Codex tasks | **LAS QC, SEG-Y subsetting and formation evaluation passed** without task prompts naming skills or catalog paths. Each run discovered all 48 skills and retained successful native skill-read evidence. See [agent evaluations](docs/AGENT_EVALUATIONS.md). |
 | Installation | **48 skills × nine targets passed locally** with skills CLI 1.5.26, including bundled resources. Linux/Windows CI runs the same checks; see [compatibility evidence](docs/COMPATIBILITY.md#verification-scope). |
-| Automated tests | **268 checks**: 204 scientific across ten isolated environments, 61 lightweight and 3 evaluation-fixture readbacks. The workflow follow-up adds 52 passing scientific checks to the previous 216-test baseline. See [results, CI scope and reproduction](docs/SCIENTIFIC_TESTING.md). |
+| September automated baseline | **268 checks**: 204 scientific across ten isolated environments, 61 lightweight and 3 evaluation-fixture readbacks. See [dated results and reproduction](docs/SCIENTIFIC_TESTING.md). |
+| October local follow-up | **12 SciKit-GStat scientific tests and 74 lightweight tests passed**. Added an eleventh isolated environment, coverage inventory gate and scientific runner that fails skipped tests. Current inventory is 293 tests; the other scientific environments and native agent tasks were not rerun in this follow-up. [Scope and commands](docs/SCIENTIFIC_TESTING.md). |
 | Field data | Published well logs, earthquake waveform and ERT observations now join GNSS, with licenses, units, holdout checks and explicit uncertainty limits. See [field-data validation](docs/FIELD_DATA_VALIDATION.md). |
 | Workflow execution | Groundwater head/stress data → Pastas hindcast; GPR/ERT/MT → checked processing or model diagnostics; NOAA TMAX → labelled climate outputs. Independent numerical, holdout and output-readback checks are recorded in the [hydro](docs/HYDRO_WORKFLOW_VALIDATION.md), [near-surface](docs/NEAR_SURFACE_WORKFLOW_VALIDATION.md) and [climate](docs/CLIMATE_WORKFLOW_VALIDATION.md) reports. |
 | Dependencies | Candidate NumPy/SciPy updates passed; incompatible pandas/setuptools combinations were rejected. The [report workflow ran successfully on main](https://github.com/SteadfastAsArt/geoscience-skills/actions/runs/34854160260). See [decisions](docs/DEPENDENCY_MAINTENANCE.md). |

@@ -1,0 +1,667 @@
+{
+  "schema_version": 1,
+  "environments": {
+    "core": {
+      "python": "3.12",
+      "requirements": "tests/science/requirements-core.txt",
+      "setup": "Core I/O, seismic and well logs; retain compatible pandas/setuptools."
+    },
+    "models": {
+      "python": "3.12",
+      "requirements": "tests/science/requirements-models.txt",
+      "setup": "Separate modelling stack; not compatible with the core pandas baseline."
+    },
+    "audits": {
+      "python": "3.11",
+      "requirements": "tests/science/requirements-audits.txt",
+      "setup": "DLIS, GIS/DEM and LoopStructural."
+    },
+    "petropy": {
+      "python": "3.11",
+      "requirements": "tests/science/requirements-audits-petropy.txt",
+      "setup": "Separate older lasio/NumPy combination for configured PetroPy."
+    },
+    "collection": {
+      "python": "3.12",
+      "requirements": "tests/science/requirements-collection.txt",
+      "setup": "Set MODFLOW_EXE to the isolated pinned binary; see SCIENTIFIC_TESTING.md."
+    },
+    "pygmt": {
+      "python": "3.12",
+      "requirements": "tests/science/environment-pygmt.yml",
+      "setup": "Conda environment including GMT and Ghostscript."
+    },
+    "hydro": {
+      "python": "3.11",
+      "requirements": "tests/science/requirements-hydro-workflow.txt",
+      "setup": "Pastas stack; NUMBA_THREADING_LAYER=workqueue where needed."
+    },
+    "climate": {
+      "python": "3.12",
+      "requirements": "tests/science/requirements-climate-workflow.txt",
+      "setup": "Climate stack and local licensed fixtures."
+    },
+    "gpr": {
+      "python": "3.11",
+      "requirements": "tests/science/requirements-near-surface-gpr.txt",
+      "setup": "Also install GPRPy commit 3b1f75eba820764b2147568fc0cc40f3a47919d5; see SCIENTIFIC_TESTING.md."
+    },
+    "mt": {
+      "python": "3.12",
+      "requirements": "tests/science/requirements-near-surface-mt.txt",
+      "setup": "Use mtpy-v2, not the legacy mtpy distribution."
+    },
+    "geostatistics": {
+      "python": "3.12",
+      "requirements": "tests/science/requirements-geostatistics.txt",
+      "setup": "SciKit-GStat API, numerical, spatial-holdout and CLI audit."
+    }
+  },
+  "suites": {
+    "io": {
+      "environment": "core",
+      "path": "tests/science/test_io_scripts.py"
+    },
+    "seismic": {
+      "environment": "core",
+      "path": "tests/science/test_seismic_examples.py"
+    },
+    "well-log": {
+      "environment": "core",
+      "path": "tests/science/test_well_log_examples.py"
+    },
+    "bruges-disba": {
+      "environment": "core",
+      "path": "tests/science/test_domain_examples.py"
+    },
+    "field-well": {
+      "environment": "core",
+      "path": "tests/science/test_field_well_logs.py"
+    },
+    "field-waveform": {
+      "environment": "core",
+      "path": "tests/science/test_field_seismic_waveform.py"
+    },
+    "models": {
+      "environment": "models",
+      "path": "tests/science/test_model_examples.py"
+    },
+    "field-gnss": {
+      "environment": "models",
+      "path": "tests/science/test_field_data.py"
+    },
+    "field-ert": {
+      "environment": "models",
+      "path": "tests/science/test_field_ert_survey.py"
+    },
+    "ert-workflow": {
+      "environment": "models",
+      "path": "tests/science/test_near_surface_workflow_ert.py"
+    },
+    "dlis": {
+      "environment": "audits",
+      "path": "tests/science/test_dlis_examples.py"
+    },
+    "gis": {
+      "environment": "audits",
+      "path": "tests/science/test_gis_examples.py"
+    },
+    "loopstructural": {
+      "environment": "audits",
+      "path": "tests/science/test_loopstructural_examples.py"
+    },
+    "petropy": {
+      "environment": "petropy",
+      "path": "tests/science/test_petropy_examples.py"
+    },
+    "collection": {
+      "environment": "collection",
+      "path": "tests/science/test_collection_examples.py"
+    },
+    "pygmt": {
+      "environment": "pygmt",
+      "path": "tests/science/test_pygmt_examples.py"
+    },
+    "hydro": {
+      "environment": "hydro",
+      "path": "tests/science/test_hydro_workflow.py"
+    },
+    "climate": {
+      "environment": "climate",
+      "path": "tests/science/test_climate_workflow.py"
+    },
+    "gpr": {
+      "environment": "gpr",
+      "path": "tests/science/test_near_surface_workflow_gpr.py"
+    },
+    "mt": {
+      "environment": "mt",
+      "path": "tests/science/test_near_surface_workflow_mt.py"
+    },
+    "scikit-gstat": {
+      "environment": "geostatistics",
+      "path": "tests/science/test_scikit_gstat_examples.py"
+    },
+    "agent-fixtures": {
+      "environment": "core",
+      "path": "evals/tests/test_fixture_readback.py"
+    }
+  },
+  "skills": {
+    "boule": {
+      "checks": [
+        "collection"
+      ],
+      "scope": "Reference ellipsoid gravity and geodetic/geocentric coordinate examples.",
+      "scripts": {}
+    },
+    "bruges": {
+      "checks": [
+        "bruges-disba",
+        "seismic"
+      ],
+      "scope": "Executed AVO, fluid, wavelet and elastic examples and helper; not all library APIs.",
+      "scripts": {
+        "scripts/avo_analysis.py": {
+          "checks": [
+            "bruges-disba"
+          ]
+        }
+      }
+    },
+    "devito": {
+      "checks": [],
+      "scope": "No dedicated scientific execution suite is mapped for this skill.",
+      "scripts": {
+        "scripts/acoustic_wave.py": {
+          "gap": "Acoustic helper needs real solver, boundary-condition and arrival-time checks."
+        }
+      }
+    },
+    "disba": {
+      "checks": [
+        "bruges-disba",
+        "seismic"
+      ],
+      "scope": "Layered dispersion, kernels, units and helper; no field inversion.",
+      "scripts": {
+        "scripts/dispersion_analysis.py": {
+          "checks": [
+            "bruges-disba"
+          ]
+        }
+      }
+    },
+    "discretize": {
+      "checks": [
+        "collection"
+      ],
+      "scope": "Nonuniform mesh order, cell volumes and analytic divergence.",
+      "scripts": {}
+    },
+    "dlisio": {
+      "checks": [
+        "dlis"
+      ],
+      "scope": "Real DLIS frame/channel parsing and helper exports; not every logging tool format.",
+      "scripts": {
+        "scripts/dlis_to_las.py": {
+          "checks": [
+            "dlis"
+          ]
+        }
+      }
+    },
+    "ensaio": {
+      "checks": [
+        "collection"
+      ],
+      "scope": "Published hash-verified cached dataset; no general network availability guarantee.",
+      "scripts": {}
+    },
+    "flopy": {
+      "checks": [
+        "collection"
+      ],
+      "scope": "Analytic MODFLOW benchmark and helper with a pinned executable; no site calibration.",
+      "scripts": {
+        "scripts/confined_flow.py": {
+          "checks": [
+            "collection"
+          ]
+        }
+      }
+    },
+    "gemgis": {
+      "checks": [
+        "gis"
+      ],
+      "scope": "GIS/DEM projection, vertical conventions, orientations and helper exports.",
+      "scripts": {
+        "scripts/prepare_gempy_data.py": {
+          "checks": [
+            "gis"
+          ]
+        }
+      }
+    },
+    "gempy": {
+      "checks": [
+        "models"
+      ],
+      "scope": "Workflow contact-plane and VTK checks; standalone helpers remain separate gaps.",
+      "scripts": {
+        "scripts/export_model.py": {
+          "gap": "Workflow examples are tested; these standalone helpers need execution and output readback."
+        },
+        "scripts/validate_input.py": {
+          "gap": "Workflow examples are tested; these standalone helpers need execution and output readback."
+        }
+      }
+    },
+    "geolime": {
+      "checks": [],
+      "scope": "Licensed vendor runtime unavailable; preparation/review guidance only.",
+      "scripts": {}
+    },
+    "geostatspy": {
+      "checks": [],
+      "scope": "No dedicated scientific execution suite is mapped for this skill.",
+      "scripts": {
+        "scripts/kriging_example.py": {
+          "gap": "Kriging helper needs real-library execution, coordinate/variance oracles and output readback."
+        }
+      }
+    },
+    "gnnwr": {
+      "checks": [],
+      "scope": "No dedicated scientific execution suite is mapped for this skill.",
+      "scripts": {}
+    },
+    "gprpy": {
+      "checks": [
+        "gpr"
+      ],
+      "scope": "Real GPR import, processing and output readback; unknown field timing stays unknown.",
+      "scripts": {
+        "scripts/process_gpr.py": {
+          "checks": [
+            "gpr"
+          ]
+        }
+      }
+    },
+    "harmonica": {
+      "checks": [],
+      "scope": "No dedicated scientific execution suite is mapped for this skill.",
+      "scripts": {
+        "scripts/gravity_processing.py": {
+          "gap": "Gravity helper needs signed-unit and analytic potential-field checks."
+        }
+      }
+    },
+    "landlab": {
+      "checks": [],
+      "scope": "No dedicated scientific execution suite is mapped for this skill.",
+      "scripts": {
+        "scripts/erosion_model.py": {
+          "gap": "Erosion helper needs boundary-condition and conservation/limiting-case checks."
+        }
+      }
+    },
+    "lasio": {
+      "checks": [
+        "io",
+        "well-log",
+        "field-well"
+      ],
+      "scope": "LAS merge, workflow units/QC and published logs; other CLIs need separate checks.",
+      "scripts": {
+        "scripts/las_to_csv.py": {
+          "gap": "LAS merge is tested; this separate inspection/conversion CLI needs null/unit and output checks."
+        },
+        "scripts/merge_curves.py": {
+          "checks": [
+            "io"
+          ]
+        },
+        "scripts/validate_las.py": {
+          "gap": "LAS merge is tested; this separate inspection/conversion CLI needs null/unit and output checks."
+        }
+      }
+    },
+    "loopstructural": {
+      "checks": [
+        "loopstructural"
+      ],
+      "scope": "Synthetic FDI/PLI planes, world coordinates and VTK output.",
+      "scripts": {
+        "scripts/build_model.py": {
+          "checks": [
+            "loopstructural"
+          ]
+        }
+      }
+    },
+    "mplstereonet": {
+      "checks": [],
+      "scope": "No dedicated scientific execution suite is mapped for this skill.",
+      "scripts": {
+        "scripts/structural_analysis.py": {
+          "gap": "Structural helper needs orientation-convention and known-angle checks."
+        }
+      }
+    },
+    "mtpy": {
+      "checks": [
+        "mt"
+      ],
+      "scope": "MTpy-v2 EDI, tensor QC/rotation and export; no raw-series estimation or inversion.",
+      "scripts": {
+        "scripts/mt_analysis.py": {
+          "checks": [
+            "mt"
+          ]
+        }
+      }
+    },
+    "obspy": {
+      "checks": [
+        "seismic",
+        "field-waveform"
+      ],
+      "scope": "Workflow filtering and field waveform/response checks; network/batch helpers not covered.",
+      "scripts": {
+        "scripts/batch_process.py": {
+          "gap": "Waveform cases do not execute this batch/network helper; deterministic I/O coverage is missing."
+        },
+        "scripts/fetch_earthquake.py": {
+          "gap": "Waveform cases do not execute this batch/network helper; deterministic I/O coverage is missing."
+        }
+      }
+    },
+    "pastas": {
+      "checks": [
+        "hydro"
+      ],
+      "scope": "Daily field hindcast, chronological isolation, diagnostics, domain helper and model readback.",
+      "scripts": {
+        "scripts/groundwater_model.py": {
+          "checks": [
+            "hydro"
+          ]
+        }
+      }
+    },
+    "petropy": {
+      "checks": [
+        "petropy"
+      ],
+      "scope": "Configured fluid/mineral examples with explicit calibration; no arbitrary formation validity.",
+      "scripts": {
+        "scripts/formation_evaluation.py": {
+          "checks": [
+            "petropy"
+          ]
+        }
+      }
+    },
+    "pooch": {
+      "checks": [
+        "collection"
+      ],
+      "scope": "Cached dataset integrity in collection cases; registry generator not covered.",
+      "scripts": {
+        "scripts/create_registry.py": {
+          "gap": "Cached Pooch use is tested; registry-generation output and failure paths are unverified."
+        }
+      }
+    },
+    "pygimli": {
+      "checks": [
+        "models",
+        "field-ert",
+        "ert-workflow"
+      ],
+      "scope": "Workflow inversion and layered diagnostics; standalone ERT CLI not covered.",
+      "scripts": {
+        "scripts/ert_inversion.py": {
+          "gap": "Workflow inversion is tested; this standalone ERT helper is not exercised."
+        }
+      }
+    },
+    "pygmt": {
+      "checks": [
+        "pygmt"
+      ],
+      "scope": "GMT figure export and coordinate-aware grid sampling with native dependencies.",
+      "scripts": {}
+    },
+    "pyleoclim": {
+      "checks": [
+        "collection"
+      ],
+      "scope": "Irregular synthetic spectrum and chronology preservation; no field chronology calibration.",
+      "scripts": {}
+    },
+    "pylops": {
+      "checks": [],
+      "scope": "No dedicated scientific execution suite is mapped for this skill.",
+      "scripts": {
+        "scripts/deconvolution.py": {
+          "gap": "Deconvolution helper needs independent forward/adjoint and recovery checks."
+        }
+      }
+    },
+    "pyrolite": {
+      "checks": [],
+      "scope": "No dedicated scientific execution suite is mapped for this skill.",
+      "scripts": {
+        "scripts/geochemistry_plots.py": {
+          "gap": "Geochemistry helper needs composition/normalisation and plot-data checks."
+        }
+      }
+    },
+    "pyvista": {
+      "checks": [
+        "seismic",
+        "models",
+        "loopstructural"
+      ],
+      "scope": "Workflow grid/mesh export and readback; standalone visualization CLI not covered.",
+      "scripts": {
+        "scripts/visualize_surface.py": {
+          "gap": "Workflow VTK exports are tested; this standalone surface CLI is not executed."
+        }
+      }
+    },
+    "rockhound": {
+      "checks": [
+        "collection"
+      ],
+      "scope": "Legacy parser with synthetic cached bytes; upstream PREM URL failed.",
+      "scripts": {}
+    },
+    "scikit-gstat": {
+      "checks": [
+        "scikit-gstat"
+      ],
+      "scope": "Executed instructions, independent kriging system, named parameters, holdout isolation and diagnostic CLI.",
+      "scripts": {
+        "scripts/variogram_analysis.py": {
+          "checks": [
+            "scikit-gstat"
+          ]
+        }
+      }
+    },
+    "segyio": {
+      "checks": [
+        "io",
+        "seismic"
+      ],
+      "scope": "Trace/time/header subsetting and workflow geometry; inspection CLI is a separate gap.",
+      "scripts": {
+        "scripts/extract_subset.py": {
+          "checks": [
+            "io"
+          ]
+        },
+        "scripts/inspect_segy.py": {
+          "gap": "Subset helper is tested; inspection CLI metadata/output contract is unverified."
+        }
+      }
+    },
+    "segysak": {
+      "checks": [
+        "collection"
+      ],
+      "scope": "Labelled cubes, sample times and identity against source SEG-Y traces.",
+      "scripts": {}
+    },
+    "simpeg": {
+      "checks": [
+        "models"
+      ],
+      "scope": "Workflow forward/inverse branch and mesh export; standalone DC CLI not covered.",
+      "scripts": {
+        "scripts/dc_inversion.py": {
+          "gap": "Workflow SimPEG branch is tested; this standalone DC helper is not executed."
+        }
+      }
+    },
+    "striplog": {
+      "checks": [
+        "well-log"
+      ],
+      "scope": "Workflow lithology intervals preserve invalid-sample gaps; standalone CLI not covered.",
+      "scripts": {
+        "scripts/create_striplog.py": {
+          "gap": "Workflow intervals are tested; this standalone striplog CLI lacks output checks."
+        }
+      }
+    },
+    "using-geoscience-skills": {
+      "checks": [],
+      "scope": "Routing inventory is structurally checked; no dedicated trigger/negative-case model evaluation recorded.",
+      "scripts": {}
+    },
+    "verde": {
+      "checks": [
+        "field-gnss",
+        "climate",
+        "models"
+      ],
+      "scope": "Related gridding/field/holdout checks; standalone gridding CLI not covered.",
+      "scripts": {
+        "scripts/grid_data.py": {
+          "gap": "Related field/workflow fits are tested; this gridding CLI is not executed."
+        }
+      }
+    },
+    "welly": {
+      "checks": [
+        "well-log",
+        "field-well"
+      ],
+      "scope": "Domain/workflow curve operations, trajectories and field logs; standalone CLIs not covered.",
+      "scripts": {
+        "scripts/project_stats.py": {
+          "gap": "Domain/workflow operations are tested; these separate well/project CLIs are unverified."
+        },
+        "scripts/well_qc.py": {
+          "gap": "Domain/workflow operations are tested; these separate well/project CLIs are unverified."
+        }
+      }
+    },
+    "climate-analysis": {
+      "checks": [
+        "climate"
+      ],
+      "scope": "NOAA station TMAX workflow; no forecasting, full climate normals or arbitrary regridding.",
+      "scripts": {
+        "scripts/station_pipeline.py": {
+          "checks": [
+            "climate"
+          ]
+        }
+      }
+    },
+    "geological-modelling": {
+      "checks": [
+        "models"
+      ],
+      "scope": "Synthetic contact model and checked VTK grid handoffs.",
+      "scripts": {}
+    },
+    "geophysical-inversion": {
+      "checks": [
+        "models",
+        "field-ert"
+      ],
+      "scope": "Independent SimPEG/pyGIMLi workflow branches and related field ERT diagnostics.",
+      "scripts": {}
+    },
+    "hydrogeological-analysis": {
+      "checks": [
+        "hydro"
+      ],
+      "scope": "Published Pastas hindcast; optional site-calibrated MODFLOW branch unverified.",
+      "scripts": {
+        "scripts/run_pastas_workflow.py": {
+          "checks": [
+            "hydro"
+          ]
+        }
+      }
+    },
+    "near-surface-geophysics": {
+      "checks": [
+        "gpr",
+        "ert-workflow",
+        "mt"
+      ],
+      "scope": "Separate GPR, layered ERT and MT QC branches; no co-located joint inversion claim.",
+      "scripts": {
+        "scripts/ert_layered_diagnostic.py": {
+          "checks": [
+            "ert-workflow"
+          ]
+        }
+      }
+    },
+    "rock-physics-avo": {
+      "checks": [
+        "seismic"
+      ],
+      "scope": "Elastic logs, fluid substitution and synthetic timing with declared assumptions.",
+      "scripts": {}
+    },
+    "seismic-interpretation": {
+      "checks": [
+        "seismic"
+      ],
+      "scope": "SEG-Y geometry, filtering, synthetics and dispersion examples.",
+      "scripts": {}
+    },
+    "well-log-evaluation": {
+      "checks": [
+        "well-log"
+      ],
+      "scope": "Workflow QC, porosity/saturation, lithology intervals and geometry.",
+      "scripts": {}
+    },
+    "xarray": {
+      "checks": [
+        "climate",
+        "collection"
+      ],
+      "scope": "Workflow calendars, coverage, NetCDF and labelled arrays; standalone climate CLI not covered.",
+      "scripts": {
+        "scripts/climate_analysis.py": {
+          "gap": "Climate workflow is tested; this standalone climate helper is not executed."
+        }
+      }
+    }
+  }
+}

@@ -26,6 +26,9 @@ jobs:
       - name: Check generated platform manifests
         run: python3 scripts/sync_manifests.py --check
 
+      - name: Check per-skill scientific coverage inventory
+        run: python3 scripts/check_coverage.py --check
+
       - name: Run validation and manifest regression tests
         run: python3 -m unittest discover -s tests -v
 

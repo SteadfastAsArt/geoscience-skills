@@ -1,287 +1,90 @@
-# Kriging Methods Reference
+# Ordinary kriging and spatial validation
 
-## Table of Contents
-- [Kriging Overview](#kriging-overview)
-- [Ordinary Kriging](#ordinary-kriging)
-- [Kriging Variance](#kriging-variance)
-- [Prediction Grid Setup](#prediction-grid-setup)
-- [Performance Optimization](#performance-optimization)
-- [Common Issues](#common-issues)
+The examples below are fragments requiring finite, unique local projected
+`coords` of shape `(n, 2)`, `values` of shape `(n,)`, and prediction coordinates
+in the same CRS and units. Preserve the original input and its missingness mask.
 
-## Kriging Overview
-
-Kriging is a geostatistical interpolation method that provides:
-- **Best Linear Unbiased Estimator (BLUE)** of unknown values
-- **Estimation variance** at each prediction location
-- **Exact interpolation** (predictions match observations at data points)
-
-### Available Methods in SciKit-GStat
-
-| Class | Description | Use Case |
-|-------|-------------|----------|
-| `OrdinaryKriging` | Assumes constant unknown mean | Most common choice |
-| `SimpleKriging` | Assumes known constant mean | When mean is well-established |
-
-## Ordinary Kriging
-
-The most widely used kriging variant.
-
-### Basic Usage
+## Predictions and conditional variance
 
 ```python
+import numpy as np
 import skgstat as skg
-import numpy as np
 
-# Fit variogram first
-V = skg.Variogram(coords, values, model='spherical')
-
-# Create kriging estimator
-ok = skg.OrdinaryKriging(V)
-
-# Predict at new locations
-predictions = ok.transform(new_coords)
+V = skg.Variogram(coords, values, model="spherical", n_lags=10)
+ok = skg.OrdinaryKriging(V, min_points=3, max_points=15)
+predictions = ok.transform(*grid_coords.T)
+variance = ok.sigma.copy()
 ```
 
-### Parameters
+Each `transform` overwrites `ok.sigma`. For chunked prediction, collect both
+arrays before starting the next chunk. `min_points` and integer `max_points`
+limit the neighbours within the model's effective range. Unsupported points
+remain NaN; report their count rather than replacing them with zero.
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `variogram` | Fitted Variogram object | Required |
-| `min_points` | Minimum neighbors for estimation | 5 |
-| `max_points` | Maximum neighbors (None = all) | 15 |
-| `mode` | 'exact' or 'estimate' | 'exact' |
+The variance has squared value units. It is conditional on the specified model,
+neighbourhood and mean assumptions. Low variance does not guarantee an accurate
+or unbiased field prediction, and it does not include fitted-parameter
+uncertainty. A prediction interval requires additional distributional assumptions
+and a calibration check. Material negative variances require investigation;
+do not silently take absolute values or clip them to make a plot.
 
-### Setting Parameters
+The built-in class is `OrdinaryKriging`. Use an appropriate external library or
+adapter for simple/universal kriging and external drift. Duplicate locations,
+conflicting measurements and singular systems require an explicit data/error
+model. A nugget should have a scientific justification; adding one solely to
+suppress a numerical failure can change the estimand.
 
-```python
-ok = skg.OrdinaryKriging(
-    variogram=V,
-    min_points=5,
-    max_points=20
-)
-```
+## Spatial holdout
 
-## Kriging Variance
-
-Kriging provides uncertainty estimates at each prediction location.
-
-### Get Predictions and Variance
-
-```python
-ok = skg.OrdinaryKriging(V)
-
-# Enable variance output
-ok.return_variance = True
-
-# Transform returns tuple
-predictions, variance = ok.transform(grid_coords)
-
-# Standard error
-std_error = np.sqrt(variance)
-```
-
-### Interpret Variance
-
-| Variance Level | Interpretation |
-|----------------|----------------|
-| Low | Close to data points, reliable estimate |
-| High | Far from data points, uncertain estimate |
-| Equal to sill | No spatial correlation, similar to mean |
-
-### Plot Uncertainty
-
-```python
-import matplotlib.pyplot as plt
-
-fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-
-# Predictions
-ax1 = axes[0]
-im1 = ax1.contourf(xx, yy, predictions.reshape(xx.shape), levels=20)
-ax1.scatter(coords[:, 0], coords[:, 1], c='k', s=10)
-plt.colorbar(im1, ax=ax1, label='Predicted Value')
-ax1.set_title('Kriging Predictions')
-
-# Variance
-ax2 = axes[1]
-im2 = ax2.contourf(xx, yy, variance.reshape(xx.shape), levels=20, cmap='Reds')
-ax2.scatter(coords[:, 0], coords[:, 1], c='k', s=10)
-plt.colorbar(im2, ax=ax2, label='Kriging Variance')
-ax2.set_title('Estimation Uncertainty')
-
-plt.tight_layout()
-plt.show()
-```
-
-## Prediction Grid Setup
-
-### Regular Grid
+Define a boolean `test_mask` from spatial blocks, survey identity or the intended
+prediction setting before fitting. Use a separate validation set for tuning.
+This fragment fixes the model and fits its variogram on training observations
+only; any trend, scaling or imputation would also need training-only fitting.
+Repeat it for predeclared folds, preserving target identities.
 
 ```python
 import numpy as np
+import skgstat as skg
 
-# Define extent
-x_min, x_max = coords[:, 0].min(), coords[:, 0].max()
-y_min, y_max = coords[:, 1].min(), coords[:, 1].max()
-
-# Create grid
-resolution = 50  # grid cells per dimension
-x = np.linspace(x_min, x_max, resolution)
-y = np.linspace(y_min, y_max, resolution)
-xx, yy = np.meshgrid(x, y)
-
-# Flatten for kriging
-grid_coords = np.column_stack([xx.ravel(), yy.ravel()])
-
-# Predict and reshape
-predictions = ok.transform(grid_coords)
-Z = predictions.reshape(xx.shape)
+train = ~test_mask
+if not train.any() or not test_mask.any():
+    raise ValueError("A holdout needs both training and test observations")
+V_train = skg.Variogram(coords[train], values[train], model="spherical",
+                        n_lags=10, maxlag="median", use_nugget=False)
+ok_train = skg.OrdinaryKriging(V_train, min_points=3, max_points=15)
+prediction = ok_train.transform(*coords[test_mask].T)
+variance = ok_train.sigma.copy()
+supported = np.isfinite(prediction) & np.isfinite(variance)
+observed = values[test_mask]
+baseline = float(values[train].mean())
+report = {
+    "targets": int(test_mask.sum()),
+    "predicted": int(supported.sum()),
+    "unsupported": int((~supported).sum()),
+    "coverage": float(supported.mean()),
+    "rmse_on_supported": None,
+    "baseline_rmse_on_same_targets": None,
+}
+if supported.any():
+    report["rmse_on_supported"] = float(np.sqrt(np.mean(
+        (prediction[supported] - observed[supported]) ** 2)))
+    report["baseline_rmse_on_same_targets"] = float(np.sqrt(np.mean(
+        (baseline - observed[supported]) ** 2)))
 ```
 
-### Irregular Points
+Changing held-out values must not change `V_train`, the predictions, variance or
+baseline. It should change only the observed residuals and their scores.
+Neighbouring random folds answer a different question from prediction in a new
+area. Report block geometry, any separation buffer and coverage with the score.
+No supported predictions means no RMSE, rather than a passing or zero-error run.
 
-```python
-# Predict at specific locations
-target_coords = np.array([
-    [50, 50],
-    [75, 25],
-    [25, 75]
-])
+`V.cross_validate()` offers a leave-one-out diagnostic conditional on an already
+fitted variogram; it does not refit that variogram per held-out observation.
+Do not label it an independent assessment of the complete model-fitting pipeline.
+`cross_val_score(ok, ...)` is invalid because `OrdinaryKriging` has no `fit` method.
 
-predictions = ok.transform(target_coords)
-```
+## Sources
 
-### Mask Invalid Areas
-
-```python
-from scipy.spatial import ConvexHull
-from matplotlib.path import Path
-
-# Create convex hull of data points
-hull = ConvexHull(coords)
-hull_path = Path(coords[hull.vertices])
-
-# Mask points outside hull
-mask = hull_path.contains_points(grid_coords)
-predictions[~mask] = np.nan
-```
-
-## Performance Optimization
-
-### Limit Search Neighbors
-
-```python
-# Use only nearest neighbors for large datasets
-ok = skg.OrdinaryKriging(
-    V,
-    max_points=20  # Limit to 20 nearest points
-)
-```
-
-### Reduce Grid Resolution
-
-```python
-# Start with coarse grid for testing
-resolution = 25  # instead of 100+
-```
-
-### Batch Processing
-
-```python
-# For very large grids, process in chunks
-chunk_size = 1000
-predictions = []
-
-for i in range(0, len(grid_coords), chunk_size):
-    chunk = grid_coords[i:i+chunk_size]
-    pred = ok.transform(chunk)
-    predictions.extend(pred)
-
-predictions = np.array(predictions)
-```
-
-## Cross-Validation
-
-### K-Fold Cross-Validation
-
-```python
-from sklearn.model_selection import cross_val_score
-import numpy as np
-
-V = skg.Variogram(coords, values, model='spherical')
-ok = skg.OrdinaryKriging(V)
-
-# Use sklearn's cross-validation
-scores = cross_val_score(
-    ok, coords, values,
-    cv=5,
-    scoring='neg_mean_squared_error'
-)
-
-rmse = np.sqrt(-scores.mean())
-print(f"Cross-validation RMSE: {rmse:.4f}")
-```
-
-### Leave-One-Out Cross-Validation
-
-```python
-from sklearn.model_selection import LeaveOneOut
-
-loo = LeaveOneOut()
-scores = cross_val_score(ok, coords, values, cv=loo, scoring='neg_mean_squared_error')
-rmse = np.sqrt(-scores.mean())
-```
-
-## Common Issues
-
-### Singular Matrix Error
-
-**Cause:** Duplicate points or purely Gaussian model
-
-**Solution:**
-```python
-# Add small nugget to variogram
-V = skg.Variogram(coords, values, model='gaussian')
-# If nugget is 0, manually add small value
-if V.parameters[2] < 1e-10:
-    V.nugget = 0.01 * V.parameters[1]  # 1% of sill
-```
-
-### Poor Predictions at Edges
-
-**Cause:** Extrapolation beyond data extent
-
-**Solution:**
-- Limit prediction grid to data extent
-- Use convex hull masking
-- Increase max_points for edge regions
-
-### Memory Error with Large Grids
-
-**Cause:** Creating full distance matrix
-
-**Solution:**
-```python
-# Reduce grid resolution
-# Use max_points to limit neighbors
-# Process in chunks
-```
-
-### Unrealistic Variance
-
-**Cause:** Poor variogram fit
-
-**Solution:**
-- Check variogram model visually
-- Try different models
-- Use robust estimators for noisy data
-
-## Workflow Checklist
-
-1. **Exploratory analysis** - Check for trends, outliers
-2. **Compute experimental variogram** - Set appropriate lags and maxlag
-3. **Fit variogram model** - Compare multiple models
-4. **Validate model** - Cross-validation
-5. **Setup prediction grid** - Appropriate resolution
-6. **Run kriging** - Get predictions and variance
-7. **Post-process** - Mask, visualize, export
+- [Kriging API](https://scikit-gstat.readthedocs.io/en/latest/reference/kriging.html)
+- [Variance example](https://scikit-gstat.readthedocs.io/en/latest/userguide/kriging.html)
+- [Variogram API](https://scikit-gstat.readthedocs.io/en/latest/reference/variogram.html)

@@ -6,6 +6,11 @@ answers; published field fixtures retain source bytes, licenses and conventions.
 Passing these tests does not establish skill activation inside an agent: see
 [agent evaluations](AGENT_EVALUATIONS.md) for that separate evidence.
 
+The [per-skill validation matrix](VALIDATION_MATRIX.md) maps every skill and
+bundled script to declared checks or explicit gaps. Its scopes distinguish
+standalone scripts from library use inside a workflow. The inventory validator
+does not execute tests or establish that mapped tests passed.
+
 ## Isolated environments
 
 Use a fresh path for each environment. Do not install this catalog into a user's
@@ -23,12 +28,49 @@ global Python environment, or combine all requirements into one lockfile.
 | Climate workflow | 3.12 | [requirements-climate-workflow.txt](../tests/science/requirements-climate-workflow.txt) | NOAA station aggregation, temporal/spatial isolation, calendars and NetCDF readback |
 | GPR workflow | 3.11 | [requirements-near-surface-gpr.txt](../tests/science/requirements-near-surface-gpr.txt) plus fixed GPRPy source | Real field raw-format processing/export and controlled physical-unit examples |
 | MT workflow | 3.12 | [requirements-near-surface-mt.txt](../tests/science/requirements-near-surface-mt.txt) | MTpy-v2 EDI/QC/rotation/export and independent tensor oracles |
+| Geostatistics | 3.12 | [requirements-geostatistics.txt](../tests/science/requirements-geostatistics.txt) | SciKit-GStat variogram parameters, ordinary kriging, spatial holdout and diagnostic CLI readback |
 
 Core retains pandas 2.3.3 because Welly calls an API removed in pandas 3, and
 setuptools 80.9.0 because Welly/Bruges still import `pkg_resources`. Modelling and
 new-collection environments passed with pandas 3.0.5. PetroPy requires its own
 older lasio/NumPy combination. See [dependency validation](DEPENDENCY_MAINTENANCE.md)
 and [domain audit constraints](DOMAIN_AUDITS.md) before changing a pin.
+
+## Run a registered environment
+
+The maintainer Python needs PyYAML, as for `validate_skills.py`. Select an
+existing scientific interpreter using the environment IDs in
+[the matrix](VALIDATION_MATRIX.md#isolated-environments):
+
+```bash
+python3 scripts/check_coverage.py --check
+python3 scripts/run_science.py --environment core \
+  --python /tmp/geoscience-core-tests/bin/python \
+  --report /tmp/geoscience-core-run.json
+```
+
+The runner checks the declared Python major/minor and runs each registered suite
+in a separate process. Missing dependencies, failed imports, zero tests, skips,
+expected failures and timeouts fail the run. It does not install dependencies
+or external executables. Supply MODFLOW/GMT/GPR setup where required below.
+The optional JSON report records actual Python/package versions, baseline and
+test-source hashes, test counts and outcomes. An existing report is never
+overwritten. A baseline hash identifies the requested requirements file; actual
+installed versions are recorded separately, not assumed to match its pins.
+
+For the SciKit-GStat baseline, create an isolated Python 3.12 environment:
+
+```bash
+python3.12 -m venv /tmp/geoscience-geostatistics-tests
+/tmp/geoscience-geostatistics-tests/bin/python -m pip install -r tests/science/requirements-geostatistics.txt
+python3 scripts/run_science.py --environment geostatistics \
+  --python /tmp/geoscience-geostatistics-tests/bin/python \
+  --report /tmp/geoscience-geostatistics-run.json
+```
+
+The geostatistics CI job uses this runner and uploads its JSON evidence. Existing
+scientific jobs retain their separate suite commands below. The lightweight CI
+job checks the inventory and generated matrix for drift.
 
 ## Reproduce core and modelling checks
 
@@ -145,6 +187,7 @@ fixture licenses, source hashes, scientific assumptions and recorded results.
 | `test_near_surface_workflow_gpr.py` | 9 | Field SEG-Y/GPRPy processing, independent raw MALA and documented time/depth scenarios |
 | `test_near_surface_workflow_ert.py` | 8 | Complete field layered-fit output, response/residual reconstruction, held-out target perturbation and synthetic recovery |
 | `test_near_surface_workflow_mt.py` | 8 | Field-derived EDI, independent impedance/rotation formulas, missingness, plots and CSV/EDI readback |
+| `test_scikit_gstat_examples.py` | 12 | Named Matérn/stable nugget parameters, independent kriging linear system, training-only holdout, missing support, plot/JSON/CSV readback |
 | `evals/tests/test_fixture_readback.py` | 3 | Independent agent fixtures read with actual LAS/SEG-Y libraries; no model invocation |
 
 The 2026-09-14 Python 3.12 runs passed **81 core, 25 modelling/field, 13 collection
@@ -153,8 +196,8 @@ skips. The Python 3.11 domain audits passed **31 more scientific tests**. Togeth
 with **61 lightweight tests**, this is **216 automated tests**: 152 scientific,
 3 fixture readbacks and 61 lightweight checks. Manual agent tasks are separate.
 The **2026-09-15** workflow follow-up passed **52 additional scientific tests**
-without skips: 13 hydro, 14 climate, 9 GPR, 8 ERT and 8 MT. The expanded suite
-contains **268 automated tests**: 204 scientific across ten isolated
+without skips: 13 hydro, 14 climate, 9 GPR, 8 ERT and 8 MT. At that revision the suite
+contained **268 automated tests**: 204 scientific across ten isolated
 environments, 3 fixture readbacks and 61 lightweight checks. The lightweight
 suite also passed after the workflow changes. CI runs all these suites on the
 PR revision; consult the run history below for the commit and result.
@@ -162,6 +205,24 @@ Historical Python 3.11 results from merged
 [PR #3](https://github.com/SteadfastAsArt/geoscience-skills/pull/3) remain valid for
 that revision: 85 scientific tests, 2 fixture tests and 53 lightweight tests.
 They are not substituted for tests of the new content or dependency versions.
+
+The **2026-10-25** local SciKit-GStat follow-up passed **12 scientific tests**
+with Python 3.12.12 and the new pinned baseline, including execution through
+the environment runner without skips. These tests execute the actual Markdown
+examples and bundled script. An independent ordinary-kriging linear system
+checks both predictions and conditional variance; perturbing held-out values
+must leave fitted training parameters, predictions, variance and baseline intact.
+Matérn/stable tests distinguish smoothness/shape from a nonzero nugget and inspect
+plotted values as well as exported files. This fixes incorrect tuple-return,
+scikit-learn cross-validation and positional-parameter examples.
+
+The full lightweight suite now has **74 passing tests**, including coverage
+inventory and runner failure-path checks. Current inventory totals **293 tests**:
+216 scientific across eleven environments, 3 fixture readbacks and 74 lightweight
+checks. This local follow-up reran the 12 geostatistics and 74 lightweight tests;
+it does not replace the historical results with a claim that all eleven
+scientific environments or native agent tasks were rerun. The new CI job's
+remote result must be read from the workflow history for the revision concerned.
 
 ## Scope of the evidence
 

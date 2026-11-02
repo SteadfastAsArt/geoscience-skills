@@ -1,209 +1,120 @@
 ---
 name: scikit-gstat
-description: |
-  Geostatistical analysis with scikit-learn style API. Compute variograms, kriging
-  interpolation, and spatial correlation analysis. Use when the agent needs to: (1) Compute
-  experimental variograms from spatial data, (2) Fit variogram models (spherical,
-  exponential, gaussian, matern), (3) Perform Ordinary or Universal Kriging interpolation,
-  (4) Assess spatial anisotropy with directional variograms, (5) Cross-validate spatial
-  models, (6) Analyze spatio-temporal data, (7) Export variogram parameters for other
-  geostatistical software.
+description: >-
+  Estimate and diagnose variograms, perform ordinary kriging, and validate spatial
+  interpolation with SciKit-GStat. Use for empirical or directional variograms,
+  covariance-model comparison and kriging prediction/variance; use PyKrige or
+  GSTools when the task requires universal kriging or external drift.
 license: MIT
 metadata:
-  version: 1.0.1
+  version: "1.0.2"
   author: Geoscience Skills
-  tags: '["Geostatistics", "Variogram", "Kriging", "Scikit-Learn", "Spatial Statistics", "Scikit-Gstat", "Interpolation", "Directional Analysis"]'
-  dependencies: '["scikit-gstat>=1.0.0", "numpy", "scipy", "scikit-learn"]'
+  tags: '["Geostatistics", "Variogram", "Kriging", "Spatial Statistics", "Directional Analysis"]'
+  dependencies: '["scikit-gstat>=1.0.0", "numpy", "scipy", "scikit-learn", "pandas", "matplotlib"]'
   complements: '["verde", "geostatspy"]'
   workflow_role: analysis
   skill_type: domain
 ---
 
-# SciKit-GStat - Geostatistics
+# SciKit-GStat
 
-## Quick Reference
+Fit spatial dependence and produce ordinary-kriging estimates with their
+conditional variances. A fitted variogram is not itself evidence of predictive
+accuracy or calibrated uncertainty.
+
+## Inputs and conventions
+
+Use coordinates shaped `(n, 2)` and one scalar observation per location. Record
+the coordinate reference system, distance units, measurement units and sampling
+support. For a regional Euclidean-distance model, project longitude/latitude
+into a suitable distance-based CRS before fitting. Resolve trends and repeated
+locations explicitly; do not silently perturb duplicate coordinates.
+
+Mask missing measurements consistently in coordinates and values. Preserve their
+identity in the source data; unknown measurements are not zeros. Variances,
+sills and nuggets have squared measurement units. SciKit-GStat's named `sill`
+is the partial sill: the plateau is `sill + nugget`. Its `effective_range` uses
+the library's model-specific convention, not a universally interchangeable
+correlation length.
+
+## Ordinary kriging example
+
+This runnable example uses synthetic measurements and local Cartesian metres.
+For real work, replace the inputs and establish an appropriate model and support.
 
 ```python
-import skgstat as skg
 import numpy as np
-
-# Create variogram
-V = skg.Variogram(coordinates=coords, values=values, n_lags=15)
-
-# Fit model
-V.model = 'spherical'
-print(f"Range: {V.parameters[0]:.2f}, Sill: {V.parameters[1]:.2f}")
-
-# Kriging interpolation
-ok = skg.OrdinaryKriging(V)
-predictions = ok.transform(grid_coords)
-```
-
-## Key Classes
-
-| Class | Purpose |
-|-------|---------|
-| `Variogram` | Empirical and theoretical variograms |
-| `OrdinaryKriging` | Interpolation with spatial correlation |
-| `DirectionalVariogram` | Anisotropic variograms |
-| `SpaceTimeVariogram` | Spatio-temporal analysis |
-
-## Essential Operations
-
-### Create and Fit Variogram
-```python
 import skgstat as skg
 
-V = skg.Variogram(
-    coordinates=coords,      # (n, 2) array of x, y
-    values=values,           # (n,) array of measurements
-    n_lags=15,
-    maxlag='median'          # or specific distance
-)
+rng = np.random.default_rng(13)
+coords = rng.uniform(0, 100, (90, 2))  # synthetic local x/y, metres
+values = np.sin(coords[:, 0] / 25) + np.cos(coords[:, 1] / 30)
+values += rng.normal(0, 0.08, len(coords))  # arbitrary measurement units
 
-# Fit model: 'spherical', 'exponential', 'gaussian', 'matern', 'stable'
-V.model = 'spherical'
-
-# Get parameters
-print(f"Range: {V.parameters[0]:.2f}")
-print(f"Sill: {V.parameters[1]:.2f}")
-print(f"Nugget: {V.parameters[2]:.2f}")
-print(f"RMSE: {V.rmse:.4f}")
+grid_coords = np.array([[30., 30.], [50., 50.], [70., 60.]])
+V = skg.Variogram(coords, values, model="spherical", n_lags=10,
+                  maxlag="median", use_nugget=False)
+ok = skg.OrdinaryKriging(V, min_points=3, max_points=12)
+predictions = ok.transform(*grid_coords.T)
+variance = ok.sigma.copy()  # variance for the MOST RECENT transform, not stddev
+supported = np.isfinite(predictions) & np.isfinite(variance)
+print(predictions, variance, supported)
 ```
 
-### Ordinary Kriging
-```python
-import skgstat as skg
-import numpy as np
+`transform` returns only predictions. `return_variance` does not enable tuple
+output. Copy `ok.sigma` before the next transform, including when processing
+chunks. Inadequate neighbourhoods may produce NaN; report support and preserve
+those gaps. Conditional kriging variance excludes uncertainty in fitted
+variogram parameters, trend choice and sampling bias.
 
-V = skg.Variogram(coords, values, model='spherical')
-ok = skg.OrdinaryKriging(V)
+## Fit diagnostics and validation
 
-# Create prediction grid
-x = np.linspace(0, 100, 50)
-y = np.linspace(0, 100, 50)
-xx, yy = np.meshgrid(x, y)
-grid_coords = np.column_stack([xx.ravel(), yy.ravel()])
+Read parameters by name using `V.describe(short=True)`. Matérn and stable models
+place a smoothness/shape parameter before their nugget in `V.parameters`.
+Evaluate a fitted model with `V.transform(lags)` so all fitted parameters are
+retained. See [model conventions](references/variogram_models.md) for parameter
+meaning, effective ranges and diagnostic examples.
 
-# Predict
-predictions = ok.transform(grid_coords)
-Z = predictions.reshape(xx.shape)
+Compare variogram-bin RMSE only as an in-sample diagnostic. For predictive
+assessment, declare spatial groups or survey holdouts before fitting; refit the
+variogram and every preprocessing step using each training fold only. Follow
+the [training-only holdout example](references/kriging_methods.md#spatial-holdout)
+for this path. `OrdinaryKriging` is not a scikit-learn estimator that can be
+passed directly to `cross_val_score`. Report unpredicted targets alongside RMSE;
+do not improve a score by quietly dropping poorly supported locations.
 
-# Get variance
-ok.return_variance = True
-predictions, variance = ok.transform(grid_coords)
+`DirectionalVariogram` can compare azimuths, but different directional ranges
+alone do not establish significant anisotropy. Inspect pair counts, trends and
+sampling geometry before changing the covariance or distance model.
+
+## Alternatives and outputs
+
+Use PyKrige/GSTools for drift-aware kriging, GeostatsPy for GSLIB-style simulation,
+and Verde for gridding without a variogram model. SciKit-GStat's built-in
+interpolator is ordinary kriging; its adapters do not make every object
+scikit-learn-compatible.
+
+Retain prediction locations, units/CRS, missing/support masks, fitted parameters,
+training partitions and input provenance. Check outputs against held-out
+observations and a training-only baseline. Label uncertainties by what they cover.
+
+## Bundled diagnostic script
+
+Resolve [scripts/variogram_analysis.py](scripts/variogram_analysis.py) relative
+to this skill. It reads explicitly selected CSV columns, removes rows missing
+any selected field, and rejects infinities, duplicate locations and constant
+values. Keep the original CSV to retain dropped-row identities. It compares
+in-sample fits and directional diagnostics; it does not run predictive validation.
+
+```bash
+python /path/to/scikit-gstat/scripts/variogram_analysis.py samples.csv \
+  --x easting --y northing --z porosity --n-lags 15 --maxlag median \
+  --output variogram-results
 ```
 
-### Directional Variogram
-```python
-import skgstat as skg
-
-DV = skg.DirectionalVariogram(
-    coordinates=coords,
-    values=values,
-    azimuth=45,          # Direction in degrees
-    tolerance=22.5,      # Angular tolerance
-    bandwidth='q33'      # Perpendicular bandwidth
-)
-
-# Check anisotropy
-for az in [0, 45, 90, 135]:
-    DV.azimuth = az
-    print(f"Azimuth {az}: Range = {DV.parameters[0]:.2f}")
-```
-
-### Cross-Validation
-```python
-import skgstat as skg
-from sklearn.model_selection import cross_val_score
-
-V = skg.Variogram(coords, values, model='spherical')
-ok = skg.OrdinaryKriging(V)
-
-scores = cross_val_score(ok, coords, values, cv=5, scoring='neg_mean_squared_error')
-print(f"CV RMSE: {np.sqrt(-scores.mean()):.4f}")
-```
-
-### Robust Estimators
-```python
-import skgstat as skg
-
-# Use robust estimator for noisy data
-V = skg.Variogram(
-    coords, values,
-    estimator='cressie'  # 'matheron', 'cressie', 'dowd', 'genton'
-)
-```
-
-## Quick Model Reference
-
-| Model | Behavior |
-|-------|----------|
-| `spherical` | Most common, linear near origin |
-| `exponential` | Never reaches sill, gradual approach |
-| `gaussian` | Parabolic near origin, smooth |
-| `matern` | Flexible smoothness control |
-
-## When to Use vs Alternatives
-
-| Use Case | Tool | Why |
-|----------|------|-----|
-| Variogram analysis + kriging | **scikit-gstat** | Modern API, sklearn-compatible |
-| GSLIB-style simulation (SGSIM) | **GeostatsPy** | Full GSLIB simulation engine |
-| Kriging with trend/drift | **pykrige** | Universal kriging, regression kriging |
-| Random field generation | **gstools** | Flexible covariance, SRF generation |
-| Spatio-temporal variograms | **scikit-gstat** | Built-in SpaceTimeVariogram |
-| Production geomodelling | **SGeMS / Petrel** | GUI, large-scale 3D models |
-| Robust variogram estimation | **scikit-gstat** | Cressie, Dowd, Genton estimators |
-| ML pipeline integration | **scikit-gstat** | sklearn `fit`/`transform` interface |
-
-**Choose scikit-gstat when**: You want a Pythonic, scikit-learn-compatible API for
-variogram fitting and kriging. Best for exploratory geostatistical analysis with
-cross-validation and integration into ML pipelines.
-
-**Choose GeostatsPy when**: You need GSLIB-compatible simulation workflows (SGSIM,
-SISIM) or are working with traditional geostatistical conventions.
-
-**Choose pykrige when**: You need universal kriging with external drift variables
-or regression kriging combining geostatistics with machine learning predictions.
-
-## Common Workflows
-
-### Variogram Fitting and Ordinary Kriging
-- [ ] Load spatial data as numpy arrays (coordinates and values)
-- [ ] Create `Variogram` object with appropriate `n_lags` and `maxlag`
-- [ ] Test estimators: matheron (default) vs cressie (robust) for noisy data
-- [ ] Fit multiple models (spherical, exponential, gaussian) and compare RMSE
-- [ ] Check anisotropy with `DirectionalVariogram` at 0, 45, 90, 135 degrees
-- [ ] Select best model based on RMSE and visual fit
-- [ ] Create `OrdinaryKriging` object from fitted variogram
-- [ ] Define prediction grid and run `ok.transform(grid_coords)`
-- [ ] Set `ok.return_variance = True` to get kriging variance
-- [ ] Cross-validate with `cross_val_score()` to assess prediction quality
-- [ ] Map predictions and kriging variance
-
-## Common Issues
-
-| Issue | Solution |
-|-------|----------|
-| Variogram flat or erratic | Adjust `n_lags` and `maxlag` (try `maxlag='median'`) |
-| Poor model fit (high RMSE) | Try different model types or nested structures |
-| Kriging too slow | Reduce number of conditioning points or grid resolution |
-| Nugget too large | May indicate measurement error; try robust estimators |
-| Anisotropy unclear | Use smaller angular tolerance in `DirectionalVariogram` |
-
-## Tips
-
-1. **Maxlag** should be ~50% of study area diagonal
-2. **Use robust estimators** (cressie, dowd) with noisy data
-3. **Test multiple models** and compare RMSE
-4. **Check anisotropy** with directional variograms before kriging
-
-## References
-
-- **[Variogram Models](references/variogram_models.md)** - Model equations and parameters
-- **[Kriging Methods](references/kriging_methods.md)** - Kriging types and configuration
-
-## Scripts
-
-- **[scripts/variogram_analysis.py](scripts/variogram_analysis.py)** - Complete variogram analysis workflow
+The nugget is fixed at zero by default; `--use-nugget` fits it. A numeric
+`--maxlag` below 1 means a fraction of maximum pair distance; larger values use
+coordinate units. JSON preserves effective range, partial sill, nugget and any
+shape parameter separately. Plots evaluate all fitted parameters. Supply the
+CRS and units in the surrounding analysis record; this script does not infer
+or transform them. Check the exported JSON and figures before interpretation.
